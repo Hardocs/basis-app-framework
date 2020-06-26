@@ -2,6 +2,7 @@
   <span>
   <div class="hello">
     <p class="text-red-100">am I red or not</p>
+    <p style="color: darkred;">answer tailwindwise, not yet...</p>
     <h1>{{ msg }}</h1>
     <br>
     <p>
