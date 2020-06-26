@@ -39,7 +39,7 @@ export default {
         Object.assign(doc, {
           _id: 'wut',
           title: 'Roma',
-          description: 'A truly great true film of Mexico, from accurate lives, in not quite recent times.'
+          description: 'A great true film of Mexico, from accurate lives, in not quite recent times.'
         })
 
         if (!doc.count) {

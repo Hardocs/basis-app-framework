@@ -3,6 +3,7 @@
     <Nav />
 <!--    <img alt="Vue logo" src="./assets/logo.png" style="margin: 95px auto 0 auto">-->
 <!--    <HelloWorld msg="Welcome to Your Vue Local Db App (very preliminary...)"/>-->
+    <router-view/>
   </div>
 </template>
 
@@ -15,6 +16,9 @@ export default {
   components: {
     // HelloWorld,
     'Nav':Nav
+  },
+  created () {
+    console.log ('App ... created')
   }
 }
 </script>
