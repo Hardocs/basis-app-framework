@@ -5,7 +5,7 @@
 <!--      <router-link to="/data-view">Data Viewey</router-link>-->
 <!--    </router-view>-->
 <!--<div style="height: 100px"><h2>Spacer temp</h2></div>-->
-    <div class="navbar nav-bg bg-opacity-100 w-screen h-16 fixed top-0 text-white hidden md:block z-20">
+    <div class="navbar nav-bg bg-opacity-100 w-screen h-16 xfixed top-0 text-white hidden md:block z-20">
       <div class="container mx-auto max-w-5xl flex items-center h-full ">
        <nav class="flex">
          <div

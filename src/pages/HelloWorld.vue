@@ -1,8 +1,8 @@
 <template>
-  <span>
+  <div>
   <div class="hello">
-    <p class="text-red-100">am I red or not</p>
-    <p style="color: darkred;">answer tailwindwise, not yet...</p>
+    <h1 class="font-bold text-primary-100 mt-2">Welcome to the Hardocs Basis App</h1>
+    <br/>
     <h1>{{ msg }}</h1>
     <br>
     <p>
@@ -35,7 +35,7 @@
       <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
     </ul>
   </div>
-  </span>
+  </div>
 </template>
 
 <script>
@@ -46,6 +46,13 @@ export default {
   },
 }
 </script>
+
+<style>
+page-title {
+  color: darkblue;
+  margin-top: 100px !important;
+}
+</style>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>

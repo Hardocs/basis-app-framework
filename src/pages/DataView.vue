@@ -27,7 +27,9 @@ export default {
     PouchDb.plugin(PouchDbUpsert)
     const dbName = 'hard-begin'
 
-    this.db = new PouchDb(dbName)
+    this.db = new PouchDb(dbName, {
+      revs_limit: 1.
+    })
     // .then(result => console.log(result))
     // .catch(err => console.log(err))
     this.db.info().then(function (info) {
