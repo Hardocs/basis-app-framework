@@ -27,9 +27,9 @@
 <script>
 import fs from 'fs'
 import app from 'electron'
-const dialog = app.remote.dialog;
-const rendWin = app.remote.getCurrentWindow()
-// const {dialog} = require('electron').remote
+
+  const dialog = app.remote.dialog;
+  const rendWin = app.remote.getCurrentWindow()
 
 export default {
   name: "ButtonsPanel",
@@ -74,22 +74,24 @@ export default {
   },
   methods: {
     openFile: function () {
-      dialog.showOpenDialog(rendWin, {
-        filters: [
-          { name: 'JSON Files', extensions: ['json']}
-        ],
-        properties: [
-          'openFile',
-          // 'openDirectory', // for later, implementing result
-        ]
-      })
-      .then(file => {
-        if (!file.canceled) {
-          this.file = file
-          this.fileName = file.filePaths[0]
-          this.fileContent = fs.readFileSync(this.fileName, 'utf8')
-        }
-      })
+      if (process.env.ORIGINAL_XDG_CURRENT_DESKTOP !== null) {
+        dialog.showOpenDialog(rendWin, {
+            filters: [
+              {name: 'JSON Files', extensions: ['json']}
+            ],
+            properties: [
+              'openFile',
+              // 'openDirectory', // for later, implementing result
+            ]
+          })
+          .then(file => {
+            if (!file.canceled) {
+              this.file = file
+              this.fileName = file.filePaths[0]
+              this.fileContent = fs.readFileSync(this.fileName, 'utf8')
+            }
+          })
+      }
     }
   },
 }
