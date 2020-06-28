@@ -67,6 +67,11 @@ export default {
           type: 'local'
         },
         {
+          name: "/buttons-gurka",
+          label: "Buttons Gurka",
+          type: 'local'
+        },
+        {
           name: "https://www.google.com/search?q=oceanic&source=lnms&tbm=isch",
           label: "Panel",
           type: 'remote'

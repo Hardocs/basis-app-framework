@@ -7,14 +7,15 @@ npm install
 
 ### Compiles and hot-reloads for development
 ```
-npm run serve
+npm run serve (for regular Vue/web development)
  - or - 
-npm run develop (added)
+npm run electron:serve (to develop including hot-reload in the Electron app)
 ```
 
 ### Compiles and minifies for production
 ```
-npm run build
+npm run electron:build (this is our delivery)
+
 ```
 
 ### Lints and fixes files

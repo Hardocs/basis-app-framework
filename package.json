@@ -15,6 +15,7 @@
   "dependencies": {
     "autoprefixer": "^9.8.4",
     "core-js": "^3.6.5",
+    "fs": "0.0.1-security",
     "json-beautify": "^1.1.1",
     "pouchdb": "^7.2.1",
     "pouchdb-find": "^7.2.1",
