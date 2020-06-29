@@ -74,7 +74,7 @@ const getJsonFromDatabase = (db, query) => {
   console.log(query)
 
   return getJsonFromDb (db, {
-    selectorx: {
+    selector: {
       title: 'Roma'
     }})
 }
