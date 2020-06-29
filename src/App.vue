@@ -8,13 +8,11 @@
 </template>
 
 <script>
-// import HelloWorld from './pages/HelloWorld.vue'
 import Nav from './components/Nav'
 
 export default {
   name: 'App',
   components: {
-    // HelloWorld,
     'Nav':Nav
   },
   created () {

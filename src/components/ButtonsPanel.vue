@@ -3,6 +3,7 @@
     <div class="text-white">
       <h2>Gurka here</h2>
       <h3>File is {{ fileName }}</h3>
+      <h3>Json is: </h3>
       <div v-html="fileContent" />
     </div>
     <div class="container mx-auto max-w-5xl flex items-center h-full ">
@@ -25,11 +26,8 @@
 </template>
 
 <script>
-import fs from 'fs'
-import app from 'electron'
 
-  const dialog = app.remote.dialog;
-  const rendWin = app.remote.getCurrentWindow()
+import { getJsonFromFile } from '@/modules/habitat-requests'
 
 export default {
   name: "ButtonsPanel",
@@ -74,24 +72,15 @@ export default {
   },
   methods: {
     openFile: function () {
-      if (process.env.ORIGINAL_XDG_CURRENT_DESKTOP !== null) {
-        dialog.showOpenDialog(rendWin, {
-            filters: [
-              {name: 'JSON Files', extensions: ['json']}
-            ],
-            properties: [
-              'openFile',
-              // 'openDirectory', // for later, implementing result
-            ]
-          })
-          .then(file => {
-            if (!file.canceled) {
-              this.file = file
-              this.fileName = file.filePaths[0]
-              this.fileContent = fs.readFileSync(this.fileName, 'utf8')
-            }
-          })
-      }
+      getJsonFromFile ()
+      .then (result => {
+        const { filename, content } = result
+        this.fileName = filename
+        this.fileContent = content
+      })
+      .catch (e => {
+        this.fileContent = e.toString()
+      })
     }
   },
 }
