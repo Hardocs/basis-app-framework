@@ -1,5 +1,6 @@
 <template>
   <div>
+    <h2>Wha?</h2>
 <!--    <router-view>-->
 <!--      <router-link to="/">Homey</router-link>-->
 <!--      <router-link to="/data-view">Data Viewey</router-link>-->
@@ -64,6 +65,11 @@ export default {
         {
           name: "/data-view",
           label: "Data View",
+          type: 'local'
+        },
+        {
+          name: "/buttons-gurka",
+          label: "Buttons Gurka",
           type: 'local'
         },
         {
