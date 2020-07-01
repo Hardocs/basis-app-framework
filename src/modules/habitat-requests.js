@@ -35,9 +35,9 @@ const getJsonFromFile = () => {
             // errors will be returned as strings, just as content
             // *todo* thus we show them on screen, but should split out view as normal
             const content = fs.readFileSync(fileName, 'utf8')
-            resolve({ fileName: fileName, content: content })
+            resolve({ name: fileName, content: content })
           } else {
-            resolve({ fileName: 'Cancelled...', content: 'Cancelled...' })
+            resolve({ name: '(Cancelled...)', content: '' })
           }
         })
     } else {

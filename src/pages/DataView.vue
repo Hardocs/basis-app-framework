@@ -37,7 +37,11 @@ export default {
       console.log('info: ' + JSON.stringify(info))
     })
 
-    // *todo* discern expected use of id vs _id
+    // *todo* after discerning special matters about _id, we'll be changing this upsert api
+    // but you can use this version until we do - just give a  unique key for each
+    // record, in the second argument, i.e. 'wut' here...and keep in mind that the
+    // basis key here, the _id, is not what we will look up records by. That will be a
+    // normal field or files of your data, after such an index is created - see next step.
     upsertJsonToDatabase(this.db, 'wut', {
       title: 'Roma',
       description: 'A great true film  宽字符宽字符宽字符宽字符宽字符宽字符宽字符宽' +

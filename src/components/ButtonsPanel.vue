@@ -1,11 +1,6 @@
 <template>
   <div class="btns-bg">
-    <div class="text-white">
-      <h2>Gurka here</h2>
-      <h3>File is {{ fileName }}</h3>
-      <h3>Json is: </h3>
-      <div v-html="fileContent" />
-    </div>
+    <h2>Actions: </h2>
     <div class="container mx-auto max-w-5xl flex items-center h-full ">
       <div
         :key="item.label"
@@ -17,8 +12,7 @@
           <a :href="item.name" target="_blank">{{ item.label }}</a>
         </div>
         <div v-else>
-          <p @click="openFile">{{ item.label }}</p>
-<!--          <router-link :to="item.name">{{ item.label }}</router-link>-->
+          <p @click="item.action">{{ item.label }}</p>
         </div>
       </div>
     </div>
@@ -33,40 +27,19 @@ export default {
   name: "ButtonsPanel",
   data: function () {
     return {
-      file: null,
-      fileName: "(not yet)",
-      fileContent: "(not yet either)",
       items: [
         {
           name: "/",
-          label: "Open",
+          label: "Display Json File",
           type: 'local',
-          action: 'openFile'
+          action: this.openFile
         },
         {
-          name: "/data-view",
-          label: "Data View",
+          name: "/other",
+          label: "Another Example (not yet)",
           type: 'local',
-          action: ''
+          action: this.noOp
         },
-        {
-          name: "https://www.google.com/search?q=oceanic&source=lnms&tbm=isch",
-          label: "Panel",
-          type: 'remote',
-          action: ''
-        },
-        {
-          name: "/documentation",
-          label: "Documentation",
-          type: 'local',
-          action: ''
-        },
-        {
-          name: "/about",
-          label: "Hoola",
-          type: 'local',
-          action: ''
-        }
       ]
     }
   },
@@ -74,14 +47,13 @@ export default {
     openFile: function () {
       getJsonFromFile ()
       .then (result => {
-        const { filename, content } = result
-        this.fileName = filename
-        this.fileContent = content
+        this.$emit('showFile', result)
       })
       .catch (e => {
         this.fileContent = e.toString()
       })
-    }
+    },
+    noOp: () => {} // don't do arrows when you want to use this.anything
   },
 }
 </script>
