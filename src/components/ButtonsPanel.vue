@@ -53,7 +53,7 @@ export default {
         this.fileContent = e.toString()
       })
     },
-    noOp: () => {} // don't do arrows when you want to use this.anything
+    noOp: () => {} // but don't do arrows when you want to use this.anything
   },
 }
 </script>
