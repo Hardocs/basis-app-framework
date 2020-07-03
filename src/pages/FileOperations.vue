@@ -6,7 +6,7 @@
     <hr>
     <ButtonsPanel :jsonData="fileContent" v-on:showFile="showFile" v-on:savedFile="savedFile"/>
     <div v-if="filePath" class="text-json">
-      <h2>Gurkha here</h2>
+<!--      <h2>Gurkha here</h2>-->
       <h3>File is {{ filePath }}</h3>
       <h3>Json is: </h3>
       <!--
@@ -25,7 +25,7 @@ import ButtonsPanel from '@/components/ButtonsPanel';
 import WrapAnsi from 'wrap-ansi';
 
 export default {
-  name: "ButtonsGurkha",
+  name: "FileOperations",
   data: function () {
     return {
       filePath: null,

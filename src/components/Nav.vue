@@ -52,13 +52,13 @@ export default {
           type: 'local'
         },
         {
-          name: "/data-view",
-          label: "Data View",
+          name: "/data-operations",
+          label: "Data Operations",
           type: 'local'
         },
         {
-          name: "/buttons-gurkha",
-          label: "Buttons Gurkha",
+          name: "/file-operations",
+          label: "File Operations",
           type: 'local'
         },
         {

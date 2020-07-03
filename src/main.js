@@ -3,8 +3,8 @@ import VueRouter from 'vue-router'
 
 import App from './App.vue'
 import HelloWorld from './pages/HelloWorld'
-import DataView from './pages/DataView'
-import ButtonsGurkha from './pages/ButtonsGurkha'
+import DataView from './pages/DataOperations'
+import FileOperations from './pages/FileOperations'
 
 // tailwindcss config
 import '@/main.css'
@@ -16,8 +16,8 @@ Vue.use(VueRouter)
 const router = new VueRouter({
   routes: [
     { path: '/', component: HelloWorld },
-    { path: '/data-view', component: DataView },
-    { path: '/buttons-gurkha', component: ButtonsGurkha },
+    { path: '/data-operations', component: DataView },
+    { path: '/file-operations', component: FileOperations },
     { path: '*', redirect: '/'}
   ]
 })
