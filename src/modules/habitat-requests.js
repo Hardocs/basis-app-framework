@@ -35,9 +35,9 @@ const getJsonFromFile = () => {
             // errors will be returned as strings, just as content
             // *todo* thus we show them on screen, but should split out view as normal
             const content = fs.readFileSync(fileName, 'utf8')
-            resolve({ name: fileName, content: content })
+            resolve({ path: fileName, content: content })
           } else {
-            resolve({ name: '(Cancelled...)', content: '' })
+            resolve({ path: '(Cancelled...)', content: '' })
           }
         })
     } else {
@@ -48,7 +48,6 @@ const getJsonFromFile = () => {
 
 const putJsonToFile = (jsonData) => {
   return new Promise ((resolve, reject) => {
-    console.log('putJsonToFile:jsonData: ' + jsonData)
     if (process.env.ORIGINAL_XDG_CURRENT_DESKTOP !== null) {
       dialog.showSaveDialog(rendWin, {
         message: 'Save your Json file here: ',
@@ -67,7 +66,7 @@ const putJsonToFile = (jsonData) => {
             });
             resolve({ path: file.filePath, success: accomplished })
           } else {
-            resolve({ name: '(Cancelled...)', content: '' })
+            resolve({ path: '(Cancelled...)', content: '' })
           }
         })
     } else {

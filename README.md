@@ -1,7 +1,5 @@
 # vue-local-db
 
-I'm letting this be visible very early, rather much against my feeling for it, but let's try such a path. 
-
 The code here is getting nuch closer to a complete-enough framework demo and basis app.
 
 You can build and run it.

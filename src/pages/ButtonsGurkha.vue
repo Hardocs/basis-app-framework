@@ -2,10 +2,10 @@
   <span>
     <h2>Buttons With Actions -- try one...</h2>
     <hr>
-    <ButtonsPanel :jsonData="fileJson" v-on:showFile="showFile" v-on:saveFile="saveFile"/>
-    <div v-if="fileName" class="text-json">
+    <ButtonsPanel :jsonData="fileContent" v-on:showFile="showFile" v-on:savedFile="savedFile"/>
+    <div v-if="filePath" class="text-json">
       <h2>Gurkha here</h2>
-      <h3>File is {{ fileName }}</h3>
+      <h3>File is {{ filePath }}</h3>
       <h3>Json is: </h3>
       <!--
         n.b. _Never_ use v-html as follows, if you aren't absolutely certain
@@ -26,19 +26,21 @@ export default {
   name: "ButtonsGurkha",
   data: function () {
     return {
-      fileName: null,
+      filePath: null,
+      fileContent: null,
       fileJson: null
     }
   },
   methods: {
     showFile: function (fileData) {
-      this.fileName = fileData.name
+      this.filePath = fileData.path
       // remember the file is text, not JSON...
-      this.fileJson = this.screenFormatJson(this.textToJson(fileData.content))
+      this.fileContent = fileData.content
+      this.fileJson = this.screenFormatJson(this.textToJson(this.fileContent))
     },
-    saveFile: function (fileData) {
-      this.fileName = fileData.path
-      this.fileJson = fileData.success
+    savedFile: function (fileData) {
+      this.filePath = fileData.path
+      this.fileContent = fileData.content
     },
     textToJson: (fileText) => {
       try {

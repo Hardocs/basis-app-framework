@@ -35,9 +35,6 @@ export default {
       type: String
     }
   },
-  mounted: function () {
-    console.log ('ButtonsPane: jsonData: ' + this.jsonData)
-  },
   data: function () {
     return {
       items: [
@@ -66,19 +63,34 @@ export default {
     openFile: function () {
       getJsonFromFile ()
         .then (result => {
+          // console.log('open: ' + JSON.stringify(result))
           this.$emit('showFile', result)
         })
         .catch (e => {
+          const errResult = {
+            path: '(no path)',
+            content: '{ "error": ' + e.toString() + ' }'
+          }
+          this.$emit('showFile', errResult)
+
           this.fileContent = e.toString()
         })
     },
     saveFile: function () {
       putJsonToFile (this.jsonData)
         .then (result => {
-          this.$emit('showFile', result)
+          const fileResult = {
+            path: result.path,
+            content: this.jsonData,
+          }
+          this.$emit('savedFile', fileResult)
         })
         .catch (e => {
-          this.fileContent = e.toString()
+          const errResult = {
+            path: '(no path)',
+            content: '{ "error": ' + e.toString() + ' }'
+          }
+          this.$emit('savedFile', errResult)
         })
     },
     noOp: () => {} // but don't do arrows when you want to use this.anything
