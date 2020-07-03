@@ -1,7 +1,6 @@
 <template>
   <div class="btns-bg">
-    <h2>Actions: </h2>
-    <div class="container mx-auto max-w-5xl flex items-center h-full ">
+    <div class="container mx-auto max-w-5xl flex pb-4 items-center h-full ">
       <div
         :key="item.label"
         v-for="item in items"
@@ -40,13 +39,13 @@ export default {
       items: [
         {
           name: "/",
-          label: "Display Json File",
+          label: "Display a Json File",
           type: 'local',
           action: this.openFile
         },
         {
           name: "/",
-          label: "Save Json File from Screen",
+          label: "Save a Json File from Screen",
           type: 'local',
           action: this.saveFile
         },
@@ -63,7 +62,6 @@ export default {
     openFile: function () {
       getJsonFromFile ()
         .then (result => {
-          // console.log('open: ' + JSON.stringify(result))
           this.$emit('showFile', result)
         })
         .catch (e => {
@@ -72,8 +70,6 @@ export default {
             content: '{ "error": ' + e.toString() + ' }'
           }
           this.$emit('showFile', errResult)
-
-          this.fileContent = e.toString()
         })
     },
     saveFile: function () {
@@ -101,7 +97,7 @@ export default {
 <style scoped>
 
 .btns-bg {
-  background-color: darkslateblue;
+  background-color: #3d538b;
 }
 
 </style>

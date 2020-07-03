@@ -37,11 +37,20 @@ export default {
       console.log('info: ' + JSON.stringify(info))
     })
 
-    // *todo* after discerning special matters about _id, we'll be changing this upsert api
-    // but you can use this version until we do - just give a  unique key for each
-    // record, in the second argument, i.e. 'wut' here...and keep in mind that the
-    // basis key here, the _id, is not what we will look up records by. That will be a
-    // normal field or files of your data, after such an index is created - see next step.
+    // *todo* after working out some special matters about _id, there's a change
+    // in how this upsert api is intended to be used, but you can use this example
+    // until we get to that - just give a unique key in the second argument,
+    // e.g. 'wut' here, for each record you want to try out.
+    //
+    // There'll soon be a more elaborate DataView component replacing this initial
+    // one, which will demonstrate exactly how we'll actually do this.
+    //
+    // The basis point is that in a real situation, we'll always look up the record
+    // of interest with a query on one or more information properties, before
+    // updating it -- or discovering it doesn't exist, thus writing it for the first time.
+
+    // At the level of interaction that document databases interact, it makes entire
+    // sense to do that ourselves. Examples forthcoming...
     upsertJsonToDatabase(this.db, 'wut', {
       title: 'Roma',
       description: 'A great true film  宽字符宽字符宽字符宽字符宽字符宽字符宽字符宽' +
@@ -57,7 +66,7 @@ export default {
       console.log('index: ' + JSON.stringify(result))
       return getJsonFromDatabase(this.db, {
         selector: {
-          title: 'Roma'
+          title: 'Romax'
         }
       })
     }).then(result => {

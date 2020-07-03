@@ -1,6 +1,8 @@
 <template>
   <span>
-    <h2>Buttons With Actions -- try one...</h2>
+    <div class="w-full bg-title">
+    <h2 class="text-json">Buttons With Actions -- try one...</h2>
+    </div>
     <hr>
     <ButtonsPanel :jsonData="fileContent" v-on:showFile="showFile" v-on:savedFile="savedFile"/>
     <div v-if="filePath" class="text-json">
@@ -72,6 +74,9 @@ export default {
 </script>
 
 <style scoped>
+.bg-title {
+  background-color: #d6b668;
+}
 .text-json {
   color: #1d3557;
 }

@@ -3,6 +3,7 @@
 import PouchDb from 'pouchdb';
 import PouchDbFind from 'pouchdb-find';
 import PouchDbUpsert from 'pouchdb-upsert';
+import { v4 as uuidv4 } from 'uuid'
 
 PouchDb.plugin(PouchDbFind)
 PouchDb.plugin(PouchDbUpsert)
@@ -23,13 +24,18 @@ const createIndexOnDb = (db, index) => {
 
 const upsertJsonToDb = (db, key, data) => {
 
+  if (!key) {
+    key = uuidv4()
+  }
+
   return db.upsert(key,
     function (doc) {
       Object.assign(doc, data)
 
       // this count thing isn't needed, but useful from example, and if we
-      // should want to keep track of how many updates a data has had. Reve,
+      // should want to keep track of how many updates a data has had. Revs,
       // though, are the thing.
+      // *todo* also choices with future interesting things in mind...
       if (!doc.count) {
         doc.count = 0;
       }
