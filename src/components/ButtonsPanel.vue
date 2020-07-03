@@ -1,6 +1,6 @@
 <template>
   <div class="btns-bg">
-    <div class="container mx-auto max-w-5xl flex pb-4 items-center h-full ">
+    <div class="container mx-auto max-w-5xl flex xpb-4 items-center h-full ">
       <div
         :key="item.label"
         v-for="item in items"
