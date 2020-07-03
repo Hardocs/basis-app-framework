@@ -21,10 +21,23 @@
 
 <script>
 
-import { getJsonFromFile } from '@/modules/habitat-requests'
+import { getJsonFromFile, putJsonToFile } from '@/modules/habitat-requests'
 
 export default {
+
+  // n.b. Note that this component with ButtonGurka practices a normal no-Vuex way
+  // to interact between Vue parent and child
+
   name: "ButtonsPanel",
+  props: {
+    jsonData: {
+      default: '{ "none": "yet" }',
+      type: String
+    }
+  },
+  mounted: function () {
+    console.log ('ButtonsPane: jsonData: ' + this.jsonData)
+  },
   data: function () {
     return {
       items: [
@@ -35,23 +48,38 @@ export default {
           action: this.openFile
         },
         {
-          name: "/other",
-          label: "Another Example (not yet)",
+          name: "/",
+          label: "Save Json File from Screen",
           type: 'local',
-          action: this.noOp
+          action: this.saveFile
         },
+        // {
+        //   name: "/other",
+        //   label: "Another Example (not yet)",
+        //   type: 'local',
+        //   action: this.noOp
+        // },
       ]
     }
   },
   methods: {
     openFile: function () {
       getJsonFromFile ()
-      .then (result => {
-        this.$emit('showFile', result)
-      })
-      .catch (e => {
-        this.fileContent = e.toString()
-      })
+        .then (result => {
+          this.$emit('showFile', result)
+        })
+        .catch (e => {
+          this.fileContent = e.toString()
+        })
+    },
+    saveFile: function () {
+      putJsonToFile (this.jsonData)
+        .then (result => {
+          this.$emit('showFile', result)
+        })
+        .catch (e => {
+          this.fileContent = e.toString()
+        })
     },
     noOp: () => {} // but don't do arrows when you want to use this.anything
   },

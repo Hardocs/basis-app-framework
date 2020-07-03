@@ -61,17 +61,8 @@ export default {
         }
       })
     }).then(result => {
-
-        // this form of stringify gives nice indented lines,
-        // but we still have to wrap the long ones, since
-        // we're presenting in <pre>
-        // *todo* later, hook up the wrap width to screen viewport
-        //  width, for the full effect.
-        const data = this.responsiveWrap(
-            JSON.stringify(result, null, 2),
-          80)
-        this.pouchData = '<pre>\n' + data + '\n</pre>'
-
+        // *todo* later, hook up the wrap width to screen viewport width, for full effect
+        this.pouchData = this.screenFormatJson(result)
     }).catch(err => {
       const msg = 'DataView: ' + err
       console.log(msg)
@@ -81,6 +72,15 @@ export default {
   methods: {
     responsiveWrap: (text, width) => {
       return WrapAnsi(text, width, { trim: false, hard: true})
+    },
+    screenFormatJson: function (text, width = 80) {
+      // this form of stringify gives nice indented lines,
+      // but we still have to wrap the long ones, since
+      // we're presenting in <pre>
+      const data = this.responsiveWrap(
+        JSON.stringify(text, null, 2),
+        width)
+      return '<pre>\n' + data + '\n</pre>'
     }
   }
 }

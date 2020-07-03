@@ -46,6 +46,36 @@ const getJsonFromFile = () => {
   })
 }
 
+const putJsonToFile = (jsonData) => {
+  return new Promise ((resolve, reject) => {
+    console.log('putJsonToFile:jsonData: ' + jsonData)
+    if (process.env.ORIGINAL_XDG_CURRENT_DESKTOP !== null) {
+      dialog.showSaveDialog(rendWin, {
+        message: 'Save your Json file here: ',
+        properties: [
+          'createDirectory ',
+          'showOverwriteConfirmation ',
+        ],
+        filters: [
+          {name: 'JSON Files', extensions: ['json']}
+        ],
+        })
+        .then(file => {
+          if (!file.canceled) {
+            const accomplished = fs.writeFileSync(file.filePath, jsonData, {
+              encoding: 'utf8',
+            });
+            resolve({ path: file.filePath, success: accomplished })
+          } else {
+            resolve({ name: '(Cancelled...)', content: '' })
+          }
+        })
+    } else {
+      reject('putJsonToFile:error: Not allowed to put file from browser')
+    }
+  })
+}
+
 const createOrOpenDatabase = (dbName, locale = 'electron-browser') => {
   let db = null
   switch(locale) {
@@ -85,6 +115,7 @@ const upsertJsonToDatabase = (db, key, data) => {
 
 export {
   getJsonFromFile,
+  putJsonToFile,
   createOrOpenDatabase,
   getStatusOfDatabase,
   upsertJsonToDatabase,

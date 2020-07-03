@@ -4,7 +4,7 @@ import VueRouter from 'vue-router'
 import App from './App.vue'
 import HelloWorld from './pages/HelloWorld'
 import DataView from './pages/DataView'
-import ButtonsGurka from './pages/ButtonsGurka'
+import ButtonsGurkha from './pages/ButtonsGurkha'
 
 // tailwindcss config
 import '@/main.css'
@@ -17,8 +17,7 @@ const router = new VueRouter({
   routes: [
     { path: '/', component: HelloWorld },
     { path: '/data-view', component: DataView },
-    { path: '/buttons-gurka', component: ButtonsGurka },
-    // { path: '/viewer', redirect: 'https://narrationsd.com' },
+    { path: '/buttons-gurkha', component: ButtonsGurkha },
     { path: '*', redirect: '/'}
   ]
 })
@@ -26,8 +25,4 @@ const router = new VueRouter({
 new Vue({
   router,
   render: h => h(App),
-  // created() {
-  //   // Prevent blank screen in Electron builds
-  //   this.$router.push('/data-view')
-  // }
 }).$mount('#app')

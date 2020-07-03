@@ -1,8 +1,11 @@
 <template>
   <div>
-<!-- Totally hacked in here; template the least... -->
-<!--<div style="height: 100px"><h2>Spacer temp</h2></div>-->
-    <div class="navbar nav-bg bg-opacity-100 w-screen h-16 xfixed top-0 text-white hidden md:block z-20">
+<!--
+  note on tailwind classes:
+    - removed hidden: because no phone version in this mockup, so we keep showing main nav
+    - removed fixed: to allow proper vertical flow in to of overall layout
+   -->
+    <div class="navbar nav-bg bg-opacity-100 w-screen h-16 top-0 text-white md:block z-20">
       <div class="container mx-auto max-w-5xl flex items-center h-full ">
        <nav class="flex">
          <div
@@ -38,24 +41,11 @@
 
 <script>
 
-// n.b. totally hacked in here, not cleaned yet from CombatCovid Nav beginnings
-
-// import { mapState, mapMutations } from "vuex";
-// import { mdiDotsVertical, mdiDotsHorizontal } from "@mdi/js";
-// import BookmarksMenu from "./BookmarksMenu";
-// import store from "~/store";
-
 export default {
   name: "Nav",
   // components: { BookmarksMenu },
   data: function() {
     return {
-      // scrollPosition: null,
-      // homePage: false,
-      // isOpen: false,
-      // ccwhIcon: "/resources/images/combatcovid.png",
-      // extrasIcon: mdiDotsVertical,
-      // designIcon: mdiDotsHorizontal,
       items: [
         { name: "/",
           label: "Home",
@@ -67,8 +57,8 @@ export default {
           type: 'local'
         },
         {
-          name: "/buttons-gurka",
-          label: "Buttons Gurka",
+          name: "/buttons-gurkha",
+          label: "Buttons Gurkha",
           type: 'local'
         },
         {
@@ -87,69 +77,9 @@ export default {
           type: 'local'
         }
       ]
-    };
-  },
-  computed: {
-    // ...mapState(["currentPage"]),
-    // hideWhen: function() {
-    //   if (typeof window !== "undefined") {
-    //     const w =
-    //       window.innerWidth ||
-    //       document.documentElement.clientWidth ||
-    //       document.body.clientWidth;
-    //     return w <= 640;
-    //   } else {
-    //     return false;
-    //   }
-    // },
-    // designRemembered: function() {
-    //   return null // store.getters.lastRepoName;
-    // },
-    // currentPage:() => {
-    //   return `${window.location.pathname}`;
-    // }
-  },
-  methods: {
-    // changeOnScroll() {
-    //   /** Here we do it when is mounted with vanilla javascript */
-    //   let nav = document.getElementsByClassName("navbar");
-    //   let state = window.scrollY;
-    //
-    //   const isHomePage = window.location.pathname === "/";
-    //   if (state > 20 && isHomePage) {
-    //     nav.forEach(item => item.classList.add("bg-primary-100"));
-    //   } else {
-    //     if (state < 20 && isHomePage) {
-    //       nav.forEach(item => item.classList.remove("bg-primary-100"));
-    //     }
-    //   }
-    // },
-    // toggleMenu: function() {
-    //   this.isOpen = !this.isOpen;
-    // },
-    // setCurrentPage(){
-    //   // store.dispatch('setPagePath', this.currentPage) // _never_ commit directly from Vue...
-    // }
-  },
-  mounted() {
-    // Totally hacked in here, to remove prior activity from CombatCovid Nav basis...
-
-    // this.setCurrentPage();
-    // let nav = document.getElementsByClassName("navbar");
-    // let home = this.$el.querySelector("#Home");
-    // // console.log(home.classList.contains("font-semibold"));
-    // if (home.classList.contains("font-semibold")) {
-    //   window.addEventListener("scroll", this.changeOnScroll);
-    // }
-    // if (window.location.pathname !== "/") {
-    //   nav.forEach(item => item.classList.add("bg-primary-100"));
-    // }
-    // // else if(home.classList.contains('font-semibold')== false){
-    // //   nav.classList.remove('bg-image')
-    // //   // window.removeEventListener('scroll', this.changeOnScroll);
-    // // }
+    }
   }
-};
+}
 </script>
 
 <style lang="scss" scoped>

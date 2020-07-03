@@ -1,8 +1,6 @@
 <template>
   <div id="app">
     <Nav />
-<!--    <img alt="Vue logo" src="./assets/logo.png" style="margin: 95px auto 0 auto">-->
-<!--    <HelloWorld msg="Welcome to Your Vue Local Db App (very preliminary...)"/>-->
     <router-view/>
   </div>
 </template>
@@ -13,7 +11,7 @@ import Nav from './components/Nav'
 export default {
   name: 'App',
   components: {
-    'Nav':Nav
+    'Nav': Nav
   },
   created () {
     console.log ('App ... created')
@@ -28,6 +26,7 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  /*margin-top: 60px;*/
+  background-color: lightgoldenrodyellow;
+  min-height: 100vh;
 }
 </style>
