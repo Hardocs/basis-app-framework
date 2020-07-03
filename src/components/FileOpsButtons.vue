@@ -1,7 +1,9 @@
 <template>
   <div class="btns-bg">
     <div class="container mx-auto max-w-5xl flex xpb-4 items-center h-full ">
+      <!-- be sure to use the noOp action when type is remote... -->
       <div
+        @click="item.action"
         :key="item.label"
         v-for="item in items"
         active-class="p-4 mx-2 text-primary-25 hover:text-blue-100"
@@ -11,7 +13,7 @@
           <a :href="item.name" target="_blank">{{ item.label }}</a>
         </div>
         <div v-else>
-          <p @click="item.action">{{ item.label }}</p>
+          <p class="cursor-p" @click="item.action">{{ item.label }}</p>
         </div>
       </div>
     </div>
@@ -27,7 +29,7 @@ export default {
   // n.b. Note that this component with ButtonGurka practices a normal no-Vuex way
   // to interact between Vue parent and child
 
-  name: "ButtonsPanel",
+  name: "FileOpsButtons",
   props: {
     jsonData: {
       default: '{ "none": "yet" }',
@@ -98,6 +100,10 @@ export default {
 
 .btns-bg {
   background-color: #3d538b;
+}
+
+.cursor-p { /* because tailwind cursor-pointer won't take care of it */
+  cursor:pointer;
 }
 
 </style>

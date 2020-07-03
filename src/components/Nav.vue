@@ -4,11 +4,14 @@
   note on tailwind classes:
     - removed hidden: because no phone version in this mockup, so we keep showing main nav
     - removed fixed: to allow proper vertical flow in to of overall layout
+    - note that adding the click handler lets the full button act like router-link,
+      before any more complex methods, esp. as may be proposed for Vue 3
    -->
     <div class="navbar nav-bg bg-opacity-100 w-screen h-16 top-0 text-white md:block z-20">
       <div class="container mx-auto max-w-5xl flex items-center h-full ">
        <nav class="flex">
          <div
+            @click="$router.push(item.name)"
             :key="item.label"
             v-for="item in items"
             active-class="p-4 mx-2 text-primary-25 hover:text-blue-100"
@@ -90,7 +93,7 @@ export default {
   color: red !important;
 }
 
-.router-link-active {
+.router-link-exact-active { /* must be exact, or you light home always */
   color: lightseagreen;
 }
 

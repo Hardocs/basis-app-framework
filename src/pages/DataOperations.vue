@@ -1,7 +1,8 @@
 <template>
   <span>
-    <h2>Data View</h2>
-    <hr>
+    <div class="bg-title">
+      <h2>Data View</h2>
+    </div>
     <div class="json-data" v-html="pouchData"></div>
     <!--    <div><h3>{{ pouchData }}</h3></div>-->
   </span>
@@ -96,6 +97,10 @@ export default {
 </script>
 
 <style scoped>
+.bg-title {
+  background-color: #d6b668;
+}
+
 .json-data {
   text-align: left;
   white-space: normal;

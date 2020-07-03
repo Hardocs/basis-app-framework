@@ -4,11 +4,12 @@
     <h2 class="text-json">Buttons With Actions -- try one...</h2>
     </div>
     <hr>
-    <ButtonsPanel :jsonData="fileContent" v-on:showFile="showFile" v-on:savedFile="savedFile"/>
+    <FileOpsButtons :jsonData="fileContent" v-on:showFile="showFile" v-on:savedFile="savedFile"/>
     <div v-if="filePath" class="text-json">
-<!--      <h2>Gurkha here</h2>-->
-      <h3>File is {{ filePath }}</h3>
-      <h3>Json is: </h3>
+      <div class="bg-file-display text-white">
+        <h3>File is {{ filePath }}</h3>
+        <h3>Json is: </h3>
+      </div>
       <!--
         n.b. _Never_ use v-html as follows, if you aren't absolutely certain
         that the content is safe...as for example raw web content never can be.
@@ -21,7 +22,7 @@
 </template>
 
 <script>
-import ButtonsPanel from '@/components/ButtonsPanel';
+import FileOpsButtons from '@/components/FileOpsButtons';
 import WrapAnsi from 'wrap-ansi';
 
 export default {
@@ -68,7 +69,7 @@ export default {
     }
   },
   components: {
-    ButtonsPanel
+    FileOpsButtons
   }
 }
 </script>
@@ -76,6 +77,9 @@ export default {
 <style scoped>
 .bg-title {
   background-color: #d6b668;
+}
+.bg-file-display {
+  background-color: teal;
 }
 .text-json {
   color: #1d3557;
