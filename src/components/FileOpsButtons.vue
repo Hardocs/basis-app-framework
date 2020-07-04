@@ -97,13 +97,10 @@ export default {
 </script>
 
 <style scoped>
-
 .btns-bg {
   background-color: #3d538b;
 }
-
 .cursor-p { /* because tailwind cursor-pointer won't take care of it */
   cursor:pointer;
 }
-
 </style>

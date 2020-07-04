@@ -11,19 +11,14 @@
       <div class="container mx-auto max-w-5xl flex items-center h-full ">
        <nav class="flex">
          <div
-            @click="$router.push(item.name)"
+            @click="handleMenu(item)"
             :key="item.label"
             v-for="item in items"
             active-class="p-4 mx-2 text-primary-25 hover:text-blue-100"
             class="p-2 hover:bg-primary-25 rounded-md mx-2 text-yellow-100 hover:font-semibold"
           >
-           <div v-if="item.type === 'remote'">
-             <a :href="item.name" target="_blank">{{ item.label }}</a>
-           </div>
-           <div v-else>
-             <router-link :to="item.name">{{ item.label }}</router-link>
-           </div>
-          </div>
+           <p class="cursor-p">{{ item.label }}</p>
+        </div>
        </nav>
       </div>
     </div>
@@ -81,6 +76,20 @@ export default {
         }
       ]
     }
+  },
+  methods: {
+    handleMenu (item) {
+      switch (item.type) {
+        case 'local':
+          this.$router.push(item.name)
+          break
+
+        case 'remote':
+        default:
+          window.open (item.name, '_blank')
+          break
+      }
+    }
   }
 }
 </script>
@@ -112,5 +121,8 @@ export default {
   to {
     transform: translateX(0);
   }
+}
+.cursor-p { /* because tailwind cursor-pointer won't take care of it */
+  cursor:pointer;
 }
 </style>
