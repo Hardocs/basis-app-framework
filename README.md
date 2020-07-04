@@ -1,12 +1,12 @@
-# vue-local-db
+# basis-app-framework
 
-The code here is getting nuch closer to a complete-enough framework demo and basis app.
+n.b. This Readme is already out of date, and will get a rewrite next week as I complete this initial framework basis with individual data operations and activities, so all is clear.
 
-You can build and run it.
+You can still build and run it, and it will be parallel or better to the latest installer.
 
-It will run, just as the installer version did.
+We do have a number of nice things added, and as of today, many operations are smoothed.
 
-(fixed now)
+(fixes for these in now, if I had to back out one or two for a while. Even in developing electron:serve mode, however, no surprises now, matters just work. You can close the developer tools pane, when you don't want them.)
 ~~(many teething issues with starting window, extra 'slim' menubar etc.)~~
 
 ## Now, what is good?
