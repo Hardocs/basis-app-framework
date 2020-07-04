@@ -1,7 +1,7 @@
 <template>
   <div class="hello">
-    <img alt="Vue logo" src="@/assets/logo.png" style="margin: 95px auto 0 auto">
-    <h1 class="font-bold text-primary-100 mt-2">Welcome to the Hardocs Basis App</h1>
+    <img alt="Vue logo" src="@/assets/icons/png/hardocs96.png" style="width: 96px; margin: 24px auto 0 auto">
+    <h1 class="font-bold text-primary-100 mt-2">Welcome to the Hardocs Framework Basis App</h1>
     <br/>
     <h1>{{ msg }}</h1>
     <br>

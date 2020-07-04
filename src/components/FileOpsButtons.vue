@@ -13,7 +13,7 @@
           <a :href="item.name" target="_blank">{{ item.label }}</a>
         </div>
         <div v-else>
-          <p class="cursor-p" @click="item.action">{{ item.label }}</p>
+          <p class="cursor-p">{{ item.label }}</p>
         </div>
       </div>
     </div>

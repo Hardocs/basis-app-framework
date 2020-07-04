@@ -1,6 +1,7 @@
 'use strict'
 
 import { app, protocol, BrowserWindow } from 'electron'
+import path from 'path'
 import {
   createProtocol,
 } from 'vue-cli-plugin-electron-builder/lib'
@@ -27,6 +28,7 @@ function createWindow() {
       width: 1200,
       height: 700,
       frame: true, // *todo* until we make our own close box etc., then false
+      icon: path.join(__dirname, 'assets/icons/png/hardocs64.png'),
       webPreferences: {
         // Use pluginOptions.nodeIntegration, leave this alone
         // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
