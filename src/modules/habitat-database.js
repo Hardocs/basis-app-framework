@@ -49,11 +49,16 @@ const getJsonFromDb = (db, query) => {
   return db.find(query)
 }
 
+const removeJsonFromDb = (db, record) => {
+  return db.remove(record)
+}
+
 export {
   createOrOpenDb,
   getStatusFromDb,
   createIndexOnDb,
   upsertJsonToDb,
-  getJsonFromDb
+  getJsonFromDb,
+  removeJsonFromDb
 }
 

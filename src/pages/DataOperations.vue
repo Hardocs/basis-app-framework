@@ -1,34 +1,41 @@
 <template>
   <span>
+    <DataOpsButtons
+      :jsonData="currentData"
+      v-on:removeJson="removeCurrentJson"
+    />
     <div class="bg-title">
       <h2>Data View</h2>
     </div>
-    <div class="json-data" v-html="pouchData"></div>
-    <!--    <div><h3>{{ pouchData }}</h3></div>-->
+    <div class="json-data" v-html="screenText"></div>
+    <!--    <div><h3>{{ screenText }}</h3></div>-->
   </span>
 </template>
 
 <script>
 
 import WrapAnsi from 'wrap-ansi'
+import DataOpsButtons from '../components/DataOpsButtons'
 import {
   createOrOpenDatabase,
   getStatusOfDatabase,
   getJsonFromDatabase,
   upsertJsonToDatabase,
-  createIndexOnDatabase
+  createIndexOnDatabase,
+  removeJsonFromDatabase
 } from '@/modules/habitat-requests'
 
 export default {
   name: "DataView",
   data: function () {
     return {
-      pouchData: 'Ready...',
+      currentData: null,
+      screenText: 'Ready...',
       db: null
     }
   },
   created: function () {
-    this.pouchData = 'Searching...'
+    this.screenText = 'Searching...'
     const dbName = 'hard-begin'
 
     this.db = createOrOpenDatabase(dbName)
@@ -67,19 +74,47 @@ export default {
       console.log('index: ' + JSON.stringify(result))
       return getJsonFromDatabase(this.db, {
         selector: {
-          title: 'Romax'
+          title: 'Roma'
         }
       })
     }).then(result => {
         // *todo* later, hook up the wrap width to screen viewport width, for full effect
-        this.pouchData = this.screenFormatJson(result)
+      this.currentData = result
+      this.screenText = this.screenFormatJson(result)
     }).catch(err => {
       const msg = 'DataView: ' + err
       console.log(msg)
-      this.pouchData = msg
+      this.screenText = msg
     })
   },
   methods: {
+    removeCurrentJson (query) {
+      getJsonFromDatabase(this.db, query)
+      .then(result => {
+        const records = result.docs
+        console.log('removeCurrentJson:records: ' + JSON.stringify(records))
+        // *todo* this is a beginning on where it gets tricky, and in dimensions: explain!
+        // and thus why we use the remove name, to remind considerations...
+        return removeJsonFromDatabase (this.db, records[0])
+      })
+      .then(result => {
+        console.log('Instructive: removal: ' + JSON.stringify(result))
+        return getJsonFromDatabase(this.db, {
+          selector: {
+            title: 'Roma'
+          }
+        })
+      })
+      .then(result => {
+        this.currentData = result
+        this.screenText = this.screenFormatJson(result)
+      })
+      .catch (err => {
+        const msg = 'Remove Json: ' + err
+        console.log(msg)
+        this.screenText = msg
+      })
+    },
     responsiveWrap: (text, width) => {
       return WrapAnsi(text, width, { trim: false, hard: true})
     },
@@ -92,6 +127,9 @@ export default {
         width)
       return '<pre>\n' + data + '\n</pre>'
     }
+  },
+  components: {
+    DataOpsButtons
   }
 }
 </script>

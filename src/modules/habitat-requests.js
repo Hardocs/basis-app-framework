@@ -1,12 +1,16 @@
 // this begins the module for all data requests (and any saves), which abstracts
-// and simplifies any interaction with the underlying filesystem or database
+// and simplifies any interaction with the underlying filesystem or database.
+// This in turn allows different habutat-database drivers to be used in future,
+// employing for example CombatCovid or other security motifs, without changes
+// to Hardocs application code
 
 import {
   createOrOpenDb,
   getStatusFromDb,
   createIndexOnDb,
   upsertJsonToDb,
-  getJsonFromDb
+  getJsonFromDb,
+  removeJsonFromDb
 } from '@/modules/habitat-database'
 
 import fs from 'fs'
@@ -112,6 +116,10 @@ const upsertJsonToDatabase = (db, key, data) => {
   return upsertJsonToDb(db, key, data)
 }
 
+const removeJsonFromDatabase = (db, record) => {
+  return removeJsonFromDb(db, record)
+}
+
 export {
   getJsonFromFile,
   putJsonToFile,
@@ -119,5 +127,6 @@ export {
   getStatusOfDatabase,
   upsertJsonToDatabase,
   createIndexOnDatabase,
-  getJsonFromDatabase
+  getJsonFromDatabase,
+  removeJsonFromDatabase
 }

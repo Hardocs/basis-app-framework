@@ -26,26 +26,30 @@ import { getJsonFromFile, putJsonToFile } from '@/modules/habitat-requests'
 
 export default {
 
-  // n.b. Note that this component with FileOperations practices a normal no-Vuex way
+  // n.b. Note that this component with DataOperations  practices a normal no-Vuex way
   // to interact between Vue parent and child
 
-  name: "FileOpsButtons",
+  name: "DataOpsButtons",
   props: {
-    jsonString: {
-      default: '{ "none": "yet" }',
-      type: String
+    jsonData: {
+      // default: () => { none: "yet" },
+      type: Object
     }
   },
   data: function () {
     return {
       items: [
         {
-          label: "Display a Json File",
-          action: this.openFile
+          label: "Create Record",
+          action: this.createRecord
         },
         {
-          label: "Save a Json File from Screen",
-          action: this.saveFile
+          label: "Find Record",
+          action: this.findRecord
+        },
+        {
+          label: "Remove Current Record...",
+          action: this.removeRecord
         },
         // {
         //   label: "Another Example (not yet)",
@@ -69,11 +73,11 @@ export default {
         })
     },
     saveFile: function () {
-      putJsonToFile (this.jsonString)
+      putJsonToFile (this.jsonData)
         .then (result => {
           const fileResult = {
             path: result.path,
-            content: this.jsonString,
+            content: this.jsonData,
           }
           this.$emit('savedFile', fileResult)
         })
@@ -84,6 +88,21 @@ export default {
           }
           this.$emit('savedFile', errResult)
         })
+    },
+    createRecord: function () {
+
+    },
+    findRecord: function () {
+
+    },
+    removeRecord: function () {
+      // fixed select for demo
+      // *todo* in future, bother to provide keyValue in form, maybe keyName?
+      this.$emit('removeJson', {
+        selector: {
+          title: 'Roma'
+        }
+      })
     },
     noOp: () => {} // but don't do arrows when you want to use this.anything
   },
