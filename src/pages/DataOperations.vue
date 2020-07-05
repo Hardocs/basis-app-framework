@@ -1,7 +1,8 @@
 <template>
   <span>
     <DataOpsButtons
-      :jsonData="currentData"
+      :json-data="currentData"
+      :operation-result="operationResult"
       v-on:removeJson="removeCurrentJson"
     />
     <div class="bg-title">
@@ -31,6 +32,7 @@ export default {
     return {
       currentData: null,
       screenText: 'Ready...',
+      operationResult: '',
       db: null
     }
   },
@@ -89,6 +91,7 @@ export default {
   },
   methods: {
     removeCurrentJson (query) {
+      this.operationResult = ''
       getJsonFromDatabase(this.db, query)
       .then(result => {
         const records = result.docs
@@ -98,7 +101,9 @@ export default {
         return removeJsonFromDatabase (this.db, records[0])
       })
       .then(result => {
-        console.log('Instructive: removal: ' + JSON.stringify(result))
+        this.operationResult = JSON.stringify(result)
+        console.log('Instructive: removal: ' + this.operationResult)
+
         return getJsonFromDatabase(this.db, {
           selector: {
             title: 'Roma'
@@ -112,7 +117,7 @@ export default {
       .catch (err => {
         const msg = 'Remove Json: ' + err
         console.log(msg)
-        this.screenText = msg
+        this.operationResult = msg
       })
     },
     responsiveWrap: (text, width) => {

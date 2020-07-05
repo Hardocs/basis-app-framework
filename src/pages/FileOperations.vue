@@ -6,7 +6,7 @@
     <hr>
     <FileOpsButtons :jsonData="fileContent" v-on:showFile="showFile" v-on:savedFile="savedFile"/>
     <div v-if="filePath" class="text-json">
-      <div class="bg-file-display text-white">
+      <div class="bg-display text-white">
         <h3>File is {{ filePath }}</h3>
         <h3>Json is: </h3>
       </div>
@@ -78,7 +78,7 @@ export default {
 .bg-title {
   background-color: #d6b668;
 }
-.bg-file-display {
+.bg-display {
   background-color: teal;
 }
 .text-json {

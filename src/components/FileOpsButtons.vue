@@ -1,5 +1,5 @@
 <template>
-  <div class="btns-bg">
+  <div class="bg-btns">
     <div class="container mx-auto max-w-5xl flex xpb-4 items-center h-full ">
       <!-- be sure to use the noOp action when type is remote... -->
       <div
@@ -91,7 +91,7 @@ export default {
 </script>
 
 <style scoped>
-.btns-bg {
+.bg-btns {
   background-color: #3d538b;
 }
 .cursor-p { /* because tailwind cursor-pointer won't take care of it */

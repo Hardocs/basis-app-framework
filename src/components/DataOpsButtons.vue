@@ -1,5 +1,5 @@
 <template>
-  <div class="btns-bg">
+  <div class="bg-btns">
     <div class="container mx-auto max-w-5xl flex xpb-4 items-center h-full ">
       <!-- be sure to use the noOp action when type is remote... -->
       <div
@@ -16,6 +16,9 @@
           <p class="cursor-p">{{ item.label }}</p>
         </div>
       </div>
+    </div>
+    <div v-if="operationResult" class="flex p-4 content-start text-left bg-display">
+      <h2 class="px-4 text-white">Result: {{ operationResult }}</h2>
     </div>
   </div>
 </template>
@@ -34,6 +37,10 @@ export default {
     jsonData: {
       // default: () => { none: "yet" },
       type: Object
+    },
+    operationResult: {
+      default: '',
+      type: String
     }
   },
   data: function () {
@@ -44,12 +51,12 @@ export default {
           action: this.createRecord
         },
         {
-          label: "Find Record",
-          action: this.findRecord
-        },
-        {
           label: "Remove Current Record...",
           action: this.removeRecord
+        },
+        {
+          label: "Find Record",
+          action: this.findRecord
         },
         // {
         //   label: "Another Example (not yet)",
@@ -90,13 +97,17 @@ export default {
         })
     },
     createRecord: function () {
-
-    },
-    findRecord: function () {
-
+      // fixed record for initial demo
+      // *todo* in future, bother to provide keyValue in form, maybe keyName?
+      this.$emit('createJson', 'wut', {
+        title: 'Roma',
+        description: 'A great true film  宽字符宽字符宽字符宽字符宽字符宽字符宽字符宽' +
+          '字符宽字符宽字符宽字符宽字符宽字符宽字符宽字符宽字符 of Mexico, from accurate ' +
+          'lives, in not quite recent times.'
+      })
     },
     removeRecord: function () {
-      // fixed select for demo
+      // fixed select for initial demo
       // *todo* in future, bother to provide keyValue in form, maybe keyName?
       this.$emit('removeJson', {
         selector: {
@@ -104,14 +115,20 @@ export default {
         }
       })
     },
+    findRecord: function () {
+
+    },
     noOp: () => {} // but don't do arrows when you want to use this.anything
   },
 }
 </script>
 
 <style scoped>
-.btns-bg {
+.bg-btns {
   background-color: #3d538b;
+}
+.bg-display {
+  background-color: teal;
 }
 .cursor-p { /* because tailwind cursor-pointer won't take care of it */
   cursor:pointer;
