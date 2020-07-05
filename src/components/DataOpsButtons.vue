@@ -18,7 +18,7 @@
       </div>
     </div>
     <div v-if="operationResult" class="flex p-4 content-start text-left bg-display">
-      <h2 class="px-4 text-white">Result: {{ operationResult }}</h2>
+      <h2 class="px-4 text-white">Result: {{ resultString }}</h2>
     </div>
   </div>
 </template>
@@ -39,8 +39,8 @@ export default {
       type: Object
     },
     operationResult: {
-      default: '',
-      type: String
+      default: () => { },
+      type: Object
     }
   },
   data: function () {
@@ -63,6 +63,11 @@ export default {
         //   action: this.noOp
         // },
       ]
+    }
+  },
+  computed: {
+    resultString: function () {
+      return JSON.stringify(this.operationResult)
     }
   },
   methods: {

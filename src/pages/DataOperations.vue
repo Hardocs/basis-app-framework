@@ -3,6 +3,7 @@
     <DataOpsButtons
       :json-data="currentData"
       :operation-result="operationResult"
+      v-on:createJson="createJson"
       v-on:removeJson="removeCurrentJson"
     />
     <div class="bg-title">
@@ -27,12 +28,12 @@ import {
 } from '@/modules/habitat-requests'
 
 export default {
-  name: "DataView",
+  name: "DataOperations",
   data: function () {
     return {
       currentData: null,
       screenText: 'Ready...',
-      operationResult: '',
+      operationResult: {},
       db: null
     }
   },
@@ -52,7 +53,7 @@ export default {
     // until we get to that - just give a unique key in the second argument,
     // e.g. 'wut' here, for each record you want to try out.
     //
-    // There'll soon be a more elaborate DataView component replacing this initial
+    // There'll soon be a more elaborate DataOperations component replacing this initial
     // one, which will demonstrate exactly how we'll actually do this.
     //
     // The basis point is that in a real situation, we'll always look up the record
@@ -84,24 +85,46 @@ export default {
       this.currentData = result
       this.screenText = this.screenFormatJson(result)
     }).catch(err => {
-      const msg = 'DataView: ' + err
+      const msg = 'DataOperations: ' + err
       console.log(msg)
       this.screenText = msg
     })
   },
   methods: {
+    createJson (key, record) {
+      this.operationResult = {}
+      upsertJsonToDatabase(this.db, key, record)
+        .then(result => {
+          this.operationResult = result
+        })
+        .then(() => {
+          return getJsonFromDatabase(this.db, {
+            selector: {
+              title: 'Roma'
+            }
+          })
+        })
+        .then(result => {
+          this.currentData = result
+          this.screenText = this.screenFormatJson(result)
+        })
+        .catch(err => {
+          const msg = 'Create Json: ' + err
+          console.log(msg)
+          this.operationResult = { error: msg }
+        })
+    },
     removeCurrentJson (query) {
-      this.operationResult = ''
+      this.operationResult = {}
       getJsonFromDatabase(this.db, query)
       .then(result => {
         const records = result.docs
-        console.log('removeCurrentJson:records: ' + JSON.stringify(records))
         // *todo* this is a beginning on where it gets tricky, and in dimensions: explain!
         // and thus why we use the remove name, to remind considerations...
         return removeJsonFromDatabase (this.db, records[0])
       })
       .then(result => {
-        this.operationResult = JSON.stringify(result)
+        this.operationResult = result
         console.log('Instructive: removal: ' + this.operationResult)
 
         return getJsonFromDatabase(this.db, {
@@ -117,7 +140,7 @@ export default {
       .catch (err => {
         const msg = 'Remove Json: ' + err
         console.log(msg)
-        this.operationResult = msg
+        this.operationResult = { error: msg }
       })
     },
     responsiveWrap: (text, width) => {
