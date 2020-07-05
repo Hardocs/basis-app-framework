@@ -12,6 +12,7 @@
   },
   "main": "background.js",
   "dependencies": {
+    "ajv": "^6.12.2",
     "autoprefixer": "^9.8.4",
     "core-js": "^3.6.5",
     "fs": "0.0.1-security",

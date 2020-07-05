@@ -5,6 +5,8 @@ import App from './App.vue'
 import HelloWorld from './pages/HelloWorld'
 import DataView from './pages/DataView'
 import ButtonsGurkha from './pages/ButtonsGurkha'
+import Form from './pages/Form'
+
 
 // tailwindcss config
 import '@/main.css'
@@ -18,6 +20,7 @@ const router = new VueRouter({
     { path: '/', component: HelloWorld },
     { path: '/data-view', component: DataView },
     { path: '/buttons-gurkha', component: ButtonsGurkha },
+    { path: '/form', component: Form },
     { path: '*', redirect: '/'}
   ]
 })

@@ -75,6 +75,11 @@ export default {
           name: "/about",
           label: "About",
           type: 'local'
+        },
+        {
+          name: "/form",
+          label: "Form test",
+          type: 'local'
         }
       ]
     }
