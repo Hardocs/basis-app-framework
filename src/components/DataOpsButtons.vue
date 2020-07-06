@@ -56,7 +56,11 @@ export default {
         },
         {
           label: "Find Record",
-          action: this.findRecord
+          action: this.findRecords
+        },
+        {
+          label: "Clear Database",
+          action: this.clearDatabase
         },
         // {
         //   label: "Another Example (not yet)",
@@ -104,7 +108,7 @@ export default {
     createRecord: function () {
       // fixed record for initial demo
       // *todo* in future, bother to provide keyValue in form, maybe keyName?
-      this.$emit('createJson', 'wut', {
+      this.$emit('createJson', {
         title: 'Roma',
         description: 'A great true film  宽字符宽字符宽字符宽字符宽字符宽字符宽字符宽' +
           '字符宽字符宽字符宽字符宽字符宽字符宽字符宽字符宽字符 of Mexico, from accurate ' +
@@ -116,12 +120,29 @@ export default {
       // *todo* in future, bother to provide keyValue in form, maybe keyName?
       this.$emit('removeJson', {
         selector: {
-          title: 'Roma'
-        }
+          title: 'Roma',
+          count: { $gt: true } // n.b. must mention a field in selector, to use it in sort...
+        },
+        sort: [
+          { 'count': 'desc' }
+        ],
+        limit: 12
       })
     },
-    findRecord: function () {
-
+    findRecords: function () {
+      this.$emit('findJson', {
+        selector: {
+          title: 'Roma',
+          count: { $gt: true }
+        },
+        sort: [
+          { 'count': 'desc' }
+        ],
+        limit: 1
+      })
+    },
+    clearDatabase: function () {
+      this.$emit('clearDatabase')
     },
     noOp: () => {} // but don't do arrows when you want to use this.anything
   },

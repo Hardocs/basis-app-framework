@@ -2,14 +2,12 @@
 
 n.b. This Readme is already out of date, and will get a rewrite next week as I complete this initial framework basis with individual data operations and activities, so all is clear.
 
-n.b.[2] - needs more doco still, (and some revisiting of methods as these become clearer though action, evolution), as there are now the first two primary data actions built and operating, proving points, and suggesting on the road to improving mutations. Reflective design. But not tonight, as I return to switch this off after a nice long diversion, and not this week-end either. But soon.
+n.b.[2] We have the operations, but still next week for this rewrite3
 
-You can still build and run it, and it will be parallel or better to the latest installer.
 
-We do have a number of nice things added, and as of today, many operations are smoothed.
+We do have a number of nice things added, and as of today, many operations are smoothed. Others can be, 
 
-(fixes for these in now, if I had to back out one or two for a while. Even in developing electron:serve mode, however, no surprises now, matters just work. You can close the developer tools pane, when you don't want them.)
-~~(many teething issues with starting window, extra 'slim' menubar etc.)~~
+*We now return you to the original doc...*
 
 ## Now, what is good?
 

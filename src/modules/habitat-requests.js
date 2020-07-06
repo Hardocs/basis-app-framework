@@ -6,10 +6,13 @@
 
 import {
   createOrOpenDb,
+  destroyDb,
   getStatusFromDb,
   createIndexOnDb,
   upsertJsonToDb,
-  getJsonFromDb,
+  explainJsonFromDb,
+  findJsonFromDb,
+  putJsonToDb,
   removeJsonFromDb
 } from '@/modules/habitat-database'
 
@@ -45,7 +48,7 @@ const getJsonFromFile = () => {
           }
         })
     } else {
-      reject('getJsonFromFile:error: Not allowed to get file from browser')
+      reject('findJsonFromFile:error: Not allowed to get file from browser')
     }
   })
 }
@@ -95,6 +98,10 @@ const createOrOpenDatabase = (dbName, locale = 'electron-browser') => {
   return db
 }
 
+const destroyDatabase = (db) => {
+  return destroyDb(db)
+}
+
 const getStatusOfDatabase = (db) => {
   return getStatusFromDb (db)
 }
@@ -103,17 +110,23 @@ const createIndexOnDatabase = (db, index) => {
   return createIndexOnDb(db, index)
 }
 
-const getJsonFromDatabase = (db, query) => {
-  console.log(query)
-
-  return getJsonFromDb (db, {
-    selector: {
-      title: 'Roma'
-    }})
+const explainJsonFromDatabase = (db, query) => {
+  return explainJsonFromDb (db, query)
+}
+const findJsonFromDatabase = (db, query) => {
+  return findJsonFromDb (db, query)
 }
 
-const upsertJsonToDatabase = (db, key, data) => {
-  return upsertJsonToDb(db, key, data)
+const putJsonToDatabase = (db, data) => {
+  return putJsonToDb(db, data)
+}
+
+const upsertJsonToDatabase = (db, query, data) => {
+  // n.b. this is disabled above in the present for good cause
+  // the later solution may involve differences at
+  // this level also, to provide full compatibility
+  // with different basis interfaces
+  return upsertJsonToDb(db, query, data)
 }
 
 const removeJsonFromDatabase = (db, record) => {
@@ -124,9 +137,12 @@ export {
   getJsonFromFile,
   putJsonToFile,
   createOrOpenDatabase,
+  destroyDatabase,
   getStatusOfDatabase,
-  upsertJsonToDatabase,
   createIndexOnDatabase,
-  getJsonFromDatabase,
+  explainJsonFromDatabase,
+  findJsonFromDatabase,
+  putJsonToDatabase,
+  upsertJsonToDatabase,
   removeJsonFromDatabase
 }

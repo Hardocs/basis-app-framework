@@ -14,6 +14,14 @@ const createOrOpenDb = (dbName) => {
   })
 }
 
+// eslint-disable-next-line
+const destroyDb = (db) => {
+  return new Promise ((resolve, reject) => {
+    reject ('Unfortunately, can\'t use with driver at present. Future may change.')
+  })
+  // return db.destroy(db)
+}
+
 const getStatusFromDb = (db) => {
   return db.info() // a promise, be aware, as all db.call()s are in Couch family
 }
@@ -22,43 +30,48 @@ const createIndexOnDb = (db, index) => {
   return db.createIndex(index)
 }
 
-const upsertJsonToDb = (db, key, data) => {
-
-  if (!key) {
-    key = uuidv4()
-  }
-
-  return db.upsert(key,
-    function (doc) {
-      Object.assign(doc, data)
-
-      // this count thing isn't needed, but useful from example, and if we
-      // should want to keep track of how many updates a data has had. Revs,
-      // though, are the thing.
-      // *todo* also choices with future interesting things in mind...
-      if (!doc.count) {
-        doc.count = 0;
-      }
-      doc.count++;
-      console.log('upsert: ' + JSON.stringify(doc))
-      return doc;
-    })
+const explainJsonFromDb = (db, query) => {
+  return db.explain(query)
 }
 
-const getJsonFromDb = (db, query) => {
+const findJsonFromDb = (db, query) => {
   return db.find(query)
+}
+
+const putJsonToDb = (db, data) => {
+  // we use our own id generation, for best confidence in cloud futures
+  // thus we're handling the fresh record case as expected, transparently
+  if (!data._id) {
+    data._id = uuidv4()
+  }
+  return db.put(data)
 }
 
 const removeJsonFromDb = (db, record) => {
   return db.remove(record)
 }
 
+// eslint-disable-next-line
+const upsertJsonToDb = (db, query, data) => {
+
+  return new Promise((resolve, reject) => {
+    reject ( 'Upsert not available, will be provided later...instead, use Put')
+  })
+
+  // the original code here wasn't a good idea - web people publish such...
+  // concept was wrong, but especially, precluded wider area concepts we need
+  // when code is provided, we'll also properly remove the lint disable preceding
+}
+
 export {
   createOrOpenDb,
+  destroyDb,
   getStatusFromDb,
   createIndexOnDb,
   upsertJsonToDb,
-  getJsonFromDb,
+  explainJsonFromDb,
+  findJsonFromDb,
+  putJsonToDb,
   removeJsonFromDb
 }
 
