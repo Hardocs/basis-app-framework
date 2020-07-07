@@ -18,8 +18,7 @@
 <script>
 
 import WrapAnsi from 'wrap-ansi'
-// import Atomics from 'Atomics'
-import DataOpsButtons from '../components/DataOpsButtons'
+import DataOpsButtons from '@/components/DataOpsButtons'
 import {
   createOrOpenDatabase,
   getStatusOfDatabase,
@@ -43,7 +42,6 @@ export default {
     }
   },
   created: function () {
-    console.log('atomics: ' + typeof Atomics)
     this.prepareDatabase()
   },
   methods: {
@@ -145,11 +143,11 @@ export default {
     clearDatabase: function () {
       this.screenText = '<p>Clearing the database turns out to be tricky, and ' +
         'is not something we\'d normally do.</p><br>' +
-        '<p>For development then, just open the Application menu of the app\'s ' +
-        'Chrome Development tools (far to the right of Console, but you can pull ' +
-        'it over so it will be visible the next time),' +
+        '<p>For development when you need it then, just open the Application menu ' +
+        'of the app\'s Chrome Development tools (far to the right of Console, but ' +
+        'you can pull it over so it will be visible the next time),' +
         'and use the \'Clear site data\' button.</p><br>' +
-        '<p>Then Refresh (Ctrl-R), and you\'ll have a brand new empty database.</p>'
+        '<p>Then Refresh (Ctrl-R), and you\'ll be on a brand new empty database.</p>'
     },
     prepareDatabase: function () {
 
@@ -172,8 +170,7 @@ export default {
         return createIndexOnDatabase(this.db, {
           index: {fields: ['count']}
         })
-      }).then(result => {
-        console.log('index count: ' + JSON.stringify(result))
+      }).then(() => {
         return findJsonFromDatabase(this.db, {
           selector: {
             title: 'Roma',
@@ -185,7 +182,7 @@ export default {
           limit: 12
         })
       }).then(result => {
-        console.log('find: ' + JSON.stringify(result))
+        // console.log('find: ' + JSON.stringify(result))
         // *todo* later, hook up the wrap width to screen viewport width, for full effect
         this.currentData = result
         this.screenText = this.screenFormatJson(result)
@@ -218,6 +215,9 @@ export default {
       return report
     },
     sleep: (milliseconds) => {
+      // very probably, you should not ever use this...maybe for a moment
+      // of discovering something (and then fixing it properly!) in dev, only.
+      // It will go out of later versions, as the framework shouldn't have it.
       return new Promise(resolve => setTimeout(resolve, milliseconds))
     }
   },

@@ -4,7 +4,7 @@
     <h2 class="text-json">Buttons With Actions -- try one...</h2>
     </div>
     <hr>
-    <FileOpsButtons :jsonData="fileContent" v-on:showFile="showFile" v-on:savedFile="savedFile"/>
+    <FileOpsButtons :jsonString="fileContent" v-on:showFile="showFile" v-on:savedFile="savedFile"/>
     <div v-if="filePath" class="text-json">
       <div class="bg-display text-white">
         <h3>File is {{ filePath }}</h3>

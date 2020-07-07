@@ -1,14 +1,15 @@
 <template>
   <div class="hello">
     <img alt="Vue logo" src="@/assets/icons/png/hardocs96.png" class="logo">
-    <h1 class="font-bold text-primary-100 mt-2">Welcome to the Hardocs Framework Basis App</h1>
+    <h1 class="font-bold text-primary-100 mt-2">This is the Framework Basis App for Hardocs</h1>
     <h1 class="font-bold text-primary-100 mt-2">{{ versionMsg }}</h1>
+    <br><br>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'HelloWorld',
+  name: 'About',
   props: {
     appVersion: String
   },
