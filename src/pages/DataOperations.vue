@@ -93,40 +93,38 @@ export default {
     removeCurrentJson (query) {
       this.operationResult = {}
       findJsonFromDatabase(this.db, query)
-      .then(result => {
-        const records = result.docs
-        // *todo* this is a beginning on where it gets tricky, and in dimensions: explain!
-        // and thus why we use the remove name, to remind considerations...
-        const status = removeJsonFromDatabase (this.db, records[0])  // top one for 'current'
-        this.recordCount = this.recordCount > 0 // a little safety for dev mishaps
-          ? this.recordCount - 1
-          : 0
-        return status
-      })
-      .then(result => {
-        this.operationResult = result
-        console.log('Instructive: removal: ' + JSON.stringify(this.operationResult))
-
-        return findJsonFromDatabase(this.db, {
-          selector: {
-            title: 'Roma',
-            count: { $gt: true } // n.b. must mention a field in selector, to use it in sort...
-          },
-          sort: [
-            { 'count': 'desc' }
-          ],
-          limit: 12
+        .then(result => {
+          const records = result.docs
+          // *todo* this is a beginning on where it gets tricky, and in dimensions: explain!
+          // and thus why we use the remove name, to remind considerations...
+          return removeJsonFromDatabase(this.db, records[0])  // top one for 'current'
         })
-      })
-      .then(result => {
-        this.currentData = result
-        this.screenText = this.screenFormatJson(result)
-      })
-      .catch (err => {
-        const msg = 'Remove Json: ' + err
-        console.log(msg)
-        this.operationResult = { error: msg }
-      })
+        .then(status => {
+          this.operationResult = status
+          this.recordCount = this.recordCount > 0 // ever a little safety for dev mishaps
+            ? this.recordCount - 1
+            : 0
+
+          return findJsonFromDatabase(this.db, {
+            selector: {
+              title: 'Roma',
+              count: {$gt: true} // n.b. must mention a field in selector, to use it in sort...
+            },
+            sort: [
+              {'count': 'desc'}
+            ],
+            limit: 12
+          })
+        })
+        .then(result => {
+          this.currentData = result
+          this.screenText = this.screenFormatJson(result)
+        })
+        .catch (err => {
+          const msg = 'Remove Json: ' + err
+          console.log(msg)
+          this.operationResult = { error: msg }
+        })
     },
     findJsonRecords: function (query) {
       findJsonFromDatabase(this.db, query)
