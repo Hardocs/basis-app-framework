@@ -60,6 +60,11 @@ export default {
           type: 'local'
         },
         {
+          name: "/data-conflict",
+          label: "Data Conflict",
+          type: 'local'
+        },
+        {
           name: "https://www.google.com/search?q=oceanic&source=lnms&tbm=isch",
           label: "Panel",
           type: 'remote'
