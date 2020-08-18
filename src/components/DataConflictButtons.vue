@@ -51,6 +51,10 @@ export default {
           action: this.createRecord
         },
         {
+          label: "Create Conflicting Record",
+          action: this.createConflictingRecord
+        },
+        {
           label: "Remove Current Record...",
           action: this.removeRecord
         },
@@ -111,6 +115,17 @@ export default {
       this.$emit('createJson', {
         title: 'Roma',
         description: 'A great true film  宽字符宽字符宽字符宽字符宽字符宽字符宽字符宽' +
+          '字符宽字符宽字符宽字符宽字符宽字符宽字符宽字符宽字符 of Mexico, from accurate ' +
+          'lives, in not quite recent times.'
+      })
+    },
+    createConflictingRecord: function () {
+      console.log('createConflictingRecord')
+      // fixed record for initial demo
+      // *todo* in future, bother to provide keyValue in form, maybe keyName?
+      this.$emit('createConflictingJson', {
+        title: 'Roma',
+        description: 'A truly great film  宽字符宽字符宽字符宽字符宽字符宽字符宽字符宽' +
           '字符宽字符宽字符宽字符宽字符宽字符宽字符宽字符宽字符 of Mexico, from accurate ' +
           'lives, in not quite recent times.'
       })

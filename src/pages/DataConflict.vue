@@ -4,6 +4,7 @@
       :json-data="currentData"
       :operation-result="operationResult"
       v-on:createJson="createJsonRecord"
+      v-on:createConflictingJson="createConflictingJsonRecord"
       v-on:removeJson="removeCurrentJson"
       v-on:findJson="findJsonRecords"
       v-on:clearDatabase="clearDatabase"
@@ -51,6 +52,52 @@ export default {
         // n.b. this is just for our demo's sorting convenience
         count: this.recordCount++
       })
+      putJsonToDatabase(this.db, record)
+        .then(result => {
+          this.operationResult = result
+        })
+        .then(() => {
+          return explainJsonFromDatabase(this.db, {
+            selector: {
+              title: 'Roma',
+              count: { $gt: true }
+            },
+            sort: [
+              { 'count': 'desc' }
+            ],
+            limit: 12
+          })
+        })
+        .then((result) => {
+          console.log('explain: ' + JSON.stringify(result))
+          return findJsonFromDatabase(this.db, {
+            selector: {
+              title: 'Roma',
+              count: { $gt: true } // n.b. must mention field in selector, to use in sort...
+            },
+            sort: [
+              { 'count': 'desc' }
+            ],
+            limit: 12
+          })
+        })
+        .then(result => {
+          this.currentData = result
+          this.screenText = this.screenFormatJson(result)
+        })
+        .catch(err => {
+          const msg = 'Create Json: ' + err
+          console.log(msg)
+          this.operationResult = { error: msg }
+        })
+    },
+    createConflictingJsonRecord (changedData) {
+      console.log('current record: ' + JSON.stringify(this.currentData.docs[0]))
+      this.operationResult = {}
+
+      const currentRecord = this.currentData.docs[0]
+      const record = Object.assign (currentRecord, changedData)
+
       putJsonToDatabase(this.db, record)
         .then(result => {
           this.operationResult = result
