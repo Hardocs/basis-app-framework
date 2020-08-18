@@ -20,7 +20,7 @@
     "pouchdb-promise": "6.2.0",
     "pouchdb-upsert": "^2.2.0",
     "smartwrap": "^2.0.1",
-    "tailwindcss": "^1.6.2",
+    "tailwindcss": "^1.6.3",
     "uuid": "^8.3.0",
     "vue": "^2.6.11",
     "vue-router": "^3.4.3",

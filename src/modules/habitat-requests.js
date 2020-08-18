@@ -11,6 +11,7 @@ import {
   createIndexOnDb,
   upsertJsonToDb,
   explainJsonFromDb,
+  getJsonFromDb,
   findJsonFromDb,
   putJsonToDb,
   removeJsonFromDb
@@ -113,6 +114,11 @@ const createIndexOnDatabase = (db, index) => {
 const explainJsonFromDatabase = (db, query) => {
   return explainJsonFromDb (db, query)
 }
+
+const getJsonFromDatabase = (db, id, options = {}) => {
+  return getJsonFromDb (db, id, options)
+}
+
 const findJsonFromDatabase = (db, query) => {
   return findJsonFromDb (db, query)
 }
@@ -141,6 +147,7 @@ export {
   getStatusOfDatabase,
   createIndexOnDatabase,
   explainJsonFromDatabase,
+  getJsonFromDatabase,
   findJsonFromDatabase,
   putJsonToDatabase,
   upsertJsonToDatabase,

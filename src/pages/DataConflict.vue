@@ -5,6 +5,7 @@
       :operation-result="operationResult"
       v-on:createJson="createJsonRecord"
       v-on:createConflictingJson="createConflictingJsonRecord"
+      v-on:getConflictingJson="getConflictingJsonRecord"
       v-on:removeJson="removeCurrentJson"
       v-on:findJson="findJsonRecords"
       v-on:clearDatabase="clearDatabase"
@@ -26,6 +27,7 @@ import {
   createIndexOnDatabase,
   putJsonToDatabase,
   explainJsonFromDatabase,
+  getJsonFromDatabase,
   findJsonFromDatabase,
   removeJsonFromDatabase
 } from '@/modules/habitat-requests'
@@ -133,6 +135,24 @@ export default {
         })
         .catch(err => {
           const msg = 'Create Json: ' + err
+          console.log(msg)
+          this.operationResult = { error: msg }
+        })
+    },
+    getConflictingJsonRecord () {
+      this.operationResult = {}
+      const id = String(this.currentData.docs[0]._id)
+      console.log('conflicted id is: ' + id +', type: ' + typeof id)
+      // const query = {
+      //   _id: id
+      // }
+      getJsonFromDatabase(this.db, id, { conflicts: true })
+        .then(result => {
+          this.currentData = result
+          this.screenText = this.screenFormatJson(result)
+        })
+        .catch (err => {
+          const msg = 'Get Conflicting Json: ' + err
           console.log(msg)
           this.operationResult = { error: msg }
         })

@@ -34,6 +34,10 @@ const explainJsonFromDb = (db, query) => {
   return db.explain(query)
 }
 
+const getJsonFromDb = (db, query, options) => {
+  return db.get(query, options)
+}
+
 const findJsonFromDb = (db, query) => {
   return db.find(query)
 }
@@ -70,6 +74,7 @@ export {
   createIndexOnDb,
   upsertJsonToDb,
   explainJsonFromDb,
+  getJsonFromDb,
   findJsonFromDb,
   putJsonToDb,
   removeJsonFromDb

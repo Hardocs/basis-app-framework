@@ -55,6 +55,10 @@ export default {
           action: this.createConflictingRecord
         },
         {
+          label: "Get Conflicting Record",
+          action: this.getConflictingRecord
+        },
+        {
           label: "Remove Current Record...",
           action: this.removeRecord
         },
@@ -129,6 +133,12 @@ export default {
           '字符宽字符宽字符宽字符宽字符宽字符宽字符宽字符宽字符 of Mexico, from accurate ' +
           'lives, in not quite recent times.'
       })
+    },
+    getConflictingRecord: function () {
+      console.log('getConflictingRecord')
+      // fixed record for initial demo
+      // *todo* in future, bother to provide keyValue in form, maybe keyName?
+      this.$emit('getConflictingJson')
     },
     removeRecord: function () {
       // fixed select for initial demo
