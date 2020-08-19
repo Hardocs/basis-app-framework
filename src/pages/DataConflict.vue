@@ -38,6 +38,7 @@ export default {
     return {
       dbName: 'hard-begin',
       currentData: null,
+      conflictRecord: null,
       recordCount: 0,
       screenText: 'Ready...',
       operationResult: {},
@@ -54,6 +55,7 @@ export default {
         // n.b. this is just for our demo's sorting convenience
         count: this.recordCount++
       })
+      this.conflictRecord = record
       putJsonToDatabase(this.db, record)
         .then(result => {
           this.operationResult = result
@@ -97,8 +99,8 @@ export default {
       console.log('current record: ' + JSON.stringify(this.currentData.docs[0]))
       this.operationResult = {}
 
-      const currentRecord = this.currentData.docs[0]
-      const record = Object.assign (currentRecord, changedData)
+      // const currentRecord = this.currentData.docs[0]
+      const record = Object.assign (this.conflictRecord, changedData)
 
       putJsonToDatabase(this.db, record)
         .then(result => {
