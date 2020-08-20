@@ -1,4 +1,7 @@
 module.exports = {
+  future: {
+    removeDeprecatedGapUtilities: true,
+  },
   purge: { // this form so we can whitelist
     enabled: true,
     content: [

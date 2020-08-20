@@ -51,8 +51,16 @@ export default {
           action: this.createRecord
         },
         {
-          label: "Create Conflicting Record",
-          action: this.createConflictingRecord
+          label: "Update Locally",
+          action: this.updateLocally
+        },
+        {
+          label: "Push to Remote",
+          action: this.pushToRemote
+        },
+        {
+          label: "Pull from Remote",
+          action: this.pullFromRemote
         },
         {
           label: "Get Conflicting Record",
@@ -65,6 +73,10 @@ export default {
         {
           label: "Find Record",
           action: this.findRecords
+        },
+        {
+          label: "Compact Database",
+          action: this.compactDatabase
         },
         {
           label: "Clear Database",
@@ -123,16 +135,28 @@ export default {
           'lives, in not quite recent times.'
       })
     },
-    createConflictingRecord: function () {
-      console.log('createConflictingRecord')
+    updateLocally: function () {
+      console.log('updateLocally')
       // fixed record for initial demo
       // *todo* in future, bother to provide keyValue in form, maybe keyName?
-      this.$emit('createConflictingJson', {
+      this.$emit('updateLocally', {
         title: 'Roma',
         description: 'A truly great film  宽字符宽字符宽字符宽字符宽字符宽字符宽字符宽' +
           '字符宽字符宽字符宽字符宽字符宽字符宽字符宽字符宽字符 of Mexico, from accurate ' +
           'lives, in not quite recent times.'
       })
+    },
+    pushToRemote: function () {
+      console.log('pushToRemote')
+      // fixed record for initial demo
+      // *todo* in future, bother to provide keyValue in form, maybe keyName?
+      this.$emit('pushToRemote')
+    },
+    pullFromRemote: function () {
+      console.log('pullFromRemote')
+      // fixed record for initial demo
+      // *todo* in future, bother to provide keyValue in form, maybe keyName?
+      this.$emit('pullFromRemote')
     },
     getConflictingRecord: function () {
       console.log('getConflictingRecord')
@@ -165,6 +189,9 @@ export default {
         ],
         limit: 1
       })
+    },
+    compactDatabase: function () {
+      this.$emit('compactDatabase')
     },
     clearDatabase: function () {
       this.$emit('clearDatabase')

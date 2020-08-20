@@ -4,10 +4,13 @@
       :json-data="currentData"
       :operation-result="operationResult"
       v-on:createJson="createJsonRecord"
-      v-on:createConflictingJson="createConflictingJsonRecord"
+      v-on:updateLocally="updateLocally"
+      v-on:pushToRemote="pushReplicateRemote"
+      v-on:pullFromRemote="pullReplicateRemote"
       v-on:getConflictingJson="getConflictingJsonRecord"
       v-on:removeJson="removeCurrentJson"
       v-on:findJson="findJsonRecords"
+      v-on:compactDatabase="compactDatabase"
       v-on:clearDatabase="clearDatabase"
     />
     <div class="bg-title">
@@ -29,7 +32,9 @@ import {
   explainJsonFromDatabase,
   getJsonFromDatabase,
   findJsonFromDatabase,
-  removeJsonFromDatabase
+  removeJsonFromDatabase,
+  openPWRemote,
+  replicateDatabase, compactDatabase, destroyDatabase
 } from '@/modules/habitat-requests'
 
 export default {
@@ -39,6 +44,9 @@ export default {
       dbName: 'hard-begin',
       currentData: null,
       conflictRecord: null,
+      remoteDbName: 'http://localhost:5984/hard-begin',
+      remoteDb: null,
+      updateCount: 0,
       recordCount: 0,
       screenText: 'Ready...',
       operationResult: {},
@@ -52,10 +60,11 @@ export default {
     createJsonRecord (record) {
       this.operationResult = {}
       record = Object.assign (record, {
+        _id: 'conflict-test',
         // n.b. this is just for our demo's sorting convenience
         count: this.recordCount++
       })
-      this.conflictRecord = record
+      this.conflictRecord = record // hived for later actual conflict exercise
       putJsonToDatabase(this.db, record)
         .then(result => {
           this.operationResult = result
@@ -86,6 +95,7 @@ export default {
           })
         })
         .then(result => {
+          this.conflictRecord = result.docs[0]
           this.currentData = result
           this.screenText = this.screenFormatJson(result)
         })
@@ -95,14 +105,18 @@ export default {
           this.operationResult = { error: msg }
         })
     },
-    createConflictingJsonRecord (changedData) {
-      console.log('current record: ' + JSON.stringify(this.currentData.docs[0]))
+    updateLocally (changedData) {
       this.operationResult = {}
-
-      // const currentRecord = this.currentData.docs[0]
-      const record = Object.assign (this.conflictRecord, changedData)
-
-      putJsonToDatabase(this.db, record)
+      console.log ('updateLocally:conflictRecord: ' + JSON.stringify(this.conflictRecord))
+      console.log ('updateLocally:changedData: ' + JSON.stringify(changedData))
+      let updateRecord = {
+        _id: this.conflictRecord._id,
+        _rev: this.conflictRecord._rev,
+        count: ++this.updateCount
+      }
+      updateRecord = Object.assign (updateRecord, changedData)
+      console.log ('updateLocally:updateRecord: ' + JSON.stringify(updateRecord))
+      putJsonToDatabase(this.db, updateRecord)
         .then(result => {
           this.operationResult = result
         })
@@ -136,21 +150,57 @@ export default {
           this.screenText = this.screenFormatJson(result)
         })
         .catch(err => {
-          const msg = 'Create Json: ' + err
+          const msg = 'Update Locally: ' + err
           console.log(msg)
+          this.operationResult = { error: msg }
+        })
+    },
+    pushReplicateRemote () {
+      console.log ('pushReplicateRemote:to: ' + this.remoteDbName)
+
+      if(!this.remoteDb) {
+        this.remoteDb = openPWRemote(this.remoteDbName)
+      }
+
+      replicateDatabase(this.dbName, this.remoteDbName, {})
+        .then (result => {
+          console.log ('pushReplicateRemote: ' + JSON.stringify(result))
+          this.operationResult = result
+        })
+        .catch (err => {
+          const msg = 'pushReplicateRemote:error: ' + err
+          console.log (msg)
+          this.operationResult = { error: msg }
+        })
+    },
+    pullReplicateRemote () {
+      console.log ('pullReplicateRemote:from: ' + this.remoteDbName)
+
+      if(!this.remoteDb) {
+        this.remoteDb = openPWRemote(this.remoteDbName)
+      }
+
+      replicateDatabase(this.remoteDbName, this.dbName, {})
+        .then (result => {
+          console.log ('pullReplicateRemote: ' + JSON.stringify(result))
+          this.operationResult = result
+        })
+        .catch (err => {
+          const msg = 'pullReplicateRemote:error: ' + err
+          console.log (msg)
           this.operationResult = { error: msg }
         })
     },
     getConflictingJsonRecord () {
       this.operationResult = {}
       const id = String(this.currentData.docs[0]._id)
-      console.log('conflicted id is: ' + id +', type: ' + typeof id)
+      console.log('getConflictingJsonRecord id is: ' + id +', type: ' + typeof id)
       // const query = {
       //   _id: id
       // }
       getJsonFromDatabase(this.db, id, { conflicts: true })
         .then(result => {
-          this.currentData = result
+          this.currentData = Object.assign(result, { wha: 'hoppen' })
           this.screenText = this.screenFormatJson(result)
         })
         .catch (err => {
@@ -207,15 +257,32 @@ export default {
           this.screenText = msg
         })
     },
-    clearDatabase: function () {
-      this.screenText = '<p>Clearing the database turns out to be tricky, and ' +
-        'is not something we\'d normally do.</p><br>' +
-        '<p>For development when you need it then, just open the Application menu ' +
-        'of the app\'s Chrome Development tools (far to the right of Console, but ' +
-        'you can pull it over so it will be visible the next time),' +
-        'and use the \'Clear site data\' button.</p><br>' +
-        '<p>Then Refresh (Ctrl-R), and you\'ll be on a brand new empty database.</p>'
+    compactDatabase: function () {
+      compactDatabase(this.db)
+      .then (result => {
+        this.currentData = result
+        this.operationResult = result
+      })
+      .catch(err => {
+        const msg = 'DataOperations:compactDatabase ' + err
+        console.log(msg)
+        this.operationResult = { error: msg }
+      })
     },
+
+    clearDatabase: function () {
+      destroyDatabase(this.db)
+        .then (result => {
+          this.currentData = result
+          this.operationResult = result
+        })
+        .catch(err => {
+          const msg = 'DataOperations:destroyDatabase: ' + err
+          console.log(msg)
+          this.operationResult = { error: msg }
+        })
+    },
+
     prepareDatabase: function () {
 
       this.operationResult = null

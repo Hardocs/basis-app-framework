@@ -6,7 +6,6 @@
 
 import {
   createOrOpenDb,
-  destroyDb,
   getStatusFromDb,
   createIndexOnDb,
   upsertJsonToDb,
@@ -14,11 +13,18 @@ import {
   getJsonFromDb,
   findJsonFromDb,
   putJsonToDb,
-  removeJsonFromDb
+  removeJsonFromDb,
+  replicateDb,
+  compactDb,
+  destroyDb
 } from '@/modules/habitat-database'
 
 import fs from 'fs'
 import app from 'electron'
+import PouchDb from 'pouchdb'
+import PouchDbAuthentication from 'pouchdb-authentication'
+
+PouchDb.plugin(PouchDbAuthentication)
 
 const dialog = app.remote.dialog;
 const rendWin = app.remote.getCurrentWindow()
@@ -94,13 +100,10 @@ const createOrOpenDatabase = (dbName, locale = 'electron-browser') => {
     case 'cloud-reach':
     default:
       throw new Error ('only electron-browser-local database at present...')
-      // lint, huh... break
+      // lint, huh...
+      // break
   }
   return db
-}
-
-const destroyDatabase = (db) => {
-  return destroyDb(db)
 }
 
 const getStatusOfDatabase = (db) => {
@@ -139,11 +142,51 @@ const removeJsonFromDatabase = (db, record) => {
   return removeJsonFromDb(db, record)
 }
 
+const openPWRemote = (remoteDbName, userName = 'admin-hard', userPass = '4admin-hard') => {
+
+  // *todo* big assumption _only_ for first early moment in dev, is no https, password authentication...
+  let remoteDb = createOrOpenDatabase(remoteDbName)
+  console.log('remoteDb: ' + JSON.stringify(remoteDb))
+  if (!remoteDb) {
+    return null // no promise on this call, so old-style handling
+  }
+
+  remoteDb.login(userName, userPass)
+    .then (result => {
+      const msg = 'login: ' + JSON.stringify(result)
+      console.log (msg)
+    })
+    .then (() => {
+      return getStatusOfDatabase(remoteDb)
+    })
+    .then(function (info) {
+      console.log('remoteDb info: ' + JSON.stringify(info))
+    })
+    .catch (err => {
+      const msg = remoteDbName + ': ' + JSON.stringify(err)
+      console.log (msg)
+      remoteDb = null
+    })
+
+  return remoteDb
+}
+
+const replicateDatabase = (from, to, options = []) => {
+  return replicateDb (from, to, options)
+}
+
+const compactDatabase = (db) => {
+  return compactDb (db)
+}
+
+const destroyDatabase = (db) => {
+  return destroyDb (db)
+}
+
 export {
   getJsonFromFile,
   putJsonToFile,
   createOrOpenDatabase,
-  destroyDatabase,
   getStatusOfDatabase,
   createIndexOnDatabase,
   explainJsonFromDatabase,
@@ -151,5 +194,9 @@ export {
   findJsonFromDatabase,
   putJsonToDatabase,
   upsertJsonToDatabase,
-  removeJsonFromDatabase
+  removeJsonFromDatabase,
+  openPWRemote,
+  replicateDatabase,
+  compactDatabase,
+  destroyDatabase
 }

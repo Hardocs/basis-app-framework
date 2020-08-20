@@ -14,14 +14,6 @@ const createOrOpenDb = (dbName) => {
   })
 }
 
-// eslint-disable-next-line
-const destroyDb = (db) => {
-  return new Promise ((resolve, reject) => {
-    reject ('Unfortunately, can\'t use with driver at present. Future may change.')
-  })
-  // return db.destroy(db)
-}
-
 const getStatusFromDb = (db) => {
   return db.info() // a promise, be aware, as all db.call()s are in Couch family
 }
@@ -55,6 +47,18 @@ const removeJsonFromDb = (db, record) => {
   return db.remove(record)
 }
 
+const replicateDb = (from, to, options) => {
+  return PouchDb.replicate(from, to, options)
+}
+
+const compactDb = (db) => {
+  return db.compact()
+}
+
+const destroyDb = (db) => {
+  return db.destroy()
+}
+
 // eslint-disable-next-line
 const upsertJsonToDb = (db, query, data) => {
 
@@ -69,7 +73,6 @@ const upsertJsonToDb = (db, query, data) => {
 
 export {
   createOrOpenDb,
-  destroyDb,
   getStatusFromDb,
   createIndexOnDb,
   upsertJsonToDb,
@@ -77,6 +80,9 @@ export {
   getJsonFromDb,
   findJsonFromDb,
   putJsonToDb,
-  removeJsonFromDb
+  removeJsonFromDb,
+  replicateDb,
+  compactDb,
+  destroyDb
 }
 
