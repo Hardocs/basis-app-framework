@@ -23,7 +23,7 @@
     "smartwrap": "^2.0.1",
     "tailwindcss": "^1.7.2",
     "uuid": "^8.3.0",
-    "vue": "^2.6.11",
+    "vue": "^2.6.12",
     "vue-router": "^3.4.3",
     "wrap-ansi": "^7.0.0"
   },
@@ -40,7 +40,7 @@
     "node-sass": "^4.14.1",
     "sass-loader": "^8.0.2",
     "vue-cli-plugin-electron-builder": "^2.0.0-rc.4",
-    "vue-template-compiler": "^2.6.11"
+    "vue-template-compiler": "^2.6.12"
   },
   "eslintConfig": {
     "root": true,

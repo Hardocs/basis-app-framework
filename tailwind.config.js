@@ -1,5 +1,5 @@
 module.exports = {
-  future: {
+  future: {  // their request from Tailwind as they transition
     removeDeprecatedGapUtilities: true,
   },
   purge: { // this form so we can whitelist
