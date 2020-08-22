@@ -48,8 +48,12 @@ export default {
           action: this.openFile
         },
         {
+          label: "Save a Html File from Screen",
+          action: this.saveHtmlToFile
+        },
+        {
           label: "Save a Json File from Screen",
-          action: this.saveFile
+          action: this.saveJsonToFile
         },
         // {
         //   label: "Another Example (not yet)",
@@ -72,7 +76,25 @@ export default {
           this.$emit('showFile', errResult)
         })
     },
-    saveFile: function () {
+    saveHtmlToFile: function () {
+      const editHtmlView = this.jsonEditor.getHTML()
+      putJsonToFile (editHtmlView)
+        // .then (result => {
+        //   const fileResult = {
+        //     path: result.path,
+        //     content: this.jsonString,
+        //   }
+        //   this.$emit('savedFile', fileResult)
+        // })
+        .catch (e => {
+          const errResult = {
+            path: '(no path)',
+            content: '{ "error": ' + e.toString() + ' }'
+          }
+          this.$emit('savedFile', errResult)
+        })
+    },
+    saveJsonToFile: function () {
       const editJsonView = JSON.stringify(this.jsonEditor.getJSON())
       putJsonToFile (editJsonView)
         .then (result => {
