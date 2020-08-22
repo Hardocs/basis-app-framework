@@ -60,6 +60,11 @@ export default {
           type: 'local'
         },
         {
+          name: "/inter-action",
+          label: "Inter Action",
+          type: 'local'
+        },
+        {
           name: "/data-conflict",
           label: "Data Conflict",
           type: 'local'
