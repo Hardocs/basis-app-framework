@@ -60,6 +60,11 @@ export default {
           type: 'local'
         },
         {
+          name: "/master-detail",
+          label: "Master Detail",
+          type: 'local'
+        },
+        {
           name: "/inter-action",
           label: "Inter Action",
           type: 'local'

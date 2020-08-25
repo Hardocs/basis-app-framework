@@ -6,6 +6,7 @@ import HelloWorld from '@/pages/HelloWorld'
 import DataOperatitons from '@/pages/DataOperations'
 import DataConflict from '@/pages/DataConflict'
 import FileOperations from '@/pages/FileOperations'
+import MasterDetail from '@/pages/MasterDetail'
 import InterAction from '@/pages/InterAction'
 import Documentation from '@/pages/Documentation'
 import About from '@/pages/About'
@@ -22,6 +23,7 @@ const router = new VueRouter({
     { path: '/', component: HelloWorld, props: { appVersion: process.env.HD_APP_VERSION } },
     { path: '/data-operations', component: DataOperatitons },
     { path: '/file-operations', component: FileOperations },
+    { path: '/master-detail', component: MasterDetail },
     { path: '/inter-action', component: InterAction },
     { path: '/data-conflict', component: DataConflict },
     { path: '/documentation', component: Documentation },

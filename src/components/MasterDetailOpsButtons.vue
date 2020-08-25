@@ -22,7 +22,7 @@
 
 <script>
 
-import { getJsonFromFile, putJsonToFile } from '@/modules/habitat-requests'
+import { getHtmlFromFile, putHtmlToFile } from '@/modules/habitat-requests'
 
 export default {
 
@@ -31,29 +31,25 @@ export default {
 
   name: "InterActOpsButtons",
   props: {
-    jsonString: {
-      default: '{ "none": "yet" }',
+    htmlString: {
+      default: 'none yet',
       type: String
     },
-    jsonEditor: {
-      default: '{ "noJson": "yet" }',
-      type: String
+    htmlEditor: {
+      // default: {},
+      type: Object
     }
   },
   data: function () {
     return {
       items: [
         {
-          label: "Edit a Json File",
-          action: this.openFile
+          label: "Edit Html Files in Folder",
+          action: this.openEditFiles
         },
         {
-          label: "Save a Html File from Screen",
+          label: "Save an Html File from Screen",
           action: this.saveHtmlToFile
-        },
-        {
-          label: "Save a Json File from Screen",
-          action: this.saveJsonToFile
         },
         // {
         //   label: "Another Example (not yet)",
@@ -64,7 +60,7 @@ export default {
   },
   methods: {
     openFile: function () {
-      getJsonFromFile ()
+      getHtmlFromFile ()
         .then (result => {
           this.$emit('showFile', result)
         })
@@ -76,27 +72,12 @@ export default {
           this.$emit('showFile', errResult)
         })
     },
-    saveHtmlToFile: function () {
-      const editHtmlView = this.jsonEditor.getHTML()
-      putJsonToFile (editHtmlView)
-        .catch (e => {
-          const errResult = {
-            path: '(no path)',
-            content: '{ "error": ' + e.toString() + ' }'
-          }
-          this.$emit('savedFile', errResult)
-        })
+    openEditFiles: function () {
+      this.$emit('openEditFiles')
     },
-    saveJsonToFile: function () {
-      const editJsonView = JSON.stringify(this.jsonEditor.getJSON())
-      putJsonToFile (editJsonView)
-        .then (result => {
-          const fileResult = {
-            path: result.path,
-            content: this.jsonString,
-          }
-          this.$emit('savedFile', fileResult)
-        })
+    saveHtmlToFile: function () {
+      const editHtmlView = this.htmlEditor.getHTML()
+      putHtmlToFile (editHtmlView)
         .catch (e => {
           const errResult = {
             path: '(no path)',
