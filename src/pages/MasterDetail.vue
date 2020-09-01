@@ -14,7 +14,6 @@
     <div v-if="filePath" class="text-json">
       <div class="bg-display text-white">
         <h3>File is {{ filePath }}</h3>
-        <h3>Html is: </h3>
       </div>
       <!--
         n.b. _Never_ use v-html as follows, if you aren't absolutely certain
