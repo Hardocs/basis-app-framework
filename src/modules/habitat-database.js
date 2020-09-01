@@ -35,8 +35,8 @@ const findJsonFromDb = (db, query) => {
 }
 
 const putJsonToDb = (db, data) => {
-  // we use our own id generation, for best confidence in cloud futures
-  // thus we're handling the fresh record case as expected, transparently
+  // from now on, we'll use our own ids, sensible to data,
+  // *todo* but for now, this is left for original demo
   if (!data._id) {
     data._id = uuidv4()
   }

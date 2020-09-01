@@ -214,6 +214,22 @@ const getStatusOfDatabase = (db) => {
   return getStatusFromDb (db)
 }
 
+const createViewOnDatabase = (/*db, name, code*/) => {
+
+}
+
+const addProjectToDatabase = (db, owner, projectName, data) => {
+  // *todo* upsert next
+  const projectData = {
+    _id: owner + '-' + projectName,
+    owner: owner,
+    name: projectName,
+    data: data
+  }
+console.log('addProj: ' + JSON.stringify(projectData))
+  return putJsonToDatabase(db, projectData)
+}
+
 const createIndexOnDatabase = (db, index) => {
   return createIndexOnDb(db, index)
 }
@@ -296,6 +312,8 @@ export {
   putJsonToFile,
   createOrOpenDatabase,
   getStatusOfDatabase,
+  addProjectToDatabase,
+  createViewOnDatabase,
   createIndexOnDatabase,
   explainJsonFromDatabase,
   getJsonFromDatabase,
