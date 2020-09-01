@@ -22,10 +22,7 @@
 
 <script>
 
-import {
-  getHtmlFromFile,
-  putHtmlToFile
-} from '@/modules/habitat-requests'
+import {createOrOpenDatabase, getHtmlFromFile, getStatusOfDatabase, putHtmlToFile} from '@/modules/habitat-requests'
 
 export default {
 
@@ -53,6 +50,14 @@ export default {
         {
           label: "Save an Html File from Screen",
           action: this.saveHtmlToFile
+        },
+        {
+          label: "Load Hardocs Db Project",
+          action: this.loadProjectFromDb
+        },
+        {
+          label: "Save Hardocs Db Project",
+          action: this.saveProjectToDb
         },
         // {
         //   label: "Another Example (not yet)",
@@ -87,6 +92,26 @@ export default {
             content: '{ "error": ' + e.toString() + ' }'
           }
           this.$emit('savedFile', errResult)
+        })
+    },
+    loadProjectFromDb: function () {
+      const db = createOrOpenDatabase('hardocs-projects')
+      getStatusOfDatabase(db)
+      .then (result => {
+        console.log ('loadProjectFromDb: ' + JSON.stringify(result))
+      })
+      .catch (err => {
+        console.log ('loadProjectFromDb: ' + err)
+      })
+    },
+    saveProjectToDb: function () {
+      const db = createOrOpenDatabase('hardocs-projects')
+      getStatusOfDatabase(db)
+        .then (result => {
+          console.log ('saveProjectToDb: ' + JSON.stringify(result))
+        })
+        .catch (err => {
+          console.log ('saveProjectToDb: ' + err)
         })
     },
     noOp: () => {} // but don't do arrows when you want to use this.anything

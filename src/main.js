@@ -13,6 +13,7 @@ import About from '@/pages/About'
 
 // tailwindcss config
 import '@/main.css'
+import HardocsDb from '@/pages/HardocsDb';
 
 Vue.config.productionTip = false
 
@@ -24,6 +25,7 @@ const router = new VueRouter({
     { path: '/data-operations', component: DataOperatitons },
     { path: '/file-operations', component: FileOperations },
     { path: '/master-detail', component: MasterDetail },
+    { path: '/hardocs-db', component: HardocsDb },
     { path: '/inter-action', component: InterAction },
     { path: '/data-conflict', component: DataConflict },
     { path: '/documentation', component: Documentation },

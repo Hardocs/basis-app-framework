@@ -65,15 +65,20 @@ export default {
           type: 'local'
         },
         {
-          name: "/inter-action",
-          label: "Inter Action",
+          name: "/hardocs-db",
+          label: "Hardocs Db",
           type: 'local'
         },
-        {
-          name: "/data-conflict",
-          label: "Data Conflict",
-          type: 'local'
-        },
+        // {
+        //   name: "/inter-action",
+        //   label: "Inter Action",
+        //   type: 'local'
+        // },
+        // {
+        //   name: "/data-conflict",
+        //   label: "Data Conflict",
+        //   type: 'local'
+        // },
         {
           name: "https://www.google.com/search?q=oceanic&source=lnms&tbm=isch",
           label: "Panel",

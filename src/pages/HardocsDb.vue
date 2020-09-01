@@ -4,7 +4,7 @@
     <h2 class="text-json">Buttons With Actions -- try one...</h2>
     </div>
     <hr>
-    <MasterDetailOpsButtons
+    <HardocsDbOpsButtons
       :htmlString="fileContent"
       :htmlEditor="editor"
       v-on:openEditFiles="openDir"
@@ -56,7 +56,7 @@
 </template>
 
 <script>
-import MasterDetailOpsButtons from '@/components/MasterDetailOpsButtons'
+import HardocsDbOpsButtons from '@/components/HardocsDbOpsButtons'
 import { Editor, EditorContent, EditorMenuBar } from 'tiptap'
 import { getHtmlFromPath, getFilesFromDir } from '@/modules/habitat-requests';
 import {
@@ -79,7 +79,7 @@ import {
 } from 'tiptap-extensions'
 
 export default {
-  name: "MasterDetail",
+  name: "HardocsDb",
   data: function () {
     return {
       editor: null,
@@ -142,7 +142,6 @@ export default {
         this.editFiles = result.files
         if (this.editFiles.length > 0) {
           this.openFile(this.editFiles[0])
-          this.openFile(this.editFiles[0])
         }
       })
       .catch (err => this.editFiles[0] = err) // we can do a lot better, but not today - parent ops result pane...
@@ -162,7 +161,7 @@ export default {
     },
   },
   components: {
-    MasterDetailOpsButtons,
+    HardocsDbOpsButtons,
     EditorContent,
     EditorMenuBar
   }

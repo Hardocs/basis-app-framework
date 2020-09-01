@@ -22,10 +22,6 @@ import {
 import fs from 'fs'
 import path from 'path'
 import app from 'electron'
-import PouchDb from 'pouchdb'
-import PouchDbAuthentication from 'pouchdb-authentication'
-
-PouchDb.plugin(PouchDbAuthentication)
 
 const dialog = app.remote.dialog;
 const rendWin = app.remote.getCurrentWindow()
