@@ -23,11 +23,8 @@
 <script>
 
 import {
-  createOrOpenDatabase,
-  addProjectToDatabase,
   getHtmlFromFile,
-  getStatusOfDatabase,
-  putHtmlToFile, getJsonFromDatabase
+  putHtmlToFile
 } from '@/modules/habitat-requests'
 
 export default {
@@ -101,56 +98,10 @@ export default {
         })
     },
     loadProjectFromDb: function () {
-      const db = createOrOpenDatabase('hardocs-projects')
-      getStatusOfDatabase(db)
-      .then (result => {
-        console.log ('loadProjectFromDb:status: ' + JSON.stringify(result))
-        return result
-      })
-      .then (() => {
-        const owner = 'hardOwner'
-        const project = 'firstProject'
-        return getJsonFromDatabase(db, owner + '-' + project)
-      })
-      .then (result => {
-        console.log('loadProjectFromDb:result: ' + JSON.stringify(result))
-      })
-      .catch (err => {
-        console.log ('loadProjectFromDb:error: ' + JSON.stringify(err))
-      })
+      this.$emit('loadProject')
     },
     saveProjectToDb: function (/*owner, project, data = {}*/) {
-      const db = createOrOpenDatabase('hardocs-projects')
-      // *todo* for the moment, this is dummy data. Soon we'll add it normally, then find with view
-      const owner = 'hardOwner'
-      const project = 'firstProject'
-      const data = {
-          docs: [
-            { doc1: 'doc1' },
-            { doc2: 'doc2' },
-          ],
-          metadata: {
-            meta1: 'meta1',
-            meta2: 'meta2'
-          }
-      }
-
-      getStatusOfDatabase(db)
-        .then (result => {
-          console.log ('saveProjectToDb:status: ' + JSON.stringify(result))
-          console.log ('saveProjectToDb:data: ' + JSON.stringify(data))
-          return addProjectToDatabase(db, owner, project, data)
-        })
-        .then(result => {
-          console.log ('addProjectToDatabase: ' + JSON.stringify(result))
-          if (!result.ok) {
-            throw new Error(result)
-          }
-          return result
-        })
-        .catch (err => {
-          console.log ('saveProjectToDb:error: ' + err)
-        })
+      this.$emit('saveProject')
     },
     noOp: () => {} // but don't do arrows when you want to use this.anything
   },

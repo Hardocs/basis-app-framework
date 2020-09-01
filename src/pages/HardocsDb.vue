@@ -10,6 +10,8 @@
       v-on:openEditFiles="openDir"
       v-on:showFile="showFile"
       v-on:savedFile="savedFile"
+      v-on:loadProject="loadProject"
+      v-on:saveProject="saveProject"
     />
     <div v-if="filePath" class="text-json">
       <div class="bg-display text-white">
@@ -57,8 +59,15 @@
 
 <script>
 import HardocsDbOpsButtons from '@/components/HardocsDbOpsButtons'
+import {
+  getHtmlFromPath,
+  getFilesFromDir,
+  createOrOpenDatabase,
+  getStatusOfDatabase,
+  // addProjectToDatabase,
+  getJsonFromDatabase, addProjectToDatabase
+} from '@/modules/habitat-requests'
 import { Editor, EditorContent, EditorMenuBar } from 'tiptap'
-import { getHtmlFromPath, getFilesFromDir } from '@/modules/habitat-requests';
 import {
   Blockquote,
   CodeBlock,
@@ -158,6 +167,58 @@ export default {
         .catch (e => {
           this.editor.setContent('error opening file: ' + e)
        })
+    },
+    saveProject: function (/*owner, project, data = {}*/) {
+      const db = createOrOpenDatabase('hardocs-projects')
+      // *todo* for the moment, this is dummy data. Soon we'll add it normally, then find with view
+      const owner = 'hardOwner'
+      const project = 'firstProject'
+      const data = {
+        docs: [
+          { doc1: 'doc1' },
+          { doc2: 'doc2' },
+        ],
+        metadata: {
+          meta1: 'meta1',
+          meta2: 'meta2'
+        }
+      }
+
+      getStatusOfDatabase(db)
+        .then (result => {
+          console.log ('saveProjectToDb:status: ' + JSON.stringify(result))
+          console.log ('saveProjectToDb:data: ' + JSON.stringify(data))
+          return addProjectToDatabase(db, owner, project, data)
+        })
+        .then(result => {
+          console.log ('addProjectToDatabase: ' + JSON.stringify(result))
+          if (!result.ok) {
+            throw new Error(result)
+          }
+          return result
+        })
+        .catch (err => {
+          console.log ('saveProjectToDb:error: ' + err)
+        })
+    },
+    loadProject: function () {
+      const db = createOrOpenDatabase('hardocs-projects')
+      getStatusOfDatabase(db)
+        .then (result => {
+          console.log ('loadProjectFromDb:status: ' + JSON.stringify(result))
+          return result
+        })
+        .then (() => {
+          const owner = 'hardOwner'
+          const project = 'firstProject'
+          return getJsonFromDatabase(db, owner + '-' + project)
+        })
+        .then (result => {
+          console.log('loadProjectFromDb:result: ' + JSON.stringify(result))
+        })
+        .catch (err => {
+          console.log ('loadProjectFromDb:error: ' + JSON.stringify(err))
+        })
     },
   },
   components: {
