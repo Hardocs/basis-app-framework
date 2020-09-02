@@ -1,5 +1,5 @@
 <template>
-  <span>
+  <div>
     <div class="w-full bg-title">
     <h2 class="text-json">Buttons With Actions -- try one...</h2>
     </div>
@@ -60,7 +60,7 @@
         </div>
       </div>
     </div>
-  </span>
+  </div>
 </template>
 
 <script>
@@ -69,7 +69,7 @@ import HardocsDbOpsButtons from '@/components/HardocsDbOpsButtons'
 import {
   getHtmlFromPath,
   getFilesFromDir,
-  saveToDatabase,
+  storeToDatabase,
   loadFromDatabase
 } from '@/modules/habitat-requests'
 import {Editor, EditorContent, EditorMenuBar} from 'tiptap'
@@ -169,7 +169,7 @@ export default {
       // first make a change that we can see, in this level of demo
       this.projectData.count += 1
 
-      saveToDatabase(this.owner, this.project, this.projectData)
+      storeToDatabase(this.owner, this.project, this.projectData)
         .then(result => {
           console.log('saveProject: result: ' + JSON.stringify(result))
           this.opsError = result

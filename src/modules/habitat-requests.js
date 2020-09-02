@@ -57,26 +57,26 @@ const loadFromDatabase =  (owner = 'hardOwner', project = 'firstProject',
   })
 }
 
-const saveToDatabase = (owner, project,
+const storeToDatabase = (owner, project,
                         data = {}, dbName = 'hardocs-projects') => {
 
   return new Promise ((resolve, reject) => {
     const db = createOrOpenDatabase(dbName)
     getStatusOfDatabase(db)
       .then (result => {
-        console.log ('saveToDatabase:status: ' + JSON.stringify(result))
-        // console.log ('saveToDatabase:data: ' + JSON.stringify(data))
+        console.log ('storeToDatabase:status: ' + JSON.stringify(result))
+        // console.log ('storeToDatabase:data: ' + JSON.stringify(data))
         return upsertProjectToDatabase(db, owner, project, data)
       })
       .then(result => {
-        // console.log ('saveToDatabase:upsert ' + JSON.stringify(result))
+        // console.log ('storeToDatabase:upsert ' + JSON.stringify(result))
         if (!result.ok) { // errors won't throw of themselves, thus we test
           reject (result)
         }
         resolve (result)
       })
       .catch (err => {
-        console.log ('saveToDatabase:error: ' + err)
+        console.log ('storeToDatabase:error: ' + err)
         reject (err)
       })
   })
@@ -411,7 +411,7 @@ export {
   upsertJsonToDatabase,
   removeJsonFromDatabase,
   loadFromDatabase,
-  saveToDatabase,
+  storeToDatabase,
   keyFromParts,
   openPWRemote,
   replicateDatabase,
