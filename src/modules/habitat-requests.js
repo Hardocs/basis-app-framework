@@ -4,6 +4,14 @@
 // employing for example CombatCovid or other security motifs, without changes
 // to Hardocs application code
 
+// we must always be promises in here -- because the UX will need that.
+// data is never returned at the time called; it is always by callbacks,
+// in event not clock time. Thus we reflect this back, and the promise
+// eventual results are put right in the UX data, to be displayed.
+
+// we never use async/await, because we want the UX to respond. That its
+// fresh data comes later after action to prepare for it, is natural, expected.
+
 import {
   createOrOpenDb,
   getStatusFromDb,
@@ -25,6 +33,54 @@ import app from 'electron'
 
 const dialog = app.remote.dialog;
 const rendWin = app.remote.getCurrentWindow()
+
+const loadFromDatabase =  (owner = 'hardOwner', project = 'firstProject',
+                           dbName = 'hardocs-projects', ) => {
+  return new Promise ((resolve, reject) => {
+    const db = createOrOpenDatabase(dbName)
+    getStatusOfDatabase(db)
+      .then (result => {
+        console.log ('loadFromDatabase:status: ' + JSON.stringify(result))
+        return result
+      })
+      .then (() => {
+        return getJsonFromDatabase(db, keyFromParts(owner, project))
+      })
+      .then (result => {
+        console.log('loadFromDatabase:result: ' + JSON.stringify(result))
+        resolve (result)
+      })
+      .catch (err => {
+        console.log ('loadFromDatabase:error: ' + JSON.stringify(err))
+        reject (err)
+      })
+  })
+}
+
+const saveToDatabase = (owner, project,
+                        data = {}, dbName = 'hardocs-projects') => {
+
+  return new Promise ((resolve, reject) => {
+    const db = createOrOpenDatabase(dbName)
+    getStatusOfDatabase(db)
+      .then (result => {
+        console.log ('saveToDatabase:status: ' + JSON.stringify(result))
+        // console.log ('saveToDatabase:data: ' + JSON.stringify(data))
+        return upsertProjectToDatabase(db, owner, project, data)
+      })
+      .then(result => {
+        // console.log ('saveToDatabase:upsert ' + JSON.stringify(result))
+        if (!result.ok) { // errors won't throw of themselves, thus we test
+          reject (result)
+        }
+        resolve (result)
+      })
+      .catch (err => {
+        console.log ('saveToDatabase:error: ' + err)
+        reject (err)
+      })
+  })
+}
 
 const getHtmlFromFile = () => {
   return new Promise ((resolve, reject) => {
@@ -218,16 +274,46 @@ const createViewOnDatabase = (/*db, name, code*/) => {
 
 }
 
-const addProjectToDatabase = (db, owner, projectName, data) => {
-  // *todo* upsert next
-  const projectData = {
-    _id: owner + '-' + projectName,
-    owner: owner,
-    name: projectName,
-    data: data
-  }
-console.log('addProj: ' + JSON.stringify(projectData))
-  return putJsonToDatabase(db, projectData)
+const upsertProjectToDatabase = (db, owner, name, data) => {
+  // *todo* seems to work as expected, but is a little different from lib - check
+  return new Promise ((resolve, reject) => {
+    const id = keyFromParts(owner, name)
+    let projectData = {
+      _id: id,
+      owner: owner,
+      name: name,
+      data: data
+    }
+    // first, see if we have the project already
+    getJsonFromDatabase(db, id)
+      .then(result => {
+        // console.log('upsertProjectToDatabase:getJsonFromDatabase: ' + JSON.stringify(result))
+        if (result) {
+          // console.log('assigning: data: ' + JSON.stringify(data))
+          const assigned = Object.assign(result, { data: data })
+          // console.log('assigned: data: ' + JSON.stringify(data))
+          return assigned
+        } else {
+          return projectData
+        }
+      })
+      .catch (err => {
+        console.log('upsertProjectToDatabase:missing: ' + JSON.stringify(err))
+        return projectData
+        })
+      .then(result => {
+        console.log('upsertProjectToDatabase:tostore: ' + JSON.stringify(result))
+        return putJsonToDatabase(db, result)
+      })
+      .then (result => {
+        // console.log ('putJsonToDatabase: ' + JSON.stringify(result))
+        resolve(result)
+      })
+      .catch(err => {
+        console.log('upsert:err: ' + err)
+        reject(err)
+      })
+  })
 }
 
 const createIndexOnDatabase = (db, index) => {
@@ -248,6 +334,10 @@ const findJsonFromDatabase = (db, query) => {
 
 const putJsonToDatabase = (db, data) => {
   return putJsonToDb(db, data)
+}
+
+const keyFromParts = (owner, project) => {
+  return owner + ':' + project
 }
 
 const upsertJsonToDatabase = (db, query, data) => {
@@ -312,7 +402,6 @@ export {
   putJsonToFile,
   createOrOpenDatabase,
   getStatusOfDatabase,
-  addProjectToDatabase,
   createViewOnDatabase,
   createIndexOnDatabase,
   explainJsonFromDatabase,
@@ -321,6 +410,9 @@ export {
   putJsonToDatabase,
   upsertJsonToDatabase,
   removeJsonFromDatabase,
+  loadFromDatabase,
+  saveToDatabase,
+  keyFromParts,
   openPWRemote,
   replicateDatabase,
   compactDatabase,

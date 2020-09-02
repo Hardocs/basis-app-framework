@@ -13,6 +13,12 @@
       v-on:loadProject="loadProject"
       v-on:saveProject="saveProject"
     />
+    <div v-if="dbData" class="bg-display text-white">
+      {{ dbData }}
+    </div>
+    <div v-if="opsError" class="bg-display text-white">
+      {{ opsError }}
+    </div>
     <div v-if="filePath" class="text-json">
       <div class="bg-display text-white">
         <h3>File is {{ filePath }}</h3>
@@ -50,7 +56,7 @@
             </div>
           </editor-menu-bar>
           <hr>
-          <editor-content :editor="editor" />
+          <editor-content :editor="editor"/>
         </div>
       </div>
     </div>
@@ -58,16 +64,15 @@
 </template>
 
 <script>
+
 import HardocsDbOpsButtons from '@/components/HardocsDbOpsButtons'
 import {
   getHtmlFromPath,
   getFilesFromDir,
-  createOrOpenDatabase,
-  getStatusOfDatabase,
-  // addProjectToDatabase,
-  getJsonFromDatabase, addProjectToDatabase
+  saveToDatabase,
+  loadFromDatabase
 } from '@/modules/habitat-requests'
-import { Editor, EditorContent, EditorMenuBar } from 'tiptap'
+import {Editor, EditorContent, EditorMenuBar} from 'tiptap'
 import {
   Blockquote,
   CodeBlock,
@@ -91,21 +96,32 @@ export default {
   name: "HardocsDb",
   data: function () {
     return {
+      // these are the primary information for a project and its data
+      owner: null,
+      project: null,
+      projectData: null, // expected connect to Vuex
+      dbData: null, // temporary measure, to first view
+
+      // the rest of these are points of call for the edit and file demonstrators
       editor: null,
       editFiles: [],
       filePath: null,
       fileContent: null,
       fileJsonObject: null,
-      fileJsonView: null
+      fileJsonView: null,
+
+      // where we can indicate issues to screen
+      opsError: null
     }
   },
-  mounted() {
+  mounted () {
+    this.preloadDummyProjectInfo()
     this.editor = new Editor({
       extensions: [
         new Blockquote(),
         new CodeBlock(),
         new HardBreak(),
-        new Heading({ levels: [1, 2, 3] }),
+        new Heading({levels: [1, 2, 3]}),
         new BulletList(),
         new OrderedList(),
         new ListItem(),
@@ -126,10 +142,48 @@ export default {
         `,
     })
   },
-  beforeDestroy() {
+  beforeDestroy () {
     this.editor.destroy()
   },
   methods: {
+    loadProject: function () {
+      this.clearPanels()
+      console.log ('loading owner: ' + this.owner + ', project: ' + this.project)
+      this.dbData = 'app is loading project owner: ' +
+        this.owner + ', project: ' + this.project
+
+      loadFromDatabase()
+        .then(result => {
+          console.log('loaded Project: ' + JSON.stringify(result))
+          this.projectData = result.data
+          this.dbData = 'app has loaded: '+ JSON.stringify(result.data)
+        })
+        .catch(err => {
+          this.opsError = JSON.stringify(err)
+        })
+    },
+    saveProject: function () {
+      this.clearPanels()
+      console.log ('saving owner: ' + this.owner + ', project: ' + this.project)
+
+      // first make a change that we can see, in this level of demo
+      this.projectData.count += 1
+
+      saveToDatabase(this.owner, this.project, this.projectData)
+        .then(result => {
+          console.log('saveProject: result: ' + JSON.stringify(result))
+          this.opsError = result
+          this.dbData = 'app has saved: '+ JSON.stringify(this.projectData)
+        })
+        .catch(err => {
+          console.log('saveProject:error: ' + err)
+          this.opsError = err
+        })
+    },
+    clearPanels: function () {
+      this.opsError = null
+      this.dbData = null
+    },
     showFile: function (fileData) {
       this.filePath = fileData.path
       this.editFiles.push(this.filePath)
@@ -147,79 +201,43 @@ export default {
     openDir: function () {
       this.editFiles = []
       getFilesFromDir('.html') // mind the dot; it's required
-      .then (result => {
-        this.editFiles = result.files
-        if (this.editFiles.length > 0) {
-          this.openFile(this.editFiles[0])
-        }
-      })
-      .catch (err => this.editFiles[0] = err) // we can do a lot better, but not today - parent ops result pane...
+        .then(result => {
+          this.editFiles = result.files
+          if (this.editFiles.length > 0) {
+            this.openFile(this.editFiles[0])
+          }
+        })
+        .catch(err => this.editFiles[0] = err) // we can do a lot better, but not today - parent ops result pane...
     },
     openFile: function (filePath) {
-      getHtmlFromPath (filePath)
-        .then (fileData => {
+      getHtmlFromPath(filePath)
+        .then(fileData => {
           this.filePath = fileData.path
           this.fileContent = fileData.content
           // part of the incoherent mess - we have already this file on list, etc..
           // this.editFiles.push(this.filePath)
           this.editor.setContent(this.fileContent)
         })
-        .catch (e => {
+        .catch(e => {
           this.editor.setContent('error opening file: ' + e)
-       })
+        })
     },
-    saveProject: function (/*owner, project, data = {}*/) {
-      const db = createOrOpenDatabase('hardocs-projects')
+    preloadDummyProjectInfo: function () {
       // *todo* for the moment, this is dummy data. Soon we'll add it normally, then find with view
-      const owner = 'hardOwner'
-      const project = 'firstProject'
-      const data = {
+      this.owner = 'hardOwner'
+      this.project = 'firstProject'
+      this.projectData = {
         docs: [
-          { doc1: 'doc1' },
-          { doc2: 'doc2' },
+          { doc1: 'doc1 text we will see' },
+          { doc2: 'doc2 text we will also see' },
         ],
         metadata: {
-          meta1: 'meta1',
-          meta2: 'meta2'
-        }
+          meta1: 'meta1 data',
+          meta2: 'meta2 data'
+        },
+        count: 0 // this is for keeping track of updates
       }
-
-      getStatusOfDatabase(db)
-        .then (result => {
-          console.log ('saveProjectToDb:status: ' + JSON.stringify(result))
-          console.log ('saveProjectToDb:data: ' + JSON.stringify(data))
-          return addProjectToDatabase(db, owner, project, data)
-        })
-        .then(result => {
-          console.log ('addProjectToDatabase: ' + JSON.stringify(result))
-          if (!result.ok) {
-            throw new Error(result)
-          }
-          return result
-        })
-        .catch (err => {
-          console.log ('saveProjectToDb:error: ' + err)
-        })
-    },
-    loadProject: function () {
-      const db = createOrOpenDatabase('hardocs-projects')
-      getStatusOfDatabase(db)
-        .then (result => {
-          console.log ('loadProjectFromDb:status: ' + JSON.stringify(result))
-          return result
-        })
-        .then (() => {
-          const owner = 'hardOwner'
-          const project = 'firstProject'
-          return getJsonFromDatabase(db, owner + '-' + project)
-        })
-        .then (result => {
-          console.log('loadProjectFromDb:result: ' + JSON.stringify(result))
-        })
-        .catch (err => {
-          console.log ('loadProjectFromDb:error: ' + JSON.stringify(err))
-        })
-    },
+    }
   },
   components: {
     HardocsDbOpsButtons,
@@ -264,15 +282,19 @@ body {
   padding: 0 2%;
 
 }
+
 .bg-title {
   background-color: #d6b668;
 }
+
 .bg-display {
   background-color: teal;
 }
+
 .text-json {
   color: #1d3557;
 }
+
 .html-data {
   text-align: left;
   white-space: normal;
