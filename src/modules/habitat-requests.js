@@ -82,6 +82,30 @@ const storeToDatabase = (owner, project,
   })
 }
 
+// n.b. this will not be a user-available call in the real Hardoces!!
+const clearDatabase = (dbName = 'hardocs-projects') => {
+  return new Promise ((resolve, reject) => {
+    const db = createOrOpenDatabase(dbName)
+    getStatusOfDatabase(db)
+      .then (result => {
+        console.log ('clearDatabase:status: ' + JSON.stringify(result))
+        // console.log ('clearDatabase:data: ' + JSON.stringify(data))
+        return destroyDatabase(db)
+      })
+      .then(result => {
+        // console.log ('clearDatabase:upsert ' + JSON.stringify(result))
+        // if (!result.ok) { // errors won't throw of themselves, thus we test
+        //   reject (result)
+        // }
+        resolve (result)
+      })
+      .catch (err => {
+        console.log ('clearDatabase:error: ' + err)
+        reject (err)
+      })
+  })
+}
+
 const getHtmlFromFile = () => {
   return new Promise ((resolve, reject) => {
     if (process.env.ORIGINAL_XDG_CURRENT_DESKTOP !== null) {
@@ -412,6 +436,7 @@ export {
   removeJsonFromDatabase,
   loadFromDatabase,
   storeToDatabase,
+  clearDatabase,
   keyFromParts,
   openPWRemote,
   replicateDatabase,

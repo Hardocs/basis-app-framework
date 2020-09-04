@@ -22,38 +22,15 @@
 
 <script>
 
-import {
-  getHtmlFromFile,
-  putHtmlToFile
-} from '@/modules/habitat-requests'
-
 export default {
 
-  // n.b. Note that this component with FileOperations practices a normal no-Vuex way
-  // to interact between Vue parent and child
+  // n.b. Note that this component with HardocsDb practices a normal way
+  // to interact between Vue parent and child, not needing external packages
 
-  name: "InterActOpsButtons",
-  props: {
-    htmlString: {
-      default: 'none yet',
-      type: String
-    },
-    htmlEditor: {
-      // default: {},
-      type: Object
-    }
-  },
+  name: "HardocsDbOpsButtons",
   data: function () {
     return {
       items: [
-        {
-          label: "Edit Html Files in Folder",
-          action: this.openEditFiles
-        },
-        {
-          label: "Save an Html File from Screen",
-          action: this.saveHtmlToFile
-        },
         {
           label: "Load Hardocs Db Project",
           action: this.loadProjectFromDb
@@ -61,6 +38,10 @@ export default {
         {
           label: "Save Hardocs Db Project",
           action: this.saveProjectToDb
+        },
+        {
+          label: "Clear Current Db",
+          action: this.clearDb
         },
         // {
         //   label: "Another Example (not yet)",
@@ -70,38 +51,14 @@ export default {
     }
   },
   methods: {
-    openFile: function () {
-      getHtmlFromFile ()
-        .then (result => {
-          this.$emit('showFile', result)
-        })
-        .catch (e => {
-          const errResult = {
-            path: '(no path)',
-            content: '{ "error": ' + e.toString() + ' }'
-          }
-          this.$emit('showFile', errResult)
-        })
-    },
-    openEditFiles: function () {
-      this.$emit('openEditFiles')
-    },
-    saveHtmlToFile: function () {
-      const editHtmlView = this.htmlEditor.getHTML()
-      putHtmlToFile (editHtmlView)
-        .catch (e => {
-          const errResult = {
-            path: '(no path)',
-            content: '{ "error": ' + e.toString() + ' }'
-          }
-          this.$emit('savedFile', errResult)
-        })
-    },
     loadProjectFromDb: function () {
       this.$emit('loadProject')
     },
-    saveProjectToDb: function (/*owner, project, data = {}*/) {
+    saveProjectToDb: function () {
       this.$emit('saveProject')
+    },
+    clearDb: function () {
+      this.$emit('clearDatabase')
     },
     noOp: () => {} // but don't do arrows when you want to use this.anything
   },

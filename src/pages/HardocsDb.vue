@@ -5,60 +5,15 @@
     </div>
     <hr>
     <HardocsDbOpsButtons
-      :htmlString="fileContent"
-      :htmlEditor="editor"
-      v-on:openEditFiles="openDir"
-      v-on:showFile="showFile"
-      v-on:savedFile="savedFile"
       v-on:loadProject="loadProject"
       v-on:saveProject="saveProject"
+      v-on:clearDatabase="clearDatabase"
     />
-    <div v-if="dbData" class="bg-display text-white">
-      {{ dbData }}
+    <div v-if="dbDisplay" class="bg-display text-white">
+      {{ dbDisplay }}
     </div>
-    <div v-if="opsError" class="bg-display text-white">
-      {{ opsError }}
-    </div>
-    <div v-if="filePath" class="text-json">
-      <div class="bg-display text-white">
-        <h3>File is {{ filePath }}</h3>
-      </div>
-      <!--
-        n.b. _Never_ use v-html as follows, if you aren't absolutely certain
-        that the content is safe...as for example raw web content never can be.
-        *todo* We will assure that safety later within the Habitat protocol...
-        ...as we do throughout CombatCovid
-      -->
-      <div class="flex mb-4 h-full">
-        <div class="w-1/2 bg-gray-400 h-12 px-2">
-          <div v-for="(file, index) in editFiles" :key="index">
-            <h2 class="master-item" @click="openFile(file)">{{ fileName(file) }}</h2>
-            <hr>
-          </div>
-        </div>
-        <div class="w-1/2 bg-gray-500 h-12 px-2 border-l-2 border-gray-600 h-full">
-          <editor-menu-bar :editor="editor" v-slot="{ commands, isActive }">
-            <div>
-              <button :class="{ 'is-active': isActive.italic() }" @click="commands.italic()">
-                Italic
-              </button>
-              &nbsp;        <button :class="{ 'is-active': isActive.bold() }" @click="commands.bold">
-                Bold
-              </button>
-              &nbsp;
-              <button :class="{ 'is-active': isActive.heading({ level: 1 }) }" @click="commands.heading({ level: 1 })">
-                H1
-              </button>
-              &nbsp;
-              <button :class="{ 'is-active': isActive.heading({ level: 2 }) }" @click="commands.heading({ level: 2 })">
-                H2
-              </button>
-            </div>
-          </editor-menu-bar>
-          <hr>
-          <editor-content :editor="editor"/>
-        </div>
-      </div>
+    <div v-if="opsDisplay" class="bg-display text-white">
+      {{ opsDisplay }}
     </div>
   </div>
 </template>
@@ -67,30 +22,10 @@
 
 import HardocsDbOpsButtons from '@/components/HardocsDbOpsButtons'
 import {
-  getHtmlFromPath,
-  getFilesFromDir,
   storeToDatabase,
-  loadFromDatabase
+  loadFromDatabase,
+  clearDatabase
 } from '@/modules/habitat-requests'
-import {Editor, EditorContent, EditorMenuBar} from 'tiptap'
-import {
-  Blockquote,
-  CodeBlock,
-  HardBreak,
-  Heading,
-  OrderedList,
-  BulletList,
-  ListItem,
-  TodoItem,
-  TodoList,
-  Bold,
-  Code,
-  Italic,
-  Link,
-  Strike,
-  Underline,
-  History,
-} from 'tiptap-extensions'
 
 export default {
   name: "HardocsDb",
@@ -100,66 +35,32 @@ export default {
       owner: null,
       project: null,
       projectData: null, // expected connect to Vuex
-      dbData: null, // temporary measure, to first view
-
-      // the rest of these are points of call for the edit and file demonstrators
-      editor: null,
-      editFiles: [],
-      filePath: null,
-      fileContent: null,
-      fileJsonObject: null,
-      fileJsonView: null,
+      dbDisplay: null, // temporary measure, to first view
 
       // where we can indicate issues to screen
-      opsError: null
+      opsDisplay: null
     }
   },
   mounted () {
     this.preloadDummyProjectInfo()
-    this.editor = new Editor({
-      extensions: [
-        new Blockquote(),
-        new CodeBlock(),
-        new HardBreak(),
-        new Heading({levels: [1, 2, 3]}),
-        new BulletList(),
-        new OrderedList(),
-        new ListItem(),
-        new TodoItem(),
-        new TodoList(),
-        new Bold(),
-        new Code(),
-        new Italic(),
-        new Link(),
-        new Strike(),
-        new Underline(),
-        new History(),
-      ],
-      content: `
-          <h1>Hmm, Headlines!</h1>
-          <p>All these <strong>few tags</strong> are working now.</p>
-          <h2>But more can come.</h2>
-        `,
-    })
-  },
-  beforeDestroy () {
-    this.editor.destroy()
   },
   methods: {
     loadProject: function () {
       this.clearPanels()
       console.log ('loading owner: ' + this.owner + ', project: ' + this.project)
-      this.dbData = 'app is loading project owner: ' +
+      this.dbDisplay = 'app is loading project owner: ' +
         this.owner + ', project: ' + this.project
 
       loadFromDatabase()
         .then(result => {
           console.log('loaded Project: ' + JSON.stringify(result))
           this.projectData = result.data
-          this.dbData = 'app has loaded: '+ JSON.stringify(result.data)
+          this.dbDisplay = 'From Hardocs Project <' + this.owner + ':' + this.project +
+            '>, app has loaded: '+ JSON.stringify(this.projectData)
         })
         .catch(err => {
-          this.opsError = JSON.stringify(err)
+          this.opsDisplay = JSON.stringify(err)
+          this.opsDisplay = 'load project: error: ' + err
         })
     },
     saveProject: function () {
@@ -167,60 +68,38 @@ export default {
       console.log ('saving owner: ' + this.owner + ', project: ' + this.project)
 
       // first make a change that we can see, in this level of demo
-      this.projectData.count += 1
+      this.projectData.countMarker += 1
 
       storeToDatabase(this.owner, this.project, this.projectData)
         .then(result => {
           console.log('saveProject: result: ' + JSON.stringify(result))
-          this.opsError = result
-          this.dbData = 'app has saved: '+ JSON.stringify(this.projectData)
+          this.opsDisplay = result
+          this.dbDisplay = 'For Hardocs Project <' + this.owner + ':' + this.project +
+            '>, app has saved: '+ JSON.stringify(this.projectData)
         })
         .catch(err => {
           console.log('saveProject:error: ' + err)
-          this.opsError = err
+          this.opsDisplay = 'save project: error: ' + err
+        })
+    },
+    clearDatabase: function () {
+      this.clearPanels()
+      console.log ('clearing database... ')
+
+      clearDatabase()
+        .then(result => {
+          console.log('clearDatabase: result: ' + JSON.stringify(result))
+          this.opsDisplay = 'Cleared Entire Hardocs database (we won\'t have this ' +
+            'in real Hardocs!): ' + JSON.stringify(result)
+        })
+        .catch(err => {
+          console.log('clearDatabase:error: ' + err)
+          this.opsDisplay = 'clear database: ' + err
         })
     },
     clearPanels: function () {
-      this.opsError = null
-      this.dbData = null
-    },
-    showFile: function (fileData) {
-      this.filePath = fileData.path
-      this.editFiles.push(this.filePath)
-      this.fileContent = fileData.content
-      this.editor.setContent(this.fileContent)
-    },
-    savedFile: function (fileData) {
-      this.filePath = fileData.path
-      this.fileContent = fileData.content
-    },
-    fileName: function (filePath) {
-      const parts = filePath.split('\\')
-      return parts[parts.length - 1]
-    },
-    openDir: function () {
-      this.editFiles = []
-      getFilesFromDir('.html') // mind the dot; it's required
-        .then(result => {
-          this.editFiles = result.files
-          if (this.editFiles.length > 0) {
-            this.openFile(this.editFiles[0])
-          }
-        })
-        .catch(err => this.editFiles[0] = err) // we can do a lot better, but not today - parent ops result pane...
-    },
-    openFile: function (filePath) {
-      getHtmlFromPath(filePath)
-        .then(fileData => {
-          this.filePath = fileData.path
-          this.fileContent = fileData.content
-          // part of the incoherent mess - we have already this file on list, etc..
-          // this.editFiles.push(this.filePath)
-          this.editor.setContent(this.fileContent)
-        })
-        .catch(e => {
-          this.editor.setContent('error opening file: ' + e)
-        })
+      this.opsDisplay = null
+      this.dbDisplay = null
     },
     preloadDummyProjectInfo: function () {
       // *todo* for the moment, this is dummy data. Soon we'll add it normally, then find with view
@@ -235,14 +114,16 @@ export default {
           meta1: 'meta1 data',
           meta2: 'meta2 data'
         },
-        count: 0 // this is for keeping track of updates
+        imgs: [
+          { name: 'img1', data: 'image1data', type: 'jpg' },
+          { name: 'img2', data: 'image2data', type: 'jpg' },
+        ],
+        countMarker: 0 // this is for keeping track of updates
       }
     }
   },
   components: {
     HardocsDbOpsButtons,
-    EditorContent,
-    EditorMenuBar
   }
 }
 </script>
