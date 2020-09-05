@@ -60,6 +60,7 @@ import MasterDetailOpsButtons from '@/components/MasterDetailOpsButtons'
 import { Editor, EditorContent, EditorMenuBar } from 'tiptap'
 import { getHtmlFromPath, getFilesFromDir } from '@/modules/habitat-requests';
 import {
+  Image,
   Blockquote,
   CodeBlock,
   HardBreak,
@@ -93,6 +94,7 @@ export default {
   mounted() {
     this.editor = new Editor({
       extensions: [
+        new Image(),
         new Blockquote(),
         new CodeBlock(),
         new HardBreak(),
