@@ -1,12 +1,18 @@
-// these are intended to be the variety needed of calls to access local services,
-// especially files, but also any needed items like dialogs and windows, for Hardocs
+// localservices are intended to be the variety needed of calls to access
+// local abilities through Electro nor Hardocs, like files in various direct or by dialog
+// ways, but later also any further items if needed, such as app dialogs and windows.
+// These last are not implemented yet, but will be according to need.
 
-// the wisdom of Habitat managing them was shown in the accommodation effort for
-// the recent version change of Electron. It's filesystem access is one of the portiongs
+// You should always access local services through this Habitat interface module.
+// The wisdom of Habitat managing them was already shown in the accommodation effort for
+// the recent version change of Electron. Its filesystem access is one of the portions
 // that is most unstable across releases, and recent plans show this is going to become
-// much more serious soon.
+// much more serious in the near future.
 
-// we handle all such changes here, so that our Hardocs calls will remain stable and the same.
+// We'll take care of it here, when it's time, and Hardocs apps will then
+// need no changes, remain stable as you've written them.
+
+// n.b. note the simple pathed file calls are last; calls with selection dialogs come first
 
 import fs from 'fs'
 import path from 'path'
@@ -15,13 +21,19 @@ import electron from 'electron'
 const { dialog, getCurrentWindow } = electron.remote
 const rendWin = getCurrentWindow()
 
+const servicesLogging = true // *todo* for now - later false thus optional
+const servicesLog = (msg) => {
+  if (servicesLogging) {
+    console.log('services: ' + msg)
+  }
+}
 
-const getHtmlFromFile = () => {
+const SelectContentFromFolder = (fileExts = 'html', typeName = 'NONE') => {
   return new Promise ((resolve, reject) => {
     if (process.env.ORIGINAL_XDG_CURRENT_DESKTOP !== null) {
       dialog.showOpenDialog(rendWin, {
           filters: [
-            {name: 'Html Files', extensions: ['html']}
+            {name: typeName, extensions: [fileExts]}
           ],
           properties: [
             'openFile',
@@ -30,6 +42,7 @@ const getHtmlFromFile = () => {
         })
         .then(file => {
           if (!file.canceled) {
+            // only a single file -- use the folder version to get many
             const fileName = file.filePaths[0]
 
             // n.b. error handling is funky here, within readFileSync()
@@ -38,156 +51,120 @@ const getHtmlFromFile = () => {
             const content = fs.readFileSync(fileName, 'utf8')
             resolve({ path: fileName, content: content })
           } else {
-            resolve({ path: '(Cancelled...)', content: '' })
+            reject({ path: '(Cancelled...)', content: '' })
           }
         })
+        .catch (e => {
+          reject ('SelectContentFromFolder: ' + e.toString())
+        })
     } else {
-      reject('getHtmlFromFile:error: Not allowed to get file from browser')
+      reject('SelectContentFromFile:error: Not allowed.')
     }
   })
 }
 
-const getHtmlFromPath = (filePath) => {
-  return new Promise ((resolve) => {
-    // n.b. error handling is funky here, within readFileSync()
-    // errors will be returned as strings, just as content
-    // *todo* thus we show them on screen, but should split out view as normal
-    const content = fs.readFileSync(filePath, 'utf8')
-    resolve({ path: filePath, content: content })
-  })
-}
-
-const getFilesFromDir = (fileExt) => {
+// n.b. you can get one or more types of files - fileExts is a Regex expression
+// since we are looking only at extensions, simple naming of them will work
+const getFilesFromFolder = (fileExts = 'html|htm') => {
   return new Promise ((resolve, reject) => {
     if (process.env.ORIGINAL_XDG_CURRENT_DESKTOP !== null) {
       dialog.showOpenDialog(rendWin, {
-          filters: [],
           properties: [
             'openDirectory', // for later, implementing result
           ]
         })
-        .then(dir => {
-          if (!dir.canceled) {
-            const dirPath = dir.filePaths[0]
+        .then(folder => {
+          if (!folder.canceled) {
+            const folderPath = folder.filePaths[0]
+            servicesLog ('getFilesFromFolder: ' + JSON.stringify(folderPath))
+            try {
+              const files = fs.readdirSync(folderPath)
+              const extsMatch = new RegExp(fileExts,"g")
+              let extFiles = []
 
-            console.log ('dir: ' + JSON.stringify(dir))
-            // n.b. error handling is funky here, a readFileSync()
-            // errors will be returned as strings, just as content
-            // *todo* thus we show them on screen, but should split out view as normal
-            const files = fs.readdirSync(dirPath)
-            let extFiles = []
-            files.forEach(file => {
-              console.log ('extname: ' + path.extname(file))
-              if (path.extname(file) === fileExt) {
-                console.log ('pushing ' + dirPath + '\\' + file)
-                extFiles.push (dirPath + '\\' + file)
-              }
-            })
-            resolve({ dirPath: dirPath, files: extFiles})
+              files.forEach(file => {
+                if (path.extname(file).match(extsMatch)) {
+                  // servicesLog ('pushing ' + folderPath + '\\' + file)
+                  extFiles.push (folderPath + '\\' + file)
+                }
+              })
+              resolve({ folderPath: folderPath, files: extFiles})
+            } catch (e) {
+              reject ('getFilesFromFolder: ' + e.toString())
+            }
           } else {
-            resolve({files: '(Cancelled...)'})
+            reject ({getFilesFromFolder: '(Cancelled...)'})
           }
         })
     } else {
-      reject('getFilesFromDir:error: Not allowed to get file from browser')
+      reject('getFilesFromFolder:error: Not allowed')
     }
   })
 }
 
-const putHtmlToFile = (htmlData) => {
+const putContentToFolder = (content,
+                            proposedFilename = 'edited',
+                            fileExt = 'html',
+                            fileDescription = 'Html Files') => {
   return new Promise ((resolve, reject) => {
     if (process.env.ORIGINAL_XDG_CURRENT_DESKTOP !== null) {
       dialog.showSaveDialog(rendWin, {
-          message: 'Save your Html file here: ',
+          defaultPath: proposedFilename,
+          message: 'Save your file here: ',
           properties: [
             'createDirectory ',
             'showOverwriteConfirmation ',
           ],
           filters: [
-            {name: 'Html Files', extensions: ['html']}
+            { name: fileDescription, extensions: [fileExt]}
           ],
         })
         .then(file => {
           if (!file.canceled) {
-            const accomplished = fs.writeFileSync(file.filePath, htmlData, {
+            const accomplished = fs.writeFileSync(file.filePath, content, {
               encoding: 'utf8',
             });
             resolve({ path: file.filePath, success: accomplished })
           } else {
-            resolve({ path: '(Cancelled...)', content: '' })
+            reject ({ path: '(Cancelled...)', content: '' })
           }
         })
+        .catch (e => {
+          reject ('putContentToFolder: ' + e.toString())
+        })
+
     } else {
-      reject('putHtmlToFile:error: Not allowed to put file from browser')
+      reject('putHtmlToFile:error: Not allowed.')
     }
   })
 }
 
-const getJsonFromFile = () => {
+const getContentFromFilePath = (filePath) => {
   return new Promise ((resolve, reject) => {
-    if (process.env.ORIGINAL_XDG_CURRENT_DESKTOP !== null) {
-      dialog.showOpenDialog(rendWin, {
-          filters: [
-            {name: 'JSON Files', extensions: ['json']}
-          ],
-          properties: [
-            'openFile',
-            // 'openDirectory', // for later, implementing result
-          ]
-        })
-        .then(file => {
-          if (!file.canceled) {
-            const fileName = file.filePaths[0]
-
-            // n.b. error handling is funky here, within readFileSync()
-            // errors will be returned as strings, just as content
-            // *todo* thus we show them on screen, but should split out view as normal
-            const content = fs.readFileSync(fileName, 'utf8')
-            resolve({ path: fileName, content: content })
-          } else {
-            resolve({ path: '(Cancelled...)', content: '' })
-          }
-        })
-    } else {
-      reject('findJsonFromFile:error: Not allowed to get file from browser')
+    try {
+      const content = fs.readFileSync(filePath, 'utf8')
+      resolve({ path: filePath, content: content })
+    } catch (e) {
+      reject ('getContentFromFilePath: ' + e.toString())
     }
   })
 }
 
-const putJsonToFile = (jsonData) => {
+const putContentToFilePath = (filePath, content) => {
   return new Promise ((resolve, reject) => {
-    if (process.env.ORIGINAL_XDG_CURRENT_DESKTOP !== null) {
-      dialog.showSaveDialog(rendWin, {
-          message: 'Save your Json file here: ',
-          properties: [
-            'createDirectory ',
-            'showOverwriteConfirmation ',
-          ],
-          filters: [
-            {name: 'JSON Files', extensions: ['json']}
-          ],
-        })
-        .then(file => {
-          if (!file.canceled) {
-            const accomplished = fs.writeFileSync(file.filePath, jsonData, {
-              encoding: 'utf8',
-            });
-            resolve({ path: file.filePath, success: accomplished })
-          } else {
-            resolve({ path: '(Cancelled...)', content: '' })
-          }
-        })
-    } else {
-      reject('putJsonToFile:error: Not allowed to put file from browser')
+    try {
+      fs.writeFileSync(filePath, content,'utf8')
+      resolve({ ok: true })
+    } catch (e) {
+      reject('putContentToFilePath: ' + e.toString())
     }
   })
 }
 
 export {
-  getFilesFromDir,
-  getHtmlFromFile,
-  getHtmlFromPath,
-  putHtmlToFile,
-  getJsonFromFile,
-  putJsonToFile,
+  getFilesFromFolder,
+  SelectContentFromFolder,
+  putContentToFolder,
+  getContentFromFilePath,
+  putContentToFilePath
 }

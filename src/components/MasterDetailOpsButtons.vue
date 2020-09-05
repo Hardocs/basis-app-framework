@@ -22,27 +22,12 @@
 
 <script>
 
-import {
-  getHtmlFromFile,
-  putHtmlToFile
-} from '@/modules/habitat-localservices'
-
 export default {
 
   // n.b. Note that this component with FileOperations practices a normal no-Vuex way
   // to interact between Vue parent and child
 
-  name: "InterActOpsButtons",
-  props: {
-    htmlString: {
-      default: 'none yet',
-      type: String
-    },
-    htmlEditor: {
-      // default: {},
-      type: Object
-    }
-  },
+  name: "MasterDetailOpsButtons",
   data: function () {
     return {
       items: [
@@ -52,7 +37,7 @@ export default {
         },
         {
           label: "Save an Html File from Screen",
-          action: this.saveHtmlToFile
+          action: this.saveToFile
         },
         // {
         //   label: "Another Example (not yet)",
@@ -62,32 +47,11 @@ export default {
     }
   },
   methods: {
-    openFile: function () {
-      getHtmlFromFile ()
-        .then (result => {
-          this.$emit('showFile', result)
-        })
-        .catch (e => {
-          const errResult = {
-            path: '(no path)',
-            content: '{ "error": ' + e.toString() + ' }'
-          }
-          this.$emit('showFile', errResult)
-        })
-    },
     openEditFiles: function () {
       this.$emit('openEditFiles')
     },
-    saveHtmlToFile: function () {
-      const editHtmlView = this.htmlEditor.getHTML()
-      putHtmlToFile (editHtmlView)
-        .catch (e => {
-          const errResult = {
-            path: '(no path)',
-            content: '{ "error": ' + e.toString() + ' }'
-          }
-          this.$emit('savedFile', errResult)
-        })
+    saveToFile: function () {
+      this.$emit('saveToFile')
     },
     noOp: () => {} // but don't do arrows when you want to use this.anything
   },
