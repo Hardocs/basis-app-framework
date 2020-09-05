@@ -1,3 +1,19 @@
+# Framework Integration Basis
+
+This is the initial release on which the Hardocs Electron App can be built, bringing in our work done in parallel.
+
+It's been slimmed down, Habitat calls clarified, and made as direct to moment as possible.
+
+This process uncovers that there need to be some new calls added, in our simple fashion, for the file operations Hardocs actually will use beyond manual selection. 
+
+All file calls will become inclusive for the various types of files we'll use; not just html or json. Thus some old ones will be revised.
+
+These additions will be arriving, and a fresh writing for the rest of this Readme.
+
+# OLD NEWS ONLY, BELOW
+
+All to be rewritten, but saving the present text for update or re-use.
+
 # basis-app-framework
 
 n.b. This Readme is already out of date, and will get a rewrite next week as I complete this initial framework basis with individual data operations and activities, so all is clear.

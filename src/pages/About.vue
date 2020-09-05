@@ -1,5 +1,6 @@
 <template>
   <div class="hello">
+    <h1 class="page-title">About</h1>
     <img alt="Vue logo" src="@/assets/icons/png/hardocs96.png" class="logo">
     <h1 class="font-bold text-primary-100 mt-2">This is the Framework Basis App for Hardocs</h1>
     <h1 class="font-bold text-primary-100 mt-2">{{ versionMsg }}</h1>
@@ -26,13 +27,15 @@ export default {
 </script>
 
 <style>
-page-title {
-  color: darkblue;
-  margin-top: 100px !important;
-}
 </style>
 
 <style scoped>
+
+.page-title {
+  color: #046fab;
+  margin-top: 2em;
+}
+
 .logo {
   width: 96px;
   margin: 24px auto

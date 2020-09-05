@@ -22,30 +22,37 @@
 
 <script>
 
-import { getJsonFromFile, putJsonToFile } from '@/modules/habitat-requests'
+import {
+  getHtmlFromFile,
+  putHtmlToFile
+} from '@/modules/habitat-localservices'
 
 export default {
 
   // n.b. Note that this component with FileOperations practices a normal no-Vuex way
   // to interact between Vue parent and child
 
-  name: "FileOpsButtons",
+  name: "InterActOpsButtons",
   props: {
-    jsonString: {
-      default: '{ "none": "yet" }',
+    htmlString: {
+      default: 'none yet',
       type: String
+    },
+    htmlEditor: {
+      // default: {},
+      type: Object
     }
   },
   data: function () {
     return {
       items: [
         {
-          label: "Display a Json File",
-          action: this.openFile
+          label: "Edit Html Files in Folder",
+          action: this.openEditFiles
         },
         {
-          label: "Save a Json File from Screen",
-          action: this.saveFile
+          label: "Save an Html File from Screen",
+          action: this.saveHtmlToFile
         },
         // {
         //   label: "Another Example (not yet)",
@@ -56,7 +63,7 @@ export default {
   },
   methods: {
     openFile: function () {
-      getJsonFromFile ()
+      getHtmlFromFile ()
         .then (result => {
           this.$emit('showFile', result)
         })
@@ -68,15 +75,12 @@ export default {
           this.$emit('showFile', errResult)
         })
     },
-    saveFile: function () {
-      putJsonToFile (this.jsonString)
-        .then (result => {
-          const fileResult = {
-            path: result.path,
-            content: this.jsonString,
-          }
-          this.$emit('savedFile', fileResult)
-        })
+    openEditFiles: function () {
+      this.$emit('openEditFiles')
+    },
+    saveHtmlToFile: function () {
+      const editHtmlView = this.htmlEditor.getHTML()
+      putHtmlToFile (editHtmlView)
         .catch (e => {
           const errResult = {
             path: '(no path)',

@@ -28,7 +28,7 @@
 <static-query>
   query{
     metadata{
-      siteName
+      sitepath
     },
     allPage{
       path
@@ -40,37 +40,37 @@
 <script>
 
 export default {
-  name: "Nav",
+  path: "Nav",
   // components: { BookmarksMenu },
   data: function() {
     return {
       items: [
-        { name: "/",
+        { path: "/",
           label: "Home",
           type: 'local'
         },
         {
-          name: "/data-operations",
-          label: "Data Operations",
+          path: "/master-detail",
+          label: "Master Detail",
           type: 'local'
         },
         {
-          name: "/file-operations",
-          label: "File Operations",
+          path: "/hardocs-db",
+          label: "Hardocs Db In-Out",
           type: 'local'
         },
         {
-          name: "https://www.google.com/search?q=oceanic&source=lnms&tbm=isch",
-          label: "Panel",
+          path: "https://www.google.com/search?q=oceanic&source=lnms&tbm=isch",
+          label: "Remote Website",
           type: 'remote'
         },
         {
-          name: "/documentation",
+          path: "/documentation",
           label: "Documentation",
           type: 'local'
         },
         {
-          name: "/about",
+          path: "/about",
           label: "About",
           type: 'local'
         }
@@ -81,12 +81,15 @@ export default {
     handleMenu (item) {
       switch (item.type) {
         case 'local':
-          this.$router.push(item.name)
+          // wouldn't want to re-push our current route...
+          if (this.$router.currentRoute.path !== item.path) {
+            this.$router.push(item.path)
+          }
           break
 
         case 'remote':
         default:
-          window.open (item.name, '_blank')
+          window.open (item.path, '_blank')
           break
       }
     }

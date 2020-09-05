@@ -1,17 +1,14 @@
 'use strict'
 
 import { app, protocol, BrowserWindow } from 'electron'
-import path from 'path'
-import {
-  createProtocol,
-} from 'vue-cli-plugin-electron-builder/lib'
+import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let appWin
+let win
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -20,15 +17,9 @@ protocol.registerSchemesAsPrivileged([
 
 function createWindow() {
   // Create the browser window.
-
-  (async () => {
-    await app.whenReady()
-
-    appWin = new BrowserWindow({
-      width: 1200,
-      height: 700,
-      frame: true, // *todo* until we make our own close box etc., then false
-      icon: path.join(__dirname, 'assets/icons/png/hardocs64.png'),
+  win = new BrowserWindow({
+    width: 800,
+    height: 600,
       webPreferences: {
         // Use pluginOptions.nodeIntegration, leave this alone
         // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
@@ -38,22 +29,17 @@ function createWindow() {
 
     if (process.env.WEBPACK_DEV_SERVER_URL) {
       // Load the url of the dev server if in development mode
-      appWin.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
-      if (!process.env.IS_TEST) appWin.webContents.openDevTools()
+    win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
+    if (!process.env.IS_TEST) win.webContents.openDevTools()
     } else {
       createProtocol('app')
       // Load the index.html when not in development
-      appWin.loadURL('app://./index.html')
+    win.loadURL('app://./index.html')
     }
 
-    appWin.on('closed', () => {
-      appWin = null
+  win.on('closed', () => {
+    win = null
     })
-
-    // *todo* we can avoid immediate dev tools in electron:develop, but need more so can still use
-    // win.webContents.on("devtools-opened", () => { win.webContents.closeDevTools() })
-  })()
-
 }
 
 // Quit when all windows are closed.
@@ -68,7 +54,7 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
-  if (appWin === null) {
+  if (win === null) {
     createWindow()
   }
 })
