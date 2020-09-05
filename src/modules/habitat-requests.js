@@ -1,30 +1,25 @@
-// this begins the module for all data requests (and any saves), which abstracts
-// and simplifies any interaction with the underlying filesystem or database.
-// This in turn allows different habutat-database drivers to be used in future,
-// employing for example CombatCovid or other security motifs, without changes
-// to Hardocs application code
+// this is the module for all data requests (and any saves) for Hardocs apps.
+//
+// It abstracts and simplifies any interaction with the filesystem or database.
 
-// we must always be promises in here -- because the UX will need that.
-// data is never returned at the time called; it is always by callbacks,
-// in event not clock time. Thus we reflect this back, and the promise
-// eventual results are put right in the UX data, to be displayed.
+// Lots of important n.b. follow...
+
+// Ths layer enables different habutat-database drivers to be used in future,
+// employing for example CombatCovid or other security motifs, without changes
+// to Hardocs application code, a primary reason to use it.
+
+// We must always be Promises in here -- because the UX will need that.
+// Data is never returned at the time called; it is always by callbacks,
+// in event time, not clock time. Thus we reflect this back, and the promise
+// eventual results are put right into the UX data, to be immediately displayed.
 
 // we never use async/await, because we want the UX to respond. That its
-// fresh data comes later after action to prepare for it, is natural, expected.
+// fresh data comes later after action to prepare for it, is natural, is expected.
 
 import {
-  createOrOpenDb,
-  getStatusFromDb,
-  createIndexOnDb,
-  upsertJsonToDb,
-  explainJsonFromDb,
-  getJsonFromDb,
-  findJsonFromDb,
-  putJsonToDb,
-  removeJsonFromDb,
-  replicateDb,
-  compactDb,
-  destroyDb
+  createOrOpenDb, getStatusFromDb,
+  getJsonFromDb, putJsonToDb,
+  destroyDb // *todo* out later
 } from '@/modules/habitat-database'
 
 import fs from 'fs'
@@ -82,15 +77,22 @@ const storeToDatabase = (owner, project,
   })
 }
 
-// n.b. this will not be a user-available call in the real Hardoces!!
+// *todo* n.b. this will not be a user-available call in the real Hardoces!!
+// it is dangerous, and we are providing temporarily only to make development modeling experiments easy
+// *todo* it will be removed soon, finding a place on the protected cloud side only
 const clearDatabase = (dbName = 'hardocs-projects') => {
   return new Promise ((resolve, reject) => {
+
+    if (dbName.includes('http')) {
+      reject ('no clearing of remote databases, ever!! Only local, for development testing')
+    }
+
     const db = createOrOpenDatabase(dbName)
     getStatusOfDatabase(db)
       .then (result => {
         console.log ('clearDatabase:status: ' + JSON.stringify(result))
         // console.log ('clearDatabase:data: ' + JSON.stringify(data))
-        return destroyDatabase(db)
+        return destroyDb(db)
       })
       .then(result => {
         // console.log ('clearDatabase:upsert ' + JSON.stringify(result))
@@ -290,14 +292,6 @@ const createOrOpenDatabase = (dbName, locale = 'electron-browser') => {
   return db
 }
 
-const getStatusOfDatabase = (db) => {
-  return getStatusFromDb (db)
-}
-
-const createViewOnDatabase = (/*db, name, code*/) => {
-
-}
-
 const upsertProjectToDatabase = (db, owner, name, data) => {
   // *todo* seems to work as expected, but is a little different from lib - check
   return new Promise ((resolve, reject) => {
@@ -340,106 +334,35 @@ const upsertProjectToDatabase = (db, owner, name, data) => {
   })
 }
 
-const createIndexOnDatabase = (db, index) => {
-  return createIndexOnDb(db, index)
-}
-
-const explainJsonFromDatabase = (db, query) => {
-  return explainJsonFromDb (db, query)
-}
-
 const getJsonFromDatabase = (db, id, options = {}) => {
   return getJsonFromDb (db, id, options)
-}
-
-const findJsonFromDatabase = (db, query) => {
-  return findJsonFromDb (db, query)
 }
 
 const putJsonToDatabase = (db, data) => {
   return putJsonToDb(db, data)
 }
 
+const getStatusOfDatabase = (db) => {
+  return getStatusFromDb (db)
+}
+
 const keyFromParts = (owner, project) => {
   return owner + ':' + project
 }
 
-const upsertJsonToDatabase = (db, query, data) => {
-  // n.b. this is disabled above in the present for good cause
-  // the later solution may involve differences at
-  // this level also, to provide full compatibility
-  // with different basis interfaces
-  return upsertJsonToDb(db, query, data)
-}
-
-const removeJsonFromDatabase = (db, record) => {
-  return removeJsonFromDb(db, record)
-}
-
-const openPWRemote = (remoteDbName, userName = 'admin-hard', userPass = '4admin-hard') => {
-
-  // *todo* big assumption _only_ for first early moment in dev, is no https, password authentication...
-  let remoteDb = createOrOpenDatabase(remoteDbName)
-  console.log('remoteDb: ' + JSON.stringify(remoteDb))
-  if (!remoteDb) {
-    return null // no promise on this call, so old-style handling
-  }
-
-  remoteDb.login(userName, userPass)
-    .then (result => {
-      const msg = 'login: ' + JSON.stringify(result)
-      console.log (msg)
-    })
-    .then (() => {
-      return getStatusOfDatabase(remoteDb)
-    })
-    .then(function (info) {
-      console.log('remoteDb info: ' + JSON.stringify(info))
-    })
-    .catch (err => {
-      const msg = remoteDbName + ': ' + JSON.stringify(err)
-      console.log (msg)
-      remoteDb = null
-    })
-
-  return remoteDb
-}
-
-const replicateDatabase = (from, to, options = []) => {
-  return replicateDb (from, to, options)
-}
-
-const compactDatabase = (db) => {
-  return compactDb (db)
-}
-
-const destroyDatabase = (db) => {
-  return destroyDb (db)
-}
-
 export {
+  createOrOpenDatabase,
+  loadFromDatabase,
+  storeToDatabase,
+  clearDatabase,
+
   getFilesFromDir,
   getHtmlFromFile,
   getHtmlFromPath,
   putHtmlToFile,
   getJsonFromFile,
   putJsonToFile,
-  createOrOpenDatabase,
-  getStatusOfDatabase,
-  createViewOnDatabase,
-  createIndexOnDatabase,
-  explainJsonFromDatabase,
+
   getJsonFromDatabase,
-  findJsonFromDatabase,
-  putJsonToDatabase,
-  upsertJsonToDatabase,
-  removeJsonFromDatabase,
-  loadFromDatabase,
-  storeToDatabase,
-  clearDatabase,
-  keyFromParts,
-  openPWRemote,
-  replicateDatabase,
-  compactDatabase,
-  destroyDatabase
+  keyFromParts
 }

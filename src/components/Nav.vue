@@ -49,16 +49,6 @@ export default {
           label: "Home",
           type: 'local'
         },
-        // {
-        //   path: "/data-operations",
-        //   label: "Data Operations",
-        //   type: 'local'
-        // },
-        // {
-        //   path: "/file-operations",
-        //   label: "File Operations",
-        //   type: 'local'
-        // },
         {
           path: "/master-detail",
           label: "Master Detail",
@@ -69,16 +59,6 @@ export default {
           label: "Hardocs Db In-Out",
           type: 'local'
         },
-        // {
-        //   path: "/inter-action",
-        //   label: "Inter Action",
-        //   type: 'local'
-        // },
-        // {
-        //   path: "/data-conflict",
-        //   label: "Data Conflict",
-        //   type: 'local'
-        // },
         {
           path: "https://www.google.com/search?q=oceanic&source=lnms&tbm=isch",
           label: "Remote Website",
