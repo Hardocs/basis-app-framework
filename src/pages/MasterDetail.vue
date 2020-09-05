@@ -5,11 +5,9 @@
     </div>
     <hr>
     <MasterDetailOpsButtons
-      :htmlString="fileContent"
-      :htmlEditor="editor"
       v-on:openEditFiles="openDir"
       v-on:showFile="showFile"
-      v-on:savedFile="savedFile"
+      v-on:saveToFile="saveToFile"
     />
     <div v-if="filePath" class="text-json">
       <div class="bg-display text-white">
@@ -58,7 +56,11 @@
 <script>
 import MasterDetailOpsButtons from '@/components/MasterDetailOpsButtons'
 import { Editor, EditorContent, EditorMenuBar } from 'tiptap'
-import { getHtmlFromPath, getFilesFromDir } from '@/modules/habitat-localservices';
+import {
+  getFilesFromFolder,
+  putContentToFolder,
+  getContentFromFilePath }
+  from '@/modules/habitat-localservices'
 import {
   Image,
   Blockquote,
@@ -129,38 +131,44 @@ export default {
       this.fileContent = fileData.content
       this.editor.setContent(this.fileContent)
     },
-    savedFile: function (fileData) {
-      this.filePath = fileData.path
-      this.fileContent = fileData.content
-    },
     fileName: function (filePath) {
       const parts = filePath.split('\\')
       return parts[parts.length - 1]
     },
     openDir: function () {
       this.editFiles = []
-      getFilesFromDir('.html') // mind the dot; it's required
+      getFilesFromFolder('html|htm') // illustrating how to get more than one type
       .then (result => {
         this.editFiles = result.files
         if (this.editFiles.length > 0) {
-          this.openFile(this.editFiles[0])
           this.openFile(this.editFiles[0])
         }
       })
       .catch (err => this.editFiles[0] = err) // we can do a lot better, but not today - parent ops result pane...
     },
     openFile: function (filePath) {
-      getHtmlFromPath (filePath)
+      getContentFromFilePath (filePath)
         .then (fileData => {
           this.filePath = fileData.path
           this.fileContent = fileData.content
-          // part of the incoherent mess - we have already this file on list, etc..
+          // part of the incoherence of simplistic demo - we have already this file on list, etc..
           // this.editFiles.push(this.filePath)
           this.editor.setContent(this.fileContent)
         })
         .catch (e => {
           this.editor.setContent('error opening file: ' + e)
        })
+    },
+    saveToFile: function () {
+      const editHtmlView = this.editor.getHTML()
+      putContentToFolder (editHtmlView, 'edited', 'html', 'Html File')
+        .then (result => {
+          console.log ('saved file: ' + JSON.stringify(result))
+        })
+        .catch (e => {
+          this.filePath = '(no path)',
+          this.fileContent = { "error": e.toString() }
+        })
     },
   },
   components: {
