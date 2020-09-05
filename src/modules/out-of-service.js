@@ -11,8 +11,8 @@ import {
   createIndexOnDb, destroyDb, explainJsonFromDb, findJsonFromDb,
   getStatusFromDb, putJsonToDb, removeJsonFromDb, replicateDb
 }
-  from '@/modules/habitat-database';
-import { createOrOpenDatabase, getStatusOfDatabase} from '@/modules/habitat-requests';
+  from '@/modules/transport-ifc';
+import { createOrOpenDatabase, getStatusOfDatabase} from '@/modules/habitat-database';
 
 const createIndexOnDatabase = (db, index) => {
   return createIndexOnDb(db, index)

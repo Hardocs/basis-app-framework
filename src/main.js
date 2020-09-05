@@ -2,7 +2,7 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 
 import App from '@/App.vue'
-import HelloWorld from '@/pages/HelloWorld'
+import Home from '@/pages/Home'
 import MasterDetail from '@/pages/MasterDetail'
 import Documentation from '@/pages/Documentation'
 import About from '@/pages/About'
@@ -17,7 +17,7 @@ Vue.use(VueRouter)
 
 const router = new VueRouter({
   routes: [
-    { path: '/', component: HelloWorld, props: { appVersion: process.env.HD_APP_VERSION } },
+    { path: '/', component: Home, props: { appVersion: process.env.HD_APP_VERSION } },
     { path: '/master-detail', component: MasterDetail },
     { path: '/hardocs-db', component: HardocsDb },
     { path: '/documentation', component: Documentation },

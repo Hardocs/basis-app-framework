@@ -25,7 +25,7 @@
 import {
   getHtmlFromFile,
   putHtmlToFile
-} from '@/modules/habitat-requests'
+} from '@/modules/habitat-localservices'
 
 export default {
 

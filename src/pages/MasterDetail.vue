@@ -58,7 +58,7 @@
 <script>
 import MasterDetailOpsButtons from '@/components/MasterDetailOpsButtons'
 import { Editor, EditorContent, EditorMenuBar } from 'tiptap'
-import { getHtmlFromPath, getFilesFromDir } from '@/modules/habitat-requests';
+import { getHtmlFromPath, getFilesFromDir } from '@/modules/habitat-localservices';
 import {
   Image,
   Blockquote,

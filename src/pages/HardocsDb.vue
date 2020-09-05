@@ -25,7 +25,7 @@ import {
   storeToDatabase,
   loadFromDatabase,
   clearDatabase
-} from '@/modules/habitat-requests'
+} from '@/modules/habitat-database'
 
 export default {
   name: "HardocsDb",
