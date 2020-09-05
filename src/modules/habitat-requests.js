@@ -24,10 +24,10 @@ import {
 
 import fs from 'fs'
 import path from 'path'
-import app from 'electron'
+import electron from 'electron'
 
-const dialog = app.remote.dialog;
-const rendWin = app.remote.getCurrentWindow()
+const { dialog, getCurrentWindow } = electron.remote
+const rendWin = getCurrentWindow()
 
 const loadFromDatabase =  (owner = 'hardOwner', project = 'firstProject',
                            dbName = 'hardocs-projects', ) => {
