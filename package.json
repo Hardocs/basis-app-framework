@@ -4,6 +4,7 @@
   "private": true,
   "author": "Narration SD",
   "description": "Collect and illustrate patterns in Hardocs basis architecture",
+  "license": "SEE LICENSE IN LICENSE.md",
   "scripts": {
     "electron:build": "vue-cli-service electron:build",
     "electron:serve": "vue-cli-service electron:serve",
