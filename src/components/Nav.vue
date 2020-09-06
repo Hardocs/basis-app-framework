@@ -60,6 +60,11 @@ export default {
           type: 'local'
         },
         {
+          path: "/docs-trans",
+          label: "Translate Files",
+          type: 'local'
+        },
+        {
           path: "https://www.google.com/search?q=oceanic&source=lnms&tbm=isch",
           label: "Remote Website",
           type: 'remote'
