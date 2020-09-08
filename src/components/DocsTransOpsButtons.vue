@@ -37,7 +37,7 @@ export default {
         },
         {
           label: "Translate Files",
-          action: this.saveToFile
+          action: this.translateFiles
         },
         {
           label: "Save an Html File from Editor",
@@ -53,6 +53,9 @@ export default {
   methods: {
     openEditFiles: function () {
       this.$emit('openEditFiles')
+    },
+    translateFiles: function () {
+      this.$emit('translateFiles')
     },
     saveToFile: function () {
       this.$emit('saveToFile')

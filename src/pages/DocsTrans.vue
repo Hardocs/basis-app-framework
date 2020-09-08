@@ -1,5 +1,5 @@
 <template>
-  <span>
+  <div>
     <div class="w-full bg-title">
     <h2 class="text-json">Buttons With Actions -- try one...</h2>
     </div>
@@ -27,6 +27,7 @@
     <DocsTransOpsButtons
       v-on:openEditFiles="openDir"
       v-on:showFile="showFile"
+      v-on:translateFiles="translateFiles"
       v-on:saveToFile="saveToFile"
     />
     <div v-if="filePath" class="text-json">
@@ -70,7 +71,10 @@
         </div>
       </div>
     </div>
-  </span>
+    <div v-if="opsDisplay" class="bg-display text-white">
+      {{ opsDisplay }}
+    </div>
+  </div>
 </template>
 
 <script>
@@ -80,7 +84,9 @@ import { Editor, EditorContent, EditorMenuBar } from 'tiptap'
 import {
   getFilesFromFolder,
   putContentToFolder,
-  getContentFromFilePath }
+  getContentFromFilePath,
+  shellProcess
+}
   from '@/modules/habitat-localservices'
 import {
   Image,
@@ -110,8 +116,6 @@ export default {
       editFiles: [],
       filePath: null,
       fileContent: null,
-      fileJsonObject: null,
-      fileJsonView: null,
       fileChoices: [
         { label: 'Markdown', exts: 'md' },
         { label: 'Word Docx', exts: 'docx' },
@@ -119,6 +123,7 @@ export default {
       ],
       fromFiletype: { label: 'Markdown', exts: 'md' },
       toFiletype:  { label: 'Html', exts: 'html,htm' },
+      opsDisplay: null,
     }
   },
   mounted() {
@@ -187,6 +192,25 @@ export default {
           this.editor.setContent('error opening file: ' + e)
        })
     },
+    translateFiles: function () {
+      this.clearPanels()
+      shellProcess('pandoc',
+        [ 'demo.txt', '-o', 'demo.docx'],
+        {
+          cwd: 'c:\\tmp'
+        }
+      )
+      .then (result => {
+        const msg = 'translateFiles: ' + result
+        console.log(msg)
+        this.opsDisplay = msg
+      })
+      .catch (e => {
+        const msg = 'translateFiles:error: ' + e
+        console.log(msg)
+        this.opsDisplay = msg
+      })
+    },
     saveToFile: function () {
       const editHtmlView = this.editor.getHTML()
       putContentToFolder (editHtmlView, 'edited', 'html', 'Html File')
@@ -197,6 +221,9 @@ export default {
           this.filePath = '(no path)',
           this.fileContent = { "error": e.toString() }
         })
+    },
+    clearPanels: function () {
+      this.opsDisplay = null
     },
   },
   components: {

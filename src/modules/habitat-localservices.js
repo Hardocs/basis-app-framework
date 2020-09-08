@@ -17,8 +17,11 @@
 import fs from 'fs'
 import path from 'path'
 import electron from 'electron'
+import {spawn} from 'child_process'
+// const child_process = require('child_process')
+// // const spawn = child_process.spawn
 
-const { dialog, getCurrentWindow } = electron.remote
+const {dialog, getCurrentWindow} = electron.remote
 const rendWin = getCurrentWindow()
 
 const servicesLogging = true // *todo* for now - later false thus optional
@@ -29,7 +32,7 @@ const servicesLog = (msg) => {
 }
 
 const SelectContentFromFolder = (fileExts = 'html', typeName = 'NONE') => {
-  return new Promise ((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     if (process.env.ORIGINAL_XDG_CURRENT_DESKTOP !== null) {
       dialog.showOpenDialog(rendWin, {
           filters: [
@@ -49,13 +52,13 @@ const SelectContentFromFolder = (fileExts = 'html', typeName = 'NONE') => {
             // errors will be returned as strings, just as content
             // *todo* thus we show them on screen, but should split out view as normal
             const content = fs.readFileSync(fileName, 'utf8')
-            resolve({ path: fileName, content: content })
+            resolve({path: fileName, content: content})
           } else {
-            reject({ path: '(Cancelled...)', content: '' })
+            reject({path: '(Cancelled...)', content: ''})
           }
         })
-        .catch (e => {
-          reject ('SelectContentFromFolder: ' + e.toString())
+        .catch(e => {
+          reject('SelectContentFromFolder: ' + e.toString())
         })
     } else {
       reject('SelectContentFromFile:error: Not allowed.')
@@ -66,7 +69,7 @@ const SelectContentFromFolder = (fileExts = 'html', typeName = 'NONE') => {
 // n.b. you can get one or more types of files - fileExts is a Regex expression
 // since we are looking only at extensions, simple naming of them will work
 const getFilesFromFolder = (fileExts = 'html|htm') => {
-  return new Promise ((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     if (process.env.ORIGINAL_XDG_CURRENT_DESKTOP !== null) {
       dialog.showOpenDialog(rendWin, {
           properties: [
@@ -76,24 +79,24 @@ const getFilesFromFolder = (fileExts = 'html|htm') => {
         .then(folder => {
           if (!folder.canceled) {
             const folderPath = folder.filePaths[0]
-            servicesLog ('getFilesFromFolder: ' + JSON.stringify(folderPath))
+            servicesLog('getFilesFromFolder: ' + JSON.stringify(folderPath))
             try {
               const files = fs.readdirSync(folderPath)
-              const extsMatch = new RegExp(fileExts,"g")
+              const extsMatch = new RegExp(fileExts, "g")
               let extFiles = []
 
               files.forEach(file => {
                 if (path.extname(file).match(extsMatch)) {
                   // servicesLog ('pushing ' + folderPath + '\\' + file)
-                  extFiles.push (folderPath + '\\' + file)
+                  extFiles.push(folderPath + '\\' + file)
                 }
               })
-              resolve({ folderPath: folderPath, files: extFiles})
+              resolve({folderPath: folderPath, files: extFiles})
             } catch (e) {
-              reject ('getFilesFromFolder: ' + e.toString())
+              reject('getFilesFromFolder: ' + e.toString())
             }
           } else {
-            reject ({getFilesFromFolder: '(Cancelled...)'})
+            reject({getFilesFromFolder: '(Cancelled...)'})
           }
         })
     } else {
@@ -106,7 +109,7 @@ const putContentToFolder = (content,
                             proposedFilename = 'edited',
                             fileExt = 'html',
                             fileDescription = 'Html Files') => {
-  return new Promise ((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     if (process.env.ORIGINAL_XDG_CURRENT_DESKTOP !== null) {
       dialog.showSaveDialog(rendWin, {
           defaultPath: proposedFilename,
@@ -116,7 +119,7 @@ const putContentToFolder = (content,
             'showOverwriteConfirmation ',
           ],
           filters: [
-            { name: fileDescription, extensions: [fileExt]}
+            {name: fileDescription, extensions: [fileExt]}
           ],
         })
         .then(file => {
@@ -124,13 +127,13 @@ const putContentToFolder = (content,
             const accomplished = fs.writeFileSync(file.filePath, content, {
               encoding: 'utf8',
             });
-            resolve({ path: file.filePath, success: accomplished })
+            resolve({path: file.filePath, success: accomplished})
           } else {
-            reject ({ path: '(Cancelled...)', content: '' })
+            reject({path: '(Cancelled...)', content: ''})
           }
         })
-        .catch (e => {
-          reject ('putContentToFolder: ' + e.toString())
+        .catch(e => {
+          reject('putContentToFolder: ' + e.toString())
         })
 
     } else {
@@ -140,23 +143,65 @@ const putContentToFolder = (content,
 }
 
 const getContentFromFilePath = (filePath) => {
-  return new Promise ((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     try {
       const content = fs.readFileSync(filePath, 'utf8')
-      resolve({ path: filePath, content: content })
+      resolve({path: filePath, content: content})
     } catch (e) {
-      reject ('getContentFromFilePath: ' + e.toString())
+      reject('getContentFromFilePath: ' + e.toString())
     }
   })
 }
 
 const putContentToFilePath = (filePath, content) => {
-  return new Promise ((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     try {
-      fs.writeFileSync(filePath, content,'utf8')
-      resolve({ ok: true })
+      fs.writeFileSync(filePath, content, 'utf8')
+      resolve({ok: true})
     } catch (e) {
       reject('putContentToFilePath: ' + e.toString())
+    }
+  })
+}
+
+const shellProcess = (childPath, args = [], options = {}) => {
+
+  return new Promise((resolve, reject) => {
+    try {
+      // console.log('dirname: ' + __dirname)
+      // console.log('childPath: ' + childPath)
+      let shellChild = spawn(childPath, args, options)
+      // note that we could have own options, if we want own control
+      options = Object.assign(options, {
+          // things we control from and for here
+          stdio: ['pipe', 'pipe', 'pipe', 'ipc']
+        },
+      )
+      shellChild.on('message', (ret) => {
+        console.log('shellChild message: ' + ret)
+      })
+      shellChild.stdout.on('data', (ret) => {
+        console.log('shellChild stdout: ' + ret)
+      })
+      shellChild.stderr.on('data', (ret) => {
+        console.log('shellChild stderr: ' + ret)
+      })
+
+      // *todo* still in discovery here, if it all does work well.
+      // Appears a while that the close event may not reliable if there are errors.
+      // However, it looks now that this was just a dev hot updates problem.
+      // The next step is then buffering up stderr and stdout, deciding in the end
+      // to reject also if stderr, as Pandoc prints useful warnings. Or resolve with them?
+      shellChild.on('close', ret => {
+        // console.log ('shellChild close: ' + ret)
+        if (ret === 0) {
+          resolve('succeeded')
+        } else {
+          reject('failed: ' + ret)
+        }
+      })
+    } catch (e) {
+      reject('shellProcess: ' + e.toString())
     }
   })
 }
@@ -166,5 +211,6 @@ export {
   SelectContentFromFolder,
   putContentToFolder,
   getContentFromFilePath,
-  putContentToFilePath
+  putContentToFilePath,
+  shellProcess
 }
