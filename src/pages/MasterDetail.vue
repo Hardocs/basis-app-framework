@@ -1,5 +1,5 @@
 <template>
-  <span>
+  <div>
     <div class="w-full bg-title">
     <h2 class="text-json">Buttons With Actions -- try one...</h2>
     </div>
@@ -50,7 +50,10 @@
         </div>
       </div>
     </div>
-  </span>
+    <div v-if="opsDisplay" class="bg-display text-white">
+      {{ opsDisplay }}
+    </div>
+  </div>
 </template>
 
 <script>
@@ -59,8 +62,8 @@ import { Editor, EditorContent, EditorMenuBar } from 'tiptap'
 import {
   getFilesFromFolder,
   putContentToFolder,
-  getContentFromFilePath }
-  from '@/modules/habitat-localservices'
+  getContentFromFilePath
+  } from '@/modules/habitat-localservices'
 import {
   Image,
   Blockquote,
@@ -89,8 +92,7 @@ export default {
       editFiles: [],
       filePath: null,
       fileContent: null,
-      fileJsonObject: null,
-      fileJsonView: null
+      opsDisplay: null,
     }
   },
   mounted() {
@@ -169,6 +171,9 @@ export default {
           this.filePath = '(no path)',
           this.fileContent = { "error": e.toString() }
         })
+    },
+    clearPanels: function () {
+      this.opsDisplay = null
     },
   },
   components: {
