@@ -21,12 +21,13 @@ import {spawn} from 'child_process'
 // const child_process = require('child_process')
 // // const spawn = child_process.spawn
 
-const {dialog, getCurrentWindow} = electron.remote
+const { dialog, getCurrentWindow } = electron.remote
 const rendWin = getCurrentWindow()
 
 const servicesLogging = true // *todo* for now - later false thus optional
-const servicesLog = (msg) => {
-  if (servicesLogging) {
+
+const servicesLog = (msg, force = false) => {
+  if (servicesLogging || force) {
     console.log('services: ' + msg)
   }
 }
@@ -68,6 +69,28 @@ const SelectContentFromFolder = (fileExts = 'html', typeName = 'NONE') => {
 
 // n.b. you can get one or more types of files - fileExts is a Regex expression
 // since we are looking only at extensions, simple naming of them will work
+
+const loadFilesFromFolder = (folderPath, fileExts = 'html|htm') => {
+  return new Promise((resolve, reject) => {
+    servicesLog('loadFilesFromFolder: ' + JSON.stringify(folderPath))
+    try {
+      const files = fs.readdirSync(folderPath)
+      const extsMatch = new RegExp(fileExts, "g")
+      let extFiles = []
+
+      files.forEach(file => {
+        if (path.extname(file).match(extsMatch)) {
+          // servicesLog ('pushing ' + folderPath + '\\' + file)
+          extFiles.push(folderPath + '\\' + file)
+        }
+      })
+      resolve({ folderPath: folderPath, files: extFiles })
+    } catch (e) {
+      reject({ loadFilesFromFolder: 'error: ' + e.toString() })
+    }
+  })
+}
+
 const getFilesFromFolder = (fileExts = 'html|htm') => {
   return new Promise((resolve, reject) => {
     if (process.env.ORIGINAL_XDG_CURRENT_DESKTOP !== null) {
@@ -80,21 +103,13 @@ const getFilesFromFolder = (fileExts = 'html|htm') => {
           if (!folder.canceled) {
             const folderPath = folder.filePaths[0]
             servicesLog('getFilesFromFolder: ' + JSON.stringify(folderPath))
-            try {
-              const files = fs.readdirSync(folderPath)
-              const extsMatch = new RegExp(fileExts, "g")
-              let extFiles = []
-
-              files.forEach(file => {
-                if (path.extname(file).match(extsMatch)) {
-                  // servicesLog ('pushing ' + folderPath + '\\' + file)
-                  extFiles.push(folderPath + '\\' + file)
-                }
+            loadFilesFromFolder(folderPath, fileExts)
+              .then (result => {
+                resolve(result)
               })
-              resolve({folderPath: folderPath, files: extFiles})
-            } catch (e) {
-              reject('getFilesFromFolder: ' + e.toString())
-            }
+              .catch(e => {
+                reject('getFilesFRomFolder: ' + e)
+              })
           } else {
             reject({getFilesFromFolder: '(Cancelled...)'})
           }
@@ -167,6 +182,8 @@ const putContentToFilePath = (filePath, content) => {
 const shellProcess = (childPath, args = [], options = {}) => {
 
   return new Promise((resolve, reject) => {
+    let shellErrs = ''
+
     try {
       // console.log('dirname: ' + __dirname)
       // console.log('childPath: ' + childPath)
@@ -181,10 +198,11 @@ const shellProcess = (childPath, args = [], options = {}) => {
         console.log('shellChild message: ' + ret)
       })
       shellChild.stdout.on('data', (ret) => {
-        console.log('shellChild stdout: ' + ret)
+        servicesLog('shellChild stdout: ' + ret)
       })
       shellChild.stderr.on('data', (ret) => {
-        console.log('shellChild stderr: ' + ret)
+        shellErrs += ret
+        servicesLog('shellChild stderr: ' + ret)
       })
 
       // *todo* still in discovery here, if it all does work well.
@@ -197,7 +215,7 @@ const shellProcess = (childPath, args = [], options = {}) => {
         if (ret === 0) {
           resolve('succeeded')
         } else {
-          reject('failed: ' + ret)
+          reject('failed: ' + shellErrs)
         }
       })
     } catch (e) {
@@ -208,6 +226,7 @@ const shellProcess = (childPath, args = [], options = {}) => {
 
 export {
   getFilesFromFolder,
+  loadFilesFromFolder,
   SelectContentFromFolder,
   putContentToFolder,
   getContentFromFilePath,

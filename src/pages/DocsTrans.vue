@@ -1,27 +1,31 @@
 <template>
-  <div>
+  <div class="docs-translate-content">
     <div class="w-full bg-title">
-    <h2 class="text-json">Buttons With Actions -- try one...</h2>
+      <h2 class="text-json">Translate by Setting File Types, Choose Folder, then Translate Files...</h2>
+      <h2 class="text-json">Edit by setting From Type (to what you translated to...), then Choose Folder...</h2>
     </div>
     <hr>
     <div class="flex w-full justify-between panel-file-choices">
-      <div class=" flex px-4 items-center">
-        <h2>Translation: </h2>
+      <div class="flex px-4 items-center text-white">
+        <p class="text-xl">File&nbsp;Types:</p>
       </div>
-        <div class="flex px-2 w-full items-center">
-          <h2 class="px-2">From: </h2>
-          <VueSelect
-            v-model="fromFiletype"
-            :options="fileChoices"
-          />
-        </div>
-        <div class="xw-1/3 flex px-2 w-full items-center">
-          <h2 class="px-2">To: </h2>
-          <VueSelect v-model="toFiletype"
-                     :options="fileChoices"
-          />
-        </div>
-<!--      </div>-->
+      <div class="flex px-2 xw-full items-center">
+        <p class="px-2 text-white text-xl">From: </p>
+        <VueSelect
+          v-model="fromFiletype"
+          :options="pandocFormats"
+          :clearable="false"
+        />
+      </div>
+      <div class="xw-1/3 flex px-2 xw-full items-center">
+        <h2 class="px-2 text-white text-xl">To: </h2>
+        <VueSelect
+          v-model="toFiletype"
+          :options="pandocFormats"
+          :clearable="false"
+        />
+      </div>
+      <!--      </div>-->
     </div>
     <hr>
     <DocsTransOpsButtons
@@ -32,7 +36,10 @@
     />
     <div v-if="filePath" class="text-json">
       <div class="bg-display text-white">
-        <h3>File is {{ filePath }}</h3>
+        <h3>Edited file is {{ filePath }}</h3>
+      </div>
+      <div v-if="opsDisplay" class="bg-display text-white">
+        {{ opsDisplay }}
       </div>
       <!--
         n.b. _Never_ use v-html as follows, if you aren't absolutely certain
@@ -53,7 +60,8 @@
               <button :class="{ 'is-active': isActive.italic() }" @click="commands.italic()">
                 Italic
               </button>
-              &nbsp;        <button :class="{ 'is-active': isActive.bold() }" @click="commands.bold">
+              &nbsp;
+              <button :class="{ 'is-active': isActive.bold() }" @click="commands.bold">
                 Bold
               </button>
               &nbsp;
@@ -67,12 +75,9 @@
             </div>
           </editor-menu-bar>
           <hr>
-          <editor-content :editor="editor"/>
+          <editor-content :editor="editor" />
         </div>
       </div>
-    </div>
-    <div v-if="opsDisplay" class="bg-display text-white">
-      {{ opsDisplay }}
     </div>
   </div>
 </template>
@@ -83,30 +88,26 @@ import VueSelect from 'vue-select'
 import { Editor, EditorContent, EditorMenuBar } from 'tiptap'
 import {
   getFilesFromFolder,
+  loadFilesFromFolder,
   putContentToFolder,
   getContentFromFilePath,
   shellProcess
 }
   from '@/modules/habitat-localservices'
 import {
-  Image,
-  Blockquote,
-  CodeBlock,
-  HardBreak,
-  Heading,
-  OrderedList,
-  BulletList,
-  ListItem,
-  TodoItem,
-  TodoList,
-  Bold,
-  Code,
-  Italic,
-  Link,
-  Strike,
-  Underline,
-  History,
+  Image, Blockquote, CodeBlock, HardBreak, Heading, OrderedList, BulletList,
+  ListItem, TodoItem, TodoList, Bold, Code, Italic, Link, Strike, Underline, History,
 } from 'tiptap-extensions'
+
+// we need this separated because it's used to initialize choice as well as choices
+const pandocFormats = [
+  { label: 'Markdown', fromExts: 'md', inFormat: 'gfm',
+    outFormat: 'gfm', outExt: 'md', optArgs: '--standalone'},
+  { label: 'Word Docx', fromExts: 'docx', inFormat: 'docx',
+    outFormat: 'docx', outExt: 'docx', optArgs: '--standalone' },
+  { label: 'Html', fromExts: 'html|htm', inFormat: 'html',
+    outFormat: 'html', outExt: 'html', optArgs: '--self-contained --standalone' },
+]
 
 export default {
   name: "DocsTrans",
@@ -114,38 +115,23 @@ export default {
     return {
       editor: null,
       editFiles: [],
+      editFolderPath: '',
       filePath: null,
       fileContent: null,
-      fileChoices: [
-        { label: 'Markdown', exts: 'md' },
-        { label: 'Word Docx', exts: 'docx' },
-        { label: 'Html', exts: 'html,htm' },
-      ],
-      fromFiletype: { label: 'Markdown', exts: 'md' },
-      toFiletype:  { label: 'Html', exts: 'html,htm' },
+      pandocFormats: pandocFormats,
+      fromFiletype: pandocFormats[0], // markdown
+      toFiletype:  pandocFormats[2], // html
+      opsMsgs: [],
       opsDisplay: null,
     }
   },
   mounted() {
     this.editor = new Editor({
       extensions: [
-        new Image(),
-        new Blockquote(),
-        new CodeBlock(),
-        new HardBreak(),
-        new Heading({ levels: [1, 2, 3] }),
-        new BulletList(),
-        new OrderedList(),
-        new ListItem(),
-        new TodoItem(),
-        new TodoList(),
-        new Bold(),
-        new Code(),
-        new Italic(),
-        new Link(),
-        new Strike(),
-        new Underline(),
-        new History(),
+        new Image(), new Blockquote(), new CodeBlock(), new HardBreak(),
+        new Heading({ levels: [1, 2, 3, 4] }),   new History(),
+        new BulletList(), new OrderedList(), new ListItem(), new TodoItem(), new TodoList(),
+        new Bold(), new Code(), new Italic(), new Link(), new Strike(), new Underline(),
       ],
       content: `
           <h1>Hmm, Headlines!</h1>
@@ -157,27 +143,39 @@ export default {
   beforeDestroy() {
     this.editor.destroy()
   },
+  watch: {
+    // the first time ever I needed a watch variable, but suits here...
+    opsMsgs: function () {
+      this.opsDisplay  = this.opsMsgs.join(', ')
+    }
+  },
   methods: {
     showFile: function (fileData) {
       this.filePath = fileData.path
       this.editFiles.push(this.filePath)
       this.fileContent = fileData.content
+      console.log('showFile:content: ' + this.fileContent)
       this.editor.setContent(this.fileContent)
     },
     fileName: function (filePath) {
       const parts = filePath.split('\\')
       return parts[parts.length - 1]
     },
+    setEditable: function (result) {
+      this.editFiles = result.files
+      this.editFolderPath = result.folderPath
+      if (this.editFiles.length > 0) {
+        this.openFile(this.editFiles[0])
+      }
+      this.opsDisplay = 'Folder is: ' + this.editFolderPath
+    },
     openDir: function () {
       this.editFiles = []
-      getFilesFromFolder('html|htm') // illustrating how to get more than one type
+      getFilesFromFolder(this.fromFiletype.fromExts) // illustrating how to get more than one type
       .then (result => {
-        this.editFiles = result.files
-        if (this.editFiles.length > 0) {
-          this.openFile(this.editFiles[0])
-        }
+        this.setEditable(result)
       })
-      .catch (err => this.editFiles[0] = err) // we can do a lot better, but not today - parent ops result pane...
+      .catch (err => this.opsDisplay = err)
     },
     openFile: function (filePath) {
       getContentFromFilePath (filePath)
@@ -185,7 +183,6 @@ export default {
           this.filePath = fileData.path
           this.fileContent = fileData.content
           // part of the incoherence of simplistic demo - we have already this file on list, etc..
-          // this.editFiles.push(this.filePath)
           this.editor.setContent(this.fileContent)
         })
         .catch (e => {
@@ -194,22 +191,26 @@ export default {
     },
     translateFiles: function () {
       this.clearPanels()
-      shellProcess('pandoc',
-        [ 'demo.txt', '-o', 'demo.docx'],
-        {
-          cwd: 'c:\\tmp'
-        }
-      )
+      this.editFiles.forEach(fileName => this.translateFile(fileName, this.editFolderPath))
+      this.fromFiletype = this.toFiletype
+      loadFilesFromFolder(this.editFolderPath)
       .then (result => {
-        const msg = 'translateFiles: ' + result
-        console.log(msg)
-        this.opsDisplay = msg
+        this.setEditable (result)
       })
-      .catch (e => {
-        const msg = 'translateFiles:error: ' + e
-        console.log(msg)
-        this.opsDisplay = msg
-      })
+      .catch (err => this.opsDisplay = err)
+    },
+    translateFile: function (fileName, cwd) {
+      shellProcess('pandoc', this.prepTranlateArgs(fileName), { cwd: cwd })
+        .then (result => {
+          const msg = 'translateFile: ' + fileName + ': ' + result
+          console.log(msg)
+          this.opsMsgs.push(msg)
+        })
+        .catch (e => {
+          const msg = 'translateFile:error: ' + fileName + ': ' + e
+          console.log(msg)
+          this.opsMsgs.push(msg)
+        })
     },
     saveToFile: function () {
       const editHtmlView = this.editor.getHTML()
@@ -222,7 +223,20 @@ export default {
           this.fileContent = { "error": e.toString() }
         })
     },
+    prepTranlateArgs: function (fileName) {
+      const fileParts = fileName.split('.')
+      const optArgs = this.toFiletype.optArgs.split(' ')
+      const args = []
+      args.push('-f'); args.push(this.fromFiletype.inFormat);
+      args.push('-t'); args.push(this.toFiletype.outFormat);
+      optArgs.forEach(optArg => args.push(optArg))
+      args.push(fileName)
+      args.push('-o'); args.push(fileParts[0] + '.' + this.toFiletype.outExt)
+      // console.log('args: ' + JSON.stringify(args))
+      return args
+    },
     clearPanels: function () {
+      this.opsMsgs = []
       this.opsDisplay = null
     },
   },
@@ -246,19 +260,11 @@ export default {
 </style>
 
 <style>
-
-h1 {
-  font-size: larger;
-  font-weight: bold;
-  margin-bottom: 1.5em;
-}
-
-h2 {
-  font-size: large;
-  font-weight: bold;
-  margin-bottom: 1em;
-}
-
+/*
+  you'd think to style the TipTap editor here, but no, unless you want
+  to use a lot of !important. Somehow main.css dominates, after it's
+  zeroed everything in sight - it's the tailwind way...
+ */
 body {
   height: 100vh;
 }
@@ -269,6 +275,10 @@ body {
 
 </style>
 <style scoped>
+
+.docs-translate-content {
+  text-align: left;
+}
 
 .left-colx {
   width: 44%;
@@ -283,10 +293,12 @@ body {
 
 .bg-title {
   background-color: #d6b668;
+  text-align: center;
 }
 
 .bg-display {
   background-color: teal;
+  text-align: center;
 }
 .text-json {
   color: #1d3557;

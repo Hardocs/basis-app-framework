@@ -32,7 +32,7 @@ export default {
     return {
       items: [
         {
-          label: "Select Files in Folder",
+          label: "Choose Folder",
           action: this.openEditFiles
         },
         {
