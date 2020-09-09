@@ -46,3 +46,33 @@ button,
 button:focus {
   outline: none;
 }
+
+h1 {
+  color: #2273ba;
+  font-size: x-large;
+  font-weight: 900;
+}
+
+h2 {
+  color: #348bbc;
+  font-size: large;
+  font-weight: 600;
+}
+
+h3 {
+  color: #34bc46;
+  font-size: medium;
+  font-weight: 600;
+}
+
+ul {
+  list-style-type: disc;
+}
+
+ol {
+  list-style-type: lower-alpha;
+}
+
+li {
+  margin-left: 1.5em;
+}

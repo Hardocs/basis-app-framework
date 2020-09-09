@@ -1,6 +1,6 @@
 {
   "name": "hardocs-app-framework",
-  "version": "0.4.5",
+  "version": "0.5.0",
   "private": true,
   "author": "Narration SD",
   "description": "Collect and illustrate patterns in Hardocs basis architecture",
@@ -22,12 +22,13 @@
     "pouchdb-promise": "6.2.0",
     "pouchdb-upsert": "^2.2.0",
     "smartwrap": "^2.0.1",
-    "tailwindcss": "^1.7.6",
+    "tailwindcss": "^1.8.5",
     "tiptap": "^1.29.6",
     "tiptap-extensions": "^1.32.6",
     "uuid": "^8.3.0",
     "vue": "^2.6.12",
     "vue-router": "^3.4.3",
+    "vue-select": "^3.10.8",
     "wrap-ansi": "^7.0.0"
   },
   "devDependencies": {
@@ -35,7 +36,7 @@
     "@vue/cli-plugin-eslint": "~4.5.0",
     "@vue/cli-service": "~4.5.0",
     "babel-eslint": "^10.1.0",
-    "babel-plugin-add-module-exports": "^1.0.2",
+    "babel-plugin-add-module-exports": "^1.0.4",
     "electron": "^9.0.0",
     "electron-devtools-installer": "^3.1.1",
     "eslint": "^6.7.2",

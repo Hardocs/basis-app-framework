@@ -4,12 +4,13 @@ import VueRouter from 'vue-router'
 import App from '@/App.vue'
 import Home from '@/pages/Home'
 import MasterDetail from '@/pages/MasterDetail'
+import HardocsDb from '@/pages/HardocsDb';
+import DocsTrans from '@/pages/DocsTrans'
 import Documentation from '@/pages/Documentation'
 import About from '@/pages/About'
 
 // tailwindcss config
 import '@/main.css'
-import HardocsDb from '@/pages/HardocsDb';
 
 Vue.config.productionTip = false
 
@@ -20,6 +21,8 @@ const router = new VueRouter({
     { path: '/', component: Home, props: { appVersion: process.env.HD_APP_VERSION } },
     { path: '/master-detail', component: MasterDetail },
     { path: '/hardocs-db', component: HardocsDb },
+    { path: '/master-detail', component: MasterDetail },
+    { path: '/docs-trans', component: DocsTrans },
     { path: '/documentation', component: Documentation },
     { path: '/about', component: About, props: { appVersion: process.env.HD_APP_VERSION } },
     { path: '*', redirect: '/'}
