@@ -5,7 +5,7 @@
     </div>
     <hr>
     <MasterDetailOpsButtons
-      v-on:openEditFiles="openDir"
+      v-on:openEditFiles="openFolder"
       v-on:showFile="showFile"
       v-on:saveToFile="saveToFile"
     />
@@ -60,9 +60,9 @@
 import MasterDetailOpsButtons from '@/components/MasterDetailOpsButtons'
 import { Editor, EditorContent, EditorMenuBar } from 'tiptap'
 import {
-  getFilesFromFolder,
+  loadFilesFromSelectedFolder,
   putContentToFolder,
-  getContentFromFilePath
+  loadContentFromFilePath
   } from '@/modules/habitat-localservices'
 import {
   Image,
@@ -127,50 +127,58 @@ export default {
     this.editor.destroy()
   },
   methods: {
-    showFile: function (fileData) {
-      this.filePath = fileData.path
+    showFile: function (fileInfo) {
+      this.filePath = fileInfo.path
       this.editFiles.push(this.filePath)
-      this.fileContent = fileData.content
+      this.fileContent = fileInfo.content
       this.editor.setContent(this.fileContent)
     },
     fileName: function (filePath) {
       const parts = filePath.split('\\')
       return parts[parts.length - 1]
     },
-    openDir: function () {
+    openFolder: function () {
       this.editFiles = []
-      getFilesFromFolder('html|htm') // illustrating how to get more than one type
-      .then (result => {
-        this.editFiles = result.files
-        if (this.editFiles.length > 0) {
-          this.openFile(this.editFiles[0])
-        }
+      loadFilesFromSelectedFolder('html|htm') // illustrating how to propose more than one type
+      .then (filesInfo => {
+        this.editFiles = filesInfo.files
+        this.openFile(this.editFiles[0])
       })
-      .catch (err => this.editFiles[0] = err) // we can do a lot better, but not today - parent ops result pane...
+      .catch (err => {
+        this.opsDisplay = 'openFolder:error: ' + err
+      })
     },
     openFile: function (filePath) {
-      getContentFromFilePath (filePath)
-        .then (fileData => {
-          this.filePath = fileData.path
-          this.fileContent = fileData.content
-          // part of the incoherence of simplistic demo - we have already this file on list, etc..
-          // this.editFiles.push(this.filePath)
+      loadContentFromFilePath (filePath)
+        .then (fileInfo => {
+          this.filePath = fileInfo.filePath
+          this.fileContent = fileInfo.content
           this.editor.setContent(this.fileContent)
         })
         .catch (e => {
-          this.editor.setContent('error opening file: ' + e)
+          this.opsDisplay = 'Error opening file: ' + e
        })
     },
     saveToFile: function () {
       const editHtmlView = this.editor.getHTML()
-      putContentToFolder (editHtmlView, 'edited', 'html', 'Html File')
-        .then (result => {
-          console.log ('saved file: ' + JSON.stringify(result))
-        })
-        .catch (e => {
-          this.filePath = '(no path)',
-          this.fileContent = { "error": e.toString() }
-        })
+      putContentToFolder (
+        editHtmlView,
+        this.fileNameFromPath(this.filePath),
+        'html', 'Html File')
+      .then (result => {
+        const msg = 'saved file: ' + JSON.stringify(result)
+        console.log(msg)
+        this.opsDisplay = msg
+      })
+      .catch (e => {
+        const msg = "saveToFile:error: " + e.toString()
+        console.log(msg)
+        this.opsDisplay = msg
+      })
+    },
+    fileNameFromPath: function (filePath) {
+      const pathParts = filePath.split('\\')
+      return pathParts[pathParts.length - 1]
     },
     clearPanels: function () {
       this.opsDisplay = null
