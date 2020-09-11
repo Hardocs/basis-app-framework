@@ -36,11 +36,11 @@ export default {
           action: this.openEditFiles
         },
         {
-          label: "Translate Files",
+          label: "Convert the Files",
           action: this.translateFiles
         },
         {
-          label: "Save an Html File from Editor",
+          label: "Save a File from the Editor",
           action: this.saveToFile
         },
         // {

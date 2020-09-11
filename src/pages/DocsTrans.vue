@@ -1,24 +1,24 @@
 <template>
   <div class="docs-translate-content">
     <div class="w-full bg-title">
-      <h2 class="text-json">Translate by Setting File Types, Choose Folder, then Translate Files...</h2>
-      <h2 class="text-json">Edit by setting From Type (to what you translated to...), then Choose Folder...</h2>
+      <h2 class="text-json">Translate by Setting File Types, then Choose Folder, then Convert the Files...</h2>
+      <h2 class="text-json">Edit by setting From Type, then Choose Folder, then click on File...</h2>
     </div>
     <hr>
-    <div class="flex w-full justify-between panel-file-choices">
+    <div class="flex w-full justify-around panel-file-choices">
       <div class="flex px-4 items-center text-white">
-        <p class="text-xl">File&nbsp;Types:</p>
+        <p class="text-lg">Translation File&nbsp;Types:</p>
       </div>
-      <div class="flex px-2 xw-full items-center">
-        <p class="px-2 text-white text-xl">From: </p>
+      <div class="flex px-4 items-center">
+        <p class="px-2 text-white text-lg">From: </p>
         <VueSelect
           v-model="fromFiletype"
           :options="pandocFormats"
           :clearable="false"
         />
       </div>
-      <div class="xw-1/3 flex px-2 xw-full items-center">
-        <h2 class="px-2 text-white text-xl">To: </h2>
+      <div class="flex px-4 items-center">
+        <h2 class="px-2 text-white text-lg">To: </h2>
         <VueSelect
           v-model="toFiletype"
           :options="pandocFormats"
@@ -29,17 +29,17 @@
     </div>
     <hr>
     <DocsTransOpsButtons
-      v-on:openEditFiles="openDir"
+      v-on:openEditFiles="collectFolderFiles"
       v-on:showFile="showFile"
       v-on:translateFiles="translateFiles"
       v-on:saveToFile="saveToFile"
     />
+    <div v-if="opsDisplay" class="bg-display text-white">
+      {{ opsDisplay }}
+    </div>
     <div v-if="filePath" class="text-json">
       <div class="bg-display text-white">
         <h3>Edited file is {{ filePath }}</h3>
-      </div>
-      <div v-if="opsDisplay" class="bg-display text-white">
-        {{ opsDisplay }}
       </div>
       <!--
         n.b. _Never_ use v-html as follows, if you aren't absolutely certain
@@ -87,13 +87,13 @@ import DocsTransOpsButtons from '@/components/DocsTransOpsButtons'
 import VueSelect from 'vue-select'
 import { Editor, EditorContent, EditorMenuBar } from 'tiptap'
 import {
-  getFilesFromFolder,
+  // selectContentFromFolder,
   loadFilesFromFolder,
+  chooseFolderForUse,
   putContentToFolder,
-  getContentFromFilePath,
+  loadContentFromFilePath,
   shellProcess
-}
-  from '@/modules/habitat-localservices'
+} from '@/modules/habitat-localservices'
 import {
   Image, Blockquote, CodeBlock, HardBreak, Heading, OrderedList, BulletList,
   ListItem, TodoItem, TodoList, Bold, Code, Italic, Link, Strike, Underline, History,
@@ -119,7 +119,7 @@ export default {
       filePath: null,
       fileContent: null,
       pandocFormats: pandocFormats,
-      fromFiletype: pandocFormats[0], // markdown
+      fromFiletype: pandocFormats[1], // docx
       toFiletype:  pandocFormats[2], // html
       opsMsgs: [],
       opsDisplay: null,
@@ -138,6 +138,14 @@ export default {
           <p>All these <strong>few tags</strong> are working now.</p>
           <h2>But more can come.</h2>
         `,
+      onDrop: (view, event, slice, moved) => {
+        console.log(`New content was added by Drop from the user's clipboard!`)
+        console.log(view, event, slice, moved)
+      },
+      onPaste: (view, event, slice, moved) => {
+        console.log(`New content was added by Paste from the user's clipboard!`)
+        console.log(view, event, slice, moved)
+      },
     })
   },
   beforeDestroy() {
@@ -147,11 +155,12 @@ export default {
     // the first time ever I needed a watch variable, but suits here...
     opsMsgs: function () {
       this.opsDisplay  = this.opsMsgs.join(', ')
+      // console.log('opsMsgs opsDisplay watch 2: ' + console.log(this.opsDisplay))
     }
   },
   methods: {
     showFile: function (fileData) {
-      this.filePath = fileData.path
+      this.filePath = this.fileNameFromPath(fileData.path)
       this.editFiles.push(this.filePath)
       this.fileContent = fileData.content
       console.log('showFile:content: ' + this.fileContent)
@@ -161,49 +170,59 @@ export default {
       const parts = filePath.split('\\')
       return parts[parts.length - 1]
     },
-    setEditable: function (result) {
-      this.editFiles = result.files
-      this.editFolderPath = result.folderPath
+    setEditable: function (filesInfo) {
+      this.editFiles = filesInfo.files
+      this.editFolderPath = filesInfo.folderPath
       if (this.editFiles.length > 0) {
         this.openFile(this.editFiles[0])
       }
-      this.opsDisplay = 'Folder is: ' + this.editFolderPath
+      this.opsMsgs.push('Folder is: ' + this.editFolderPath)
     },
-    openDir: function () {
+    collectFolderFiles: function () {
+      this.clearPanels()
       this.editFiles = []
-      getFilesFromFolder(this.fromFiletype.fromExts) // illustrating how to get more than one type
-      .then (result => {
-        this.setEditable(result)
+      chooseFolderForUse()
+      .then (folder => {
+        return loadFilesFromFolder(folder, this.fromFiletype.fromExts)
+          .then(filesInfo => {
+            this.setEditable(filesInfo)
+          })
+          .catch(err => {
+            this.opsDisplay = err
+          })
       })
-      .catch (err => this.opsDisplay = err)
     },
     openFile: function (filePath) {
-      getContentFromFilePath (filePath)
+      this.clearPanels()
+      loadContentFromFilePath (filePath)
         .then (fileData => {
-          this.filePath = fileData.path
+          this.filePath = fileData.filePath
           this.fileContent = fileData.content
-          // part of the incoherence of simplistic demo - we have already this file on list, etc..
           this.editor.setContent(this.fileContent)
         })
         .catch (e => {
-          this.editor.setContent('error opening file: ' + e)
+          this.opsDisplay = 'error opening file: ' + e
        })
     },
     translateFiles: function () {
       this.clearPanels()
-      this.editFiles.forEach(fileName => this.translateFile(fileName, this.editFolderPath))
-      this.fromFiletype = this.toFiletype
-      loadFilesFromFolder(this.editFolderPath)
-      .then (result => {
-        this.setEditable (result)
+      this.editFiles.forEach(fileName => {
+        this.translateFile(fileName, this.editFolderPath)
       })
-      .catch (err => this.opsDisplay = err)
+      this.fromFiletype = this.toFiletype
+      loadFilesFromFolder(this.editFolderPath, this.fromFiletype.inFormat)
+      .then (filesInfo => {
+        this.setEditable (filesInfo)
+      })
+      .catch (err => {
+        this.opsDisplay = err
+      })
     },
     translateFile: function (fileName, cwd) {
       shellProcess('pandoc', this.prepTranlateArgs(fileName), { cwd: cwd })
         .then (result => {
           const msg = 'translateFile: ' + fileName + ': ' + result
-          console.log(msg)
+          // console.log(msg)
           this.opsMsgs.push(msg)
         })
         .catch (e => {
@@ -214,7 +233,7 @@ export default {
     },
     saveToFile: function () {
       const editHtmlView = this.editor.getHTML()
-      putContentToFolder (editHtmlView, 'edited', 'html', 'Html File')
+      putContentToFolder (editHtmlView, this.filePath, 'html', 'Html File')
         .then (result => {
           console.log ('saved file: ' + JSON.stringify(result))
         })
@@ -229,13 +248,19 @@ export default {
       const args = []
       args.push('-f'); args.push(this.fromFiletype.inFormat);
       args.push('-t'); args.push(this.toFiletype.outFormat);
-      optArgs.forEach(optArg => args.push(optArg))
+      optArgs.forEach(optArg => {
+        args.push(optArg)
+      })
       args.push(fileName)
       args.push('-o'); args.push(fileParts[0] + '.' + this.toFiletype.outExt)
-      // console.log('args: ' + JSON.stringify(args))
       return args
     },
+    fileNameFromPath: function (filePath) {
+      const pathParts = filePath.split('\\')
+      return pathParts[pathParts.length - 1]
+    },
     clearPanels: function () {
+      this.editor.setContent('')
       this.opsMsgs = []
       this.opsDisplay = null
     },
