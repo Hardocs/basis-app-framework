@@ -26,13 +26,13 @@ const loadFromDatabase =  (owner = 'hardOwner', project = 'firstProject',
                            dbName = 'hardocs-projects', ) => {
   return new Promise ((resolve, reject) => {
     const db = createOrOpenDatabase(dbName)
-    getStatusOfDatabase(db)
+    getStatusFromDb(db)
       .then (result => {
         console.log ('loadFromDatabase:status: ' + JSON.stringify(result))
         return result
       })
       .then (() => {
-        return getJsonFromDatabase(db, keyFromParts(owner, project))
+        return getJsonFromDb(db, keyFromParts(owner, project))
       })
       .then (result => {
         console.log('loadFromDatabase:result: ' + JSON.stringify(result))
@@ -50,7 +50,7 @@ const storeToDatabase = (owner, project,
 
   return new Promise ((resolve, reject) => {
     const db = createOrOpenDatabase(dbName)
-    getStatusOfDatabase(db)
+    getStatusFromDb(db)
       .then (result => {
         console.log ('storeToDatabase:status: ' + JSON.stringify(result))
         // console.log ('storeToDatabase:data: ' + JSON.stringify(data))
@@ -98,9 +98,9 @@ const upsertProjectToDatabase = (db, owner, name, data) => {
       data: data
     }
     // first, see if we have the project already
-    getJsonFromDatabase(db, id)
+    getJsonFromDb(db, id)
       .then(result => {
-        // console.log('upsertProjectToDatabase:getJsonFromDatabase: ' + JSON.stringify(result))
+        // console.log('upsertProjectToDatabase:getJsonFromDb: ' + JSON.stringify(result))
         if (result) {
           // console.log('assigning: data: ' + JSON.stringify(data))
           const assigned = Object.assign(result, { data: data })
@@ -116,10 +116,10 @@ const upsertProjectToDatabase = (db, owner, name, data) => {
         })
       .then(result => {
         console.log('upsertProjectToDatabase:tostore: ' + JSON.stringify(result))
-        return putJsonToDatabase(db, result)
+        return putJsonToDb(db, result)
       })
       .then (result => {
-        // console.log ('putJsonToDatabase: ' + JSON.stringify(result))
+        // console.log ('putJsonToDb: ' + JSON.stringify(result))
         resolve(result)
       })
       .catch(err => {
@@ -129,16 +129,19 @@ const upsertProjectToDatabase = (db, owner, name, data) => {
   })
 }
 
-const getJsonFromDatabase = (db, id, options = {}) => {
-  return getJsonFromDb (db, id, options)
-}
-
-const putJsonToDatabase = (db, data) => {
-  return putJsonToDb(db, data)
-}
-
-const getStatusOfDatabase = (db) => {
-  return getStatusFromDb (db)
+const getStatusOfDb =  (dbName = 'hardocs-projects') => {
+  return new Promise ((resolve, reject) => {
+    const db = createOrOpenDatabase(dbName)
+    getStatusFromDb(db)
+      .then (result => {
+        console.log ('loadFromDatabase:status: ' + JSON.stringify(result))
+        resolve(result)
+      })
+      .catch (err => {
+        console.log ('getStatusOfDb:error: ' + err)
+        reject (err)
+      })
+  })
 }
 
 
@@ -153,7 +156,7 @@ const clearDatabase = (dbName = 'hardocs-projects') => {
     }
 
     const db = createOrOpenDatabase(dbName)
-    getStatusOfDatabase(db)
+    getStatusFromDb(db)
       .then (result => {
         console.log ('clearDatabase:status: ' + JSON.stringify(result))
         // console.log ('clearDatabase:data: ' + JSON.stringify(data))
@@ -182,7 +185,6 @@ export {
   loadFromDatabase,
   storeToDatabase,
   clearDatabase,
-
-  getJsonFromDatabase,
+  getStatusOfDb,
   keyFromParts
 }

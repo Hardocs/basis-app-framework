@@ -226,17 +226,6 @@ const putContentToFolder = (content,
   })
 }
 
-// const getContentFromFilePath = (filePath) => {
-//   return new Promise((resolve, reject) => {
-//     try {
-//       const content = fs.readFileSync(filePath, 'utf8')
-//       resolve({path: filePath, content: content})
-//     } catch (e) {
-//       reject('getContentFromFilePath: ' + e.toString())
-//     }
-//   })
-// }
-
 const putContentToFilePath = (filePath, content) => {
   return new Promise((resolve, reject) => {
     try {
