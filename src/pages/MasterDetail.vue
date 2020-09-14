@@ -60,8 +60,8 @@
 import MasterDetailOpsButtons from '@/components/MasterDetailOpsButtons'
 import { Editor, EditorContent, EditorMenuBar } from 'tiptap'
 import {
-  loadFilesFromSelectedFolder,
-  putContentToFolder,
+  loadFilePathsFromSelectedFolder,
+  putContentToSelectedFolder,
   loadContentFromFilePath
   } from '@/modules/habitat-localservices'
 import {
@@ -139,7 +139,7 @@ export default {
     },
     openFolder: function () {
       this.editFiles = []
-      loadFilesFromSelectedFolder('html|htm') // illustrating how to propose more than one type
+      loadFilePathsFromSelectedFolder(['html', 'htm']) // illustrating how to propose more than one type
       .then (filesInfo => {
         this.editFiles = filesInfo.files
         this.openFile(this.editFiles[0])
@@ -161,7 +161,7 @@ export default {
     },
     saveToFile: function () {
       const editHtmlView = this.editor.getHTML()
-      putContentToFolder (
+      putContentToSelectedFolder (
         editHtmlView,
         this.fileNameFromPath(this.filePath),
         'html', 'Html File')
