@@ -87,10 +87,9 @@ import DocsTransOpsButtons from '@/components/DocsTransOpsButtons'
 import VueSelect from 'vue-select'
 import { Editor, EditorContent, EditorMenuBar } from 'tiptap'
 import {
-  // selectContentFromFolder,
-  loadFilesFromFolder,
+  loadFilePathsFromFolder,
   chooseFolderForUse,
-  putContentToFolder,
+  putContentToSelectedFolder,
   loadContentFromFilePath,
   shellProcess
 } from '@/modules/habitat-localservices'
@@ -101,11 +100,11 @@ import {
 
 // we need this separated because it's used to initialize choice as well as choices
 const pandocFormats = [
-  { label: 'Markdown', fromExts: 'md', inFormat: 'gfm',
+  { label: 'Markdown', fromExts: ['md'], inFormat: 'gfm',
     outFormat: 'gfm', outExt: 'md', optArgs: '--standalone'},
-  { label: 'Word Docx', fromExts: 'docx', inFormat: 'docx',
+  { label: 'Word Docx', fromExts: ['docx'], inFormat: 'docx',
     outFormat: 'docx', outExt: 'docx', optArgs: '--standalone' },
-  { label: 'Html', fromExts: 'html|htm', inFormat: 'html',
+  { label: 'Html', fromExts: ['html', 'htm'], inFormat: 'html',
     outFormat: 'html', outExt: 'html', optArgs: '--self-contained --standalone' },
 ]
 
@@ -183,7 +182,7 @@ export default {
       this.editFiles = []
       chooseFolderForUse()
       .then (folder => {
-        return loadFilesFromFolder(folder, this.fromFiletype.fromExts)
+        return loadFilePathsFromFolder(folder, this.fromFiletype.fromExts)
           .then(filesInfo => {
             this.setEditable(filesInfo)
           })
@@ -210,7 +209,7 @@ export default {
         this.translateFile(fileName, this.editFolderPath)
       })
       this.fromFiletype = this.toFiletype
-      loadFilesFromFolder(this.editFolderPath, this.fromFiletype.inFormat)
+      loadFilePathsFromFolder(this.editFolderPath, this.fromFiletype.inFormat)
       .then (filesInfo => {
         this.setEditable (filesInfo)
       })
@@ -233,7 +232,7 @@ export default {
     },
     saveToFile: function () {
       const editHtmlView = this.editor.getHTML()
-      putContentToFolder (editHtmlView, this.filePath, 'html', 'Html File')
+      putContentToSelectedFolder (editHtmlView, this.filePath, 'html', 'Html File')
         .then (result => {
           console.log ('saved file: ' + JSON.stringify(result))
         })
