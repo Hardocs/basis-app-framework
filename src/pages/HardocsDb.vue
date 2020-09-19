@@ -22,10 +22,8 @@
 
 import HardocsDbOpsButtons from '@/components/HardocsDbOpsButtons'
 import {
-  storeToDatabase,
-  loadFromDatabase,
-  clearDatabase
-} from '@/modules/habitat-database'
+  habitatDb
+} from '@hardocs-project/habitat-client'
 
 export default {
   name: "HardocsDb",
@@ -51,7 +49,7 @@ export default {
       this.dbDisplay = 'app is loading project owner: ' +
         this.owner + ', project: ' + this.project
 
-      loadFromDatabase()
+      habitatDb.loadFromDatabase()
         .then(result => {
           console.log('loaded Project: ' + JSON.stringify(result))
           this.projectData = result.data
@@ -70,7 +68,7 @@ export default {
       // first make a change that we can see, in this level of demo
       this.projectData.countMarker += 1
 
-      storeToDatabase(this.owner, this.project, this.projectData)
+      habitatDb.storeToDatabase(this.owner, this.project, this.projectData)
         .then(result => {
           console.log('saveProject: result: ' + JSON.stringify(result))
           this.opsDisplay = result
@@ -86,7 +84,7 @@ export default {
       this.clearPanels()
       console.log ('clearing database... ')
 
-      clearDatabase()
+      habitatDb.clearDatabase()
         .then(result => {
           console.log('clearDatabase: result: ' + JSON.stringify(result))
           this.opsDisplay = 'Cleared Entire Hardocs database (we won\'t have this ' +
