@@ -180,7 +180,7 @@ export default {
     collectFolderFiles: function () {
       this.clearPanels()
       this.editFiles = []
-      chooseFolderForUse()
+      chooseFolderForUse(this.fromFiletype.fromExts)
       .then (folder => {
         return loadFilePathsFromFolder(folder, this.fromFiletype.fromExts)
           .then(filesInfo => {
@@ -208,7 +208,7 @@ export default {
       this.editFiles.forEach(fileName => {
         this.translateFile(fileName, this.editFolderPath)
       })
-      this.fromFiletype = this.toFiletype
+      this.fromFiletype = [ this.toFiletype ]
       loadFilePathsFromFolder(this.editFolderPath, this.fromFiletype.inFormat)
       .then (filesInfo => {
         this.setEditable (filesInfo)
