@@ -176,7 +176,7 @@ export default {
     collectFolderFiles: function () {
       this.clearPanels()
       this.editFiles = []
-      habitatServices.chooseFolderForUse()
+      habitatServices.chooseFolderForUse(this.fromFiletype.fromExts)
       .then (folder => {
         return habitatServices.loadFilePathsFromFolder(folder, this.fromFiletype.fromExts)
           .then(filesInfo => {
@@ -204,7 +204,7 @@ export default {
       this.editFiles.forEach(fileName => {
         this.translateFile(fileName, this.editFolderPath)
       })
-      this.fromFiletype = this.toFiletype
+      this.fromFiletype = [ this.toFiletype ]
       habitatServices.loadFilePathsFromFolder(this.editFolderPath, this.fromFiletype.inFormat)
       .then (filesInfo => {
         this.setEditable (filesInfo)
