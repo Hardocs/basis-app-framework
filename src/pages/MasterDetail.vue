@@ -159,7 +159,7 @@ export default {
     },
     saveToFile: function () {
       const editHtmlView = this.editor.getHTML()
-      habitatServices.putContentToFolder (
+      habitatServices.putContentToSelectedFolder (
         editHtmlView,
         this.fileNameFromPath(this.filePath),
         'html', 'Html File')
