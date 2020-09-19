@@ -26,7 +26,7 @@ const explainJsonFromDb = (db, query) => {
   return db.explain(query)
 }
 
-const getJsonFromDb = (db, query, options) => {
+const getJsonFromDb = (db, query, options = {}) => {
   return db.get(query, options)
 }
 
