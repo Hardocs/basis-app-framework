@@ -13,6 +13,7 @@
   },
   "main": "background.js",
   "dependencies": {
+    "@hardocs-project/habitat-client": "^0.5.3",
     "autoprefixer": "^9.8.6",
     "core-js": "^3.6.5",
     "fs": "0.0.1-security",

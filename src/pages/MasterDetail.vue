@@ -137,7 +137,7 @@ export default {
     },
     openFolder: function () {
       this.editFiles = []
-      habitatServices.loadFilesFromSelectedFolder('html|htm') // illustrating how to propose more than one type
+      habitatServices.loadFilePathsFromSelectedFolder('html|htm') // illustrating how to propose more than one type
       .then (filesInfo => {
         this.editFiles = filesInfo.files
         this.openFile(this.editFiles[0])

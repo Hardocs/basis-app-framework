@@ -87,12 +87,8 @@ import DocsTransOpsButtons from '@/components/DocsTransOpsButtons'
 import VueSelect from 'vue-select'
 import { Editor, EditorContent, EditorMenuBar } from 'tiptap'
 import {
-  loadFilePathsFromFolder,
-  chooseFolderForUse,
-  putContentToSelectedFolder,
-  loadContentFromFilePath,
-  shellProcess
-} from '@/modules/habitat-localservices'
+  habitatServices,
+} from '@hardocs-project/habitat-client'
 import {
   Image, Blockquote, CodeBlock, HardBreak, Heading, OrderedList, BulletList,
   ListItem, TodoItem, TodoList, Bold, Code, Italic, Link, Strike, Underline, History,
@@ -180,9 +176,9 @@ export default {
     collectFolderFiles: function () {
       this.clearPanels()
       this.editFiles = []
-      chooseFolderForUse()
+      habitatServices.chooseFolderForUse()
       .then (folder => {
-        return loadFilePathsFromFolder(folder, this.fromFiletype.fromExts)
+        return habitatServices.loadFilePathsFromFolder(folder, this.fromFiletype.fromExts)
           .then(filesInfo => {
             this.setEditable(filesInfo)
           })
@@ -193,7 +189,7 @@ export default {
     },
     openFile: function (filePath) {
       this.clearPanels()
-      loadContentFromFilePath (filePath)
+      habitatServices.loadContentFromFilePath(filePath)
         .then (fileData => {
           this.filePath = fileData.filePath
           this.fileContent = fileData.content
@@ -209,7 +205,7 @@ export default {
         this.translateFile(fileName, this.editFolderPath)
       })
       this.fromFiletype = this.toFiletype
-      loadFilePathsFromFolder(this.editFolderPath, this.fromFiletype.inFormat)
+      habitatServices.loadFilePathsFromFolder(this.editFolderPath, this.fromFiletype.inFormat)
       .then (filesInfo => {
         this.setEditable (filesInfo)
       })
@@ -218,7 +214,8 @@ export default {
       })
     },
     translateFile: function (fileName, cwd) {
-      shellProcess('pandoc', this.prepTranlateArgs(fileName), { cwd: cwd })
+      habitatServices.shellProcess('pandoc',
+        this.prepTranlateArgs(fileName), { cwd: cwd })
         .then (result => {
           const msg = 'translateFile: ' + fileName + ': ' + result
           // console.log(msg)
@@ -232,7 +229,8 @@ export default {
     },
     saveToFile: function () {
       const editHtmlView = this.editor.getHTML()
-      putContentToSelectedFolder (editHtmlView, this.filePath, 'html', 'Html File')
+      habitatServices.putContentToSelectedFolder(editHtmlView,
+        this.filePath, 'html', 'Html File')
         .then (result => {
           console.log ('saved file: ' + JSON.stringify(result))
         })
