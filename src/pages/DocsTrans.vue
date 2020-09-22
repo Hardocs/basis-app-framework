@@ -86,13 +86,7 @@
 import DocsTransOpsButtons from '@/components/DocsTransOpsButtons'
 import VueSelect from 'vue-select'
 import { Editor, EditorContent, EditorMenuBar } from 'tiptap'
-import {
-  loadFilePathsFromFolder,
-  chooseFolderForUse,
-  putContentToSelectedFolder,
-  loadContentFromFilePath,
-  shellProcess
-} from '@/modules/habitat-localservices'
+import { habitatLocal } from '@hardocs-project/habitat-client'
 import {
   Image, Blockquote, CodeBlock, HardBreak, Heading, OrderedList, BulletList,
   ListItem, TodoItem, TodoList, Bold, Code, Italic, Link, Strike, Underline, History,
@@ -180,9 +174,9 @@ export default {
     collectFolderFiles: function () {
       this.clearPanels()
       this.editFiles = []
-      chooseFolderForUse(this.fromFiletype.fromExts)
+      habitatLocal.chooseFolderForUse(this.fromFiletype.fromExts)
       .then (folder => {
-        return loadFilePathsFromFolder(folder, this.fromFiletype.fromExts)
+        return habitatLocal.loadFilePathsFromFolder(folder, this.fromFiletype.fromExts)
           .then(filesInfo => {
             this.setEditable(filesInfo)
           })
@@ -193,7 +187,7 @@ export default {
     },
     openFile: function (filePath) {
       this.clearPanels()
-      loadContentFromFilePath (filePath)
+      habitatLocal.loadContentFromFilePath(filePath)
         .then (fileData => {
           this.filePath = fileData.filePath
           this.fileContent = fileData.content
@@ -208,8 +202,8 @@ export default {
       this.editFiles.forEach(fileName => {
         this.translateFile(fileName, this.editFolderPath)
       })
-      this.fromFiletype = [ this.toFiletype ]
-      loadFilePathsFromFolder(this.editFolderPath, this.fromFiletype.inFormat)
+      this.setFromFileTypeMatchingToMenu()
+      habitatLocal.loadFilePathsFromFolder(this.editFolderPath, this.fromFiletype.fromExts)
       .then (filesInfo => {
         this.setEditable (filesInfo)
       })
@@ -218,7 +212,8 @@ export default {
       })
     },
     translateFile: function (fileName, cwd) {
-      shellProcess('pandoc', this.prepTranlateArgs(fileName), { cwd: cwd })
+      habitatLocal.shellProcess('pandoc',
+        this.prepTranlateArgs(fileName), { cwd: cwd })
         .then (result => {
           const msg = 'translateFile: ' + fileName + ': ' + result
           // console.log(msg)
@@ -232,7 +227,8 @@ export default {
     },
     saveToFile: function () {
       const editHtmlView = this.editor.getHTML()
-      putContentToSelectedFolder (editHtmlView, this.filePath, 'html', 'Html File')
+      habitatLocal.putContentToSelectedFolder(editHtmlView,
+        this.filePath, this.fromFiletype.outFormat, this.fromFiletype.label)
         .then (result => {
           console.log ('saved file: ' + JSON.stringify(result))
         })
@@ -257,6 +253,12 @@ export default {
     fileNameFromPath: function (filePath) {
       const pathParts = filePath.split('\\')
       return pathParts[pathParts.length - 1]
+    },
+    setFromFileTypeMatchingToMenu () {
+      const fileType = pandocFormats.find(format => {
+        return format.label === this.toFiletype.label
+      })
+      this.fromFiletype = fileType
     },
     clearPanels: function () {
       this.editor.setContent('')
