@@ -21,9 +21,7 @@
 <script>
 
 import HardocsDbOpsButtons from '@/components/HardocsDbOpsButtons'
-import {
-  habitatDb
-} from '@hardocs-project/habitat-client'
+import { habitatDb } from '@hardocs-project/habitat-client'
 
 export default {
   name: "HardocsDb",

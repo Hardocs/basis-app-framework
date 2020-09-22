@@ -21,9 +21,7 @@
 <script>
 
 import ProjectsAdminOpsButtons from '@/components/ProjectsAdminOpsButtons'
-import {
-  habitatDb
-} from '@hardocs-project/habitat-client'
+import { habitatDb } from '@hardocs-project/habitat-client'
 
 export default {
   name: "ProjectsAdmin",
@@ -84,7 +82,7 @@ export default {
       this.clearPanels()
       console.log ('clearing database... ')
 
-      habitatDb.adminProjects()
+      habitatDb.clearDatabase()
         .then(result => {
           console.log('adminProjects: result: ' + JSON.stringify(result))
           this.opsDisplay = 'Cleared Entire Hardocs database (we won\'t have this ' +
