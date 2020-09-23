@@ -22,6 +22,7 @@
 
 import ProjectsAdminOpsButtons from '@/components/ProjectsAdminOpsButtons'
 import { habitatDb } from '@hardocs-project/habitat-client'
+import { habitatLocal } from '@hardocs-project/habitat-client'
 
 export default {
   name: "ProjectsAdmin",
@@ -34,48 +35,76 @@ export default {
       dbDisplay: null, // temporary measure, to first view
 
       // where we can indicate issues to screen
-      opsDisplay: null
+      opsDisplay: null,
+      remoteDbBase: 'https://hd.narrationsd.com/hard-api',
+      remoteDb: 'https://hd.narrationsd.com/hard-api/monkeys'
     }
   },
   mounted () {
     this.preloadDummyProjectInfo()
   },
   methods: {
-    createProjects: function () {
+    checkStatus: function (dbUrl) {
       this.clearPanels()
-      console.log ('loading owner: ' + this.owner + ', project: ' + this.project)
-      this.dbDisplay = 'app is loading project owner: ' +
-        this.owner + ', project: ' + this.project
-
-      habitatDb.loadFromDatabase()
-        .then(result => {
-          console.log('loaded Project: ' + JSON.stringify(result))
-          this.projectData = result.data
-          this.dbDisplay = 'From Hardocs Project <' + this.owner + ':' + this.project +
-            '>, app has loaded: '+ JSON.stringify(this.projectData)
+      console.log ('checking db status')
+      // *todd* not yet a business, has to be a promise for others, local
+      habitatDb.getStatusOfDb(dbUrl)
+        .then (result => {
+          console.log('checkStatus: ' + JSON.stringify(result))
+          this.opsDisplay = 'Db Status: ' + JSON.stringify(result)
         })
         .catch(err => {
-          this.opsDisplay = JSON.stringify(err)
-          this.opsDisplay = 'load project: error: ' + err
+          console.log('checkStatus:error: ' + err)
+          this.opsDisplay = 'Check Db Status: error: ' + err
         })
+    },
+    createProjects: function () {
+      this.clearPanels()
+      this.logOutClear()
+      habitatDb.getStatusOfDb(this.remoteDbd)
+        .then (result => {
+          console.log('checkStatus: ' + JSON.stringify(result))
+          this.opsDisplay = 'Db Status: ' + JSON.stringify(result)
+        })
+        .catch(err => {
+          console.log('logging in because: '+ err)
+          habitatLocal.showModalPage(this.remoteDbBase + '/sign_in')
+        })
+
+      // console.log ('loading owner: ' + this.owner + ', project: ' + this.project)
+      // this.dbDisplay = 'app is loading project owner: ' +
+      //   this.owner + ', project: ' + this.project
+      //
+      // habitatDb.loadFromDatabase()
+      //   .then(result => {
+      //     console.log('loaded Project: ' + JSON.stringify(result))
+      //     this.projectData = result.data
+      //     this.dbDisplay = 'From Hardocs Project <' + this.owner + ':' + this.project +
+      //       '>, app has loaded: '+ JSON.stringify(this.projectData)
+      //   })
+      //   .catch(err => {
+      //     this.opsDisplay = JSON.stringify(err)
+      //     this.opsDisplay = 'load project: error: ' + err
+      //   })
     },
     listProjects: function () {
       this.clearPanels()
-      console.log ('saving owner: ' + this.owner + ', project: ' + this.project)
+      // console.log('original cookies: ' + this.cookies)
+      // try {
+      //   deleteNodeCookies(this.cookies)
+      // }
+      // catch (e) {
+      //   console.log('deleteCookies: ' + e)
+      // }
 
-      // first make a change that we can see, in this level of demo
-      this.projectData.countMarker += 1
-
-      habitatDb.storeToDatabase(this.owner, this.project, this.projectData)
+      // listOwnerProjects('hardOwner')
+      habitatDb.listOwnerProjects('hardOwner', this.remoteDbUrl)
         .then(result => {
-          console.log('listProjects: result: ' + JSON.stringify(result))
-          this.opsDisplay = result
-          this.dbDisplay = 'For Hardocs Project <' + this.owner + ':' + this.project +
-            '>, app has saved: '+ JSON.stringify(this.projectData)
+          this.dbDisplay = JSON.stringify(result)
+          this.opsDisplay = 'this is not real yet - just listing any records owner can reach - monkeys db'
         })
         .catch(err => {
-          console.log('listProjects:error: ' + err)
-          this.opsDisplay = 'save project: error: ' + err
+          this.opsDisplay = err
         })
     },
     adminProjects: function () {
@@ -91,6 +120,22 @@ export default {
         .catch(err => {
           console.log('adminProjects:error: ' + err)
           this.opsDisplay = 'clear database: ' + err
+        })
+    },
+    logOutClear: function () {
+      habitatLocal.getNodeCookies()
+        .then (result => {
+          this.cookies = result
+          this.opsDisplay = 'Node Cookies: ' + JSON.stringify(result)
+          return result
+        })
+        .then (result => {
+          habitatLocal.deleteNodeCookies(result)
+        })
+        .catch(err => {
+          const msg = 'logOutClear:error: ' + err
+          this.opsDisplay = msg
+          console.log(msg)
         })
     },
     clearPanels: function () {
