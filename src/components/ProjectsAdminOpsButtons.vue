@@ -36,12 +36,28 @@ export default {
           action: this.createProjects
         },
         {
-          label: "List Projects",
-          action: this.listProjects
+          label: "List RemoteProjects",
+          action: this.listRemoteProjects
+        },
+        {
+          label: "List Local Projects",
+          action: this.listLocalProjects
+        },
+        {
+          label: "Replicate Databases",
+          action: this.replicateDb
         },
         {
           label: "Administer Projects",
           action: this.adminProjects
+        },
+        {
+          label: "Clear Local Projects",
+          action: this.clearLocalProjects
+        },
+        {
+          label: "Log Out Remote",
+          action: this.logOutRemote
         },
         // {
         //   label: "Another Example (not yet)",
@@ -54,11 +70,23 @@ export default {
     createProjects: function () {
       this.$emit('createProjects')
     },
-    listProjects: function () {
-      this.$emit('listProjects')
+    listRemoteProjects: function () {
+      this.$emit('listRemoteProjects')
+    },
+    listLocalProjects: function () {
+      this.$emit('listLocalProjects')
     },
     adminProjects: function () {
       this.$emit('adminProjects')
+    },
+    replicateDb: function () {
+      this.$emit('replicateDb')
+    },
+    clearLocalProjects: function () {
+      this.$emit('clearLocalProjects')
+    },
+    logOutRemote: function () {
+      this.$emit('logOutRemote')
     },
     noOp: () => {} // but don't do arrows when you want to use this.anything
   },

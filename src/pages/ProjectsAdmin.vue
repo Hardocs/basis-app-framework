@@ -6,8 +6,12 @@
     <hr>
     <ProjectsAdminOpsButtons
       v-on:createProjects="createProjects"
-      v-on:listProjects="listProjects"
+      v-on:listLocalProjects="listLocalProjects"
+      v-on:listRemoteProjects="listRemoteProjects"
+      v-on:replicateDb="replicateDb"
       v-on:adminProjects="adminProjects"
+      v-on:clearLocalProjects="clearLocalProjects"
+      v-on:logOutRemote="logOutRemote"
     />
     <div v-if="dbDisplay" class="bg-display text-white">
       {{ dbDisplay }}
@@ -36,8 +40,7 @@ export default {
 
       // where we can indicate issues to screen
       opsDisplay: null,
-      remoteDbBase: 'https://hd.narrationsd.com/hard-api',
-      remoteDb: 'https://hd.narrationsd.com/hard-api/monkeys'
+      remoteDb: 'https://hd.narrationsd.com/hard-api/hardocs-projects'
     }
   },
   mounted () {
@@ -60,56 +63,73 @@ export default {
     },
     createProjects: function () {
       this.clearPanels()
-      this.logOutClear()
-      habitatDb.getStatusOfDb(this.remoteDbd)
-        .then (result => {
-          console.log('checkStatus: ' + JSON.stringify(result))
-          this.opsDisplay = 'Db Status: ' + JSON.stringify(result)
-        })
-        .catch(err => {
-          console.log('logging in because: '+ err)
-          habitatLocal.showModalPage(this.remoteDbBase + '/sign_in')
-        })
-
-      // console.log ('loading owner: ' + this.owner + ', project: ' + this.project)
-      // this.dbDisplay = 'app is loading project owner: ' +
-      //   this.owner + ', project: ' + this.project
-      //
-      // habitatDb.loadFromDatabase()
-      //   .then(result => {
-      //     console.log('loaded Project: ' + JSON.stringify(result))
-      //     this.projectData = result.data
-      //     this.dbDisplay = 'From Hardocs Project <' + this.owner + ':' + this.project +
-      //       '>, app has loaded: '+ JSON.stringify(this.projectData)
-      //   })
-      //   .catch(err => {
-      //     this.opsDisplay = JSON.stringify(err)
-      //     this.opsDisplay = 'load project: error: ' + err
-      //   })
+      habitatDb.assureRemoteLogin(this.remoteDb)
+      .then (result => {
+        this.opsDisplay = result.msg
+      })
+      .catch (err => {
+        this.opsDisplay = err.msg
+      })
     },
-    listProjects: function () {
+    listLocalProjects: function () {
       this.clearPanels()
-      // console.log('original cookies: ' + this.cookies)
-      // try {
-      //   deleteNodeCookies(this.cookies)
-      // }
-      // catch (e) {
-      //   console.log('deleteCookies: ' + e)
-      // }
-
-      // listOwnerProjects('hardOwner')
-      habitatDb.listOwnerProjects('hardOwner', this.remoteDbUrl)
+      const localDb = 'hardocs-projects'
+      habitatDb.listOwnerProjects('hardOwner', localDb)
         .then(result => {
+          console.log ('listLocalProjects: ' + JSON.stringify(result))
           this.dbDisplay = JSON.stringify(result)
-          this.opsDisplay = 'this is not real yet - just listing any records owner can reach - monkeys db'
+          this.opsDisplay = 'this is not real yet - just listing any records ' +
+            'owner can reach - ' + localDb + ' db'
         })
         .catch(err => {
           this.opsDisplay = err
         })
     },
+    listRemoteProjects: function () {
+      this.clearPanels()
+      habitatDb.assureRemoteLogin(this.remoteDb)
+        .then (() => {
+          return habitatDb.listOwnerProjects('hardOwner', this.remoteDb)
+        })
+        .then(result => {
+          console.log ('listLocalProjects: ' + JSON.stringify(result))
+          this.dbDisplay = JSON.stringify(result)
+          this.opsDisplay = 'this is not real yet - just listing any records ' +
+            'owner can reach - ' + this.remoteDb + ' db'
+        })
+        .catch(err => {
+          this.opsDisplay = err
+        })
+    },
+    replicateDb: function () {
+      this.clearPanels()
+      const fromDb = this.remoteDb
+      const toDb = 'hardocs-projects'
+      console.log ('replicateDb projects from ' + fromDb + ' to ' + toDb + '... ')
+      habitatDb.assureRemoteLogin(this.remoteDb)
+        .then (() => {
+          return habitatDb.replicateDatabase(fromDb, toDb)
+        })
+        .then(result => {
+          console.log ('replicateDb:result: ' + result)
+          console.log ('replicateDbJ: ' + JSON.stringify(result))
+          this.dbDisplay = JSON.stringify(result)
+          this.opsDisplay = 'this is not real yet - just listing any records ' +
+            'owner can reach - ' + fromDb + ' db'
+        })
+        .catch(err => {
+          console.log ('replicateDb:error: ' + err)
+          this.opsDisplay = 'from ' + fromDb +' to ' + toDb + ': ' + err
+        })
+
+    },
     adminProjects: function () {
       this.clearPanels()
-      console.log ('clearing database... ')
+      console.log ('admin projects... ')
+    },
+    clearLocalProjects: function () {
+      this.clearPanels()
+      console.log ('clearing local database... ')
 
       habitatDb.clearDatabase()
         .then(result => {
@@ -122,7 +142,7 @@ export default {
           this.opsDisplay = 'clear database: ' + err
         })
     },
-    logOutClear: function () {
+    logOutRemote: function () {
       habitatLocal.getNodeCookies()
         .then (result => {
           this.cookies = result
@@ -142,7 +162,7 @@ export default {
       this.opsDisplay = null
       this.dbDisplay = null
     },
-    preloadDummyProjectInfo: function () {
+    preloadDummyProjectInfo: function (marker) {
       // *todo* for the moment, this is dummy data. Soon we'll add it normally, then find with view
       this.owner = 'hardOwner'
       this.project = 'firstProject'
@@ -153,7 +173,8 @@ export default {
         ],
         metadata: {
           meta1: 'meta1 data',
-          meta2: 'meta2 data'
+          meta2: 'meta2 data',
+          marker: marker
         },
         imgs: [
           { name: 'img1', data: 'image1data', type: 'jpg' },
