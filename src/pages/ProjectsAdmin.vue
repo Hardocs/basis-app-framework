@@ -116,14 +116,12 @@ export default {
         .then(result => {
           console.log ('replicateDb:down:result: ' + JSON.stringify(result))
           this.dbDisplay = 'down: ' + JSON.stringify(result)
-          // this.opsDisplay = 'this is not real yet - just listing any records ' +
-          //   'owner can reach - ' + cloudDb + ' db'
         })
         .then (() => {
           return habitatDb.replicateDatabase(localDb, cloudDb)
         })
         .then(result => {
-          console.log ('replicateDb:up:result: ' + result)
+          console.log ('replicateDb:up:result: ' + JSON.stringify(result))
           this.dbDisplay += ', up: ' + JSON.stringify(result)
           this.opsDisplay = 'this is not real yet - just listing any records ' +
             'owner can reach - ' + cloudDb + ' db'
