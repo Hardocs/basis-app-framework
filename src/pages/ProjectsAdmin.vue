@@ -40,6 +40,7 @@ export default {
 
       // where we can indicate issues to screen
       opsDisplay: null,
+      // remoteDb: 'localhost:5984'
       remoteDb: 'https://hd.narrationsd.com/hard-api/hardocs-projects'
     }
   },
@@ -103,23 +104,33 @@ export default {
     },
     replicateDb: function () {
       this.clearPanels()
-      const fromDb = this.remoteDb
-      const toDb = 'hardocs-projects'
-      console.log ('replicateDb projects from ' + fromDb + ' to ' + toDb + '... ')
+      const cloudDb = this.remoteDb
+      const localDb = 'hardocs-projects'
+      console.log ('replicateDb projects from ' + cloudDb + ' to ' + localDb + '... ')
+      // *todo* look very carefully into consequences of both checkpoint settings below,
+      // but also the thing they save from, the odd nature of the 404 setting off CORS
       habitatDb.assureRemoteLogin(this.remoteDb)
         .then (() => {
-          return habitatDb.replicateDatabase(fromDb, toDb)
+          return habitatDb.replicateDatabase(cloudDb, localDb, { checkpoint: 'target' })
         })
         .then(result => {
-          console.log ('replicateDb:result: ' + result)
-          console.log ('replicateDbJ: ' + JSON.stringify(result))
-          this.dbDisplay = JSON.stringify(result)
+          console.log ('replicateDb:down:result: ' + JSON.stringify(result))
+          this.dbDisplay = 'down: ' + JSON.stringify(result)
+          // this.opsDisplay = 'this is not real yet - just listing any records ' +
+          //   'owner can reach - ' + cloudDb + ' db'
+        })
+        .then (() => {
+          return habitatDb.replicateDatabase(localDb, cloudDb, { checkpoint: 'source' })
+        })
+        .then(result => {
+          console.log ('replicateDb:up:result: ' + result)
+          this.dbDisplay += ', up: ' + JSON.stringify(result)
           this.opsDisplay = 'this is not real yet - just listing any records ' +
-            'owner can reach - ' + fromDb + ' db'
+            'owner can reach - ' + cloudDb + ' db'
         })
         .catch(err => {
           console.log ('replicateDb:error: ' + err)
-          this.opsDisplay = 'from ' + fromDb +' to ' + toDb + ': ' + err
+          this.opsDisplay = 'from ' + cloudDb +' to ' + localDb + ': ' + err
         })
 
     },
