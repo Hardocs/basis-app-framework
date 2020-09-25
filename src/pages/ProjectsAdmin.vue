@@ -111,7 +111,7 @@ export default {
       // but also the thing they save from, the odd nature of the 404 setting off CORS
       habitatDb.assureRemoteLogin(this.remoteDb)
         .then (() => {
-          return habitatDb.replicateDatabase(cloudDb, localDb, { checkpoint: 'target' })
+          return habitatDb.replicateDatabase(cloudDb, localDb)
         })
         .then(result => {
           console.log ('replicateDb:down:result: ' + JSON.stringify(result))
@@ -120,7 +120,7 @@ export default {
           //   'owner can reach - ' + cloudDb + ' db'
         })
         .then (() => {
-          return habitatDb.replicateDatabase(localDb, cloudDb, { checkpoint: 'source' })
+          return habitatDb.replicateDatabase(localDb, cloudDb)
         })
         .then(result => {
           console.log ('replicateDb:up:result: ' + result)
