@@ -52,7 +52,7 @@ export default {
           action: this.listRemoteProjects
         },
         {
-          label: "Sync Hardocs Cloud",
+          label: "Sync With Hardocs Cloud",
           action: this.replicateDb
         },
         {
