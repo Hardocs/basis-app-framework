@@ -72,6 +72,17 @@ export default {
         this.opsDisplay = err.msg
       })
     },
+    adminProjects: function () {
+      this.clearPanels()
+      console.log ('admin projects... ')
+      habitatDb.assureRemoteLogin(this.remoteDb)
+        .then (result => {
+          this.opsDisplay = result.msg
+        })
+        .catch (err => {
+          this.opsDisplay = err.msg
+        })
+    },
     listLocalProjects: function () {
       this.clearPanels()
       const localDb = 'hardocs-projects'
@@ -84,6 +95,21 @@ export default {
         })
         .catch(err => {
           this.opsDisplay = err
+        })
+    },
+    clearLocalProjects: function () {
+      this.clearPanels()
+      console.log ('clearing local database... ')
+
+      habitatDb.clearDatabase()
+        .then(result => {
+          console.log('adminProjects: result: ' + JSON.stringify(result))
+          this.opsDisplay = 'Cleared Entire Hardocs database (we won\'t have this ' +
+            'in real Hardocs!): ' + JSON.stringify(result)
+        })
+        .catch(err => {
+          console.log('adminProjects:error: ' + err)
+          this.opsDisplay = 'clear database: ' + err
         })
     },
     listRemoteProjects: function () {
@@ -132,26 +158,8 @@ export default {
         })
 
     },
-    adminProjects: function () {
-      this.clearPanels()
-      console.log ('admin projects... ')
-    },
-    clearLocalProjects: function () {
-      this.clearPanels()
-      console.log ('clearing local database... ')
-
-      habitatDb.clearDatabase()
-        .then(result => {
-          console.log('adminProjects: result: ' + JSON.stringify(result))
-          this.opsDisplay = 'Cleared Entire Hardocs database (we won\'t have this ' +
-            'in real Hardocs!): ' + JSON.stringify(result)
-        })
-        .catch(err => {
-          console.log('adminProjects:error: ' + err)
-          this.opsDisplay = 'clear database: ' + err
-        })
-    },
     logOutRemote: function () {
+      this.clearPanels()
       habitatLocal.getNodeCookies()
         .then (result => {
           this.cookies = result
@@ -168,8 +176,8 @@ export default {
         })
     },
     clearPanels: function () {
-      this.opsDisplay = null
-      this.dbDisplay = null
+      this.opsDisplay = ''
+      this.dbDisplay = ''
     },
     preloadDummyProjectInfo: function (marker) {
       // *todo* for the moment, this is dummy data. Soon we'll add it normally, then find with view

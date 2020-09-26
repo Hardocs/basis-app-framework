@@ -36,27 +36,27 @@ export default {
           action: this.createProjects
         },
         {
-          label: "List RemoteProjects",
-          action: this.listRemoteProjects
+          label: "Administer Projects",
+          action: this.adminProjects
         },
         {
           label: "List Local Projects",
           action: this.listLocalProjects
         },
         {
-          label: "Replicate Databases",
-          action: this.replicateDb
-        },
-        {
-          label: "Administer Projects",
-          action: this.adminProjects
-        },
-        {
           label: "Clear Local Projects",
           action: this.clearLocalProjects
         },
         {
-          label: "Log Out Remote",
+          label: "List Remote Projects",
+          action: this.listRemoteProjects
+        },
+        {
+          label: "Sync Hardocs Cloud",
+          action: this.replicateDb
+        },
+        {
+          label: "Log Out Hardocs Cloud",
           action: this.logOutRemote
         },
         // {
