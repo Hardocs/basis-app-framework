@@ -66,12 +66,12 @@ export default {
         },
         {
           path: "/projects-admin",
-          label: "Projects Admin",
+          label: "Hardocs Projects",
           type: 'local'
         },
         {
           path: "https://www.google.com/search?q=oceanic&source=lnms&tbm=isch",
-          label: "Remote Website",
+          label: "Another Site",
           type: 'remote'
         },
         {

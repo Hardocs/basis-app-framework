@@ -5,7 +5,7 @@
     </div>
     <hr>
     <ProjectsAdminOpsButtons
-      v-on:createProjects="createProjects"
+      v-on:adminOwners="adminOwners"
       v-on:listLocalProjects="listLocalProjects"
       v-on:listRemoteProjects="listRemoteProjects"
       v-on:replicateDb="replicateDb"
@@ -18,6 +18,64 @@
     </div>
     <div v-if="opsDisplay" class="bg-display text-white">
       {{ opsDisplay }}
+    </div>
+    <div v-if="adminOwnersForm">
+      <div class="w-full max-w-xs">
+        <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+          <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="username">
+              Owner
+            </label>
+            <input v-model="owner" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
+              leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="owner-identity">
+          </div>
+          <div class="flex items-center justify-between">
+            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+              focus:outline-none focus:shadow-outline" type="button">
+              Create Owner
+            </button>
+            <button v-if="ownerExists" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+              focus:outline-none focus:shadow-outline" type="button">
+              Delete Owner
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div v-if="adminProjectsForm">
+        <div class="w-full max-w-xs">
+          <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+            <div class="mb-4">
+              <label class="block text-gray-700 text-sm font-bold mb-2" for="username">
+                Ownership
+              </label>
+              <input v-model="owner" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
+              leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="owner-identity">
+            </div>
+            <div class="mb-6">
+              <label class="block text-gray-700 text-sm font-bold mb-2" for="project">
+                Project
+              </label>
+              <input v-model="project" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
+              leading-tight focus:outline-none focus:shadow-outline" type="text" id="project" placeholder="project-name">
+              <p v-if="!projectExists" class="text-red-500 text-xs italic">Please choose a project name (can have dashes, no colons).</p>
+            </div>
+            <div class="flex items-center justify-between">
+              <button v-if="projectExists" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+              focus:outline-none focus:shadow-outline" type="button">
+                Load Project
+              </button>
+              <button v-else class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+              focus:outline-none focus:shadow-outline" type="button">
+                Create Project
+              </button>
+              <button v-if="projectExists" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+              focus:outline-none focus:shadow-outline" type="button">
+                Delete Project
+              </button>
+            </div>
+          </form>
+        </div>
     </div>
   </div>
 </template>
@@ -34,14 +92,20 @@ export default {
     return {
       // these are the primary information for a project and its data
       owner: null,
+      ownerExists: false,
       project: null,
+      projectExists: true,
       projectData: null, // expected connect to Vuex
       dbDisplay: null, // temporary measure, to first view
 
       // where we can indicate issues to screen
       opsDisplay: null,
-      // remoteDb: 'localhost:5984'
-      remoteDb: 'https://hd.narrationsd.com/hard-api/hardocs-projects'
+      // remoteDb: 'localhost:5984',
+      remoteDb: 'https://hd.narrationsd.com/hard-api/hardocs-projects',
+
+      // control of forms
+      adminOwnersForm: false,
+      adminProjectsForm: false,
     }
   },
   mounted () {
@@ -62,22 +126,32 @@ export default {
           this.opsDisplay = 'Check Db Status: error: ' + err
         })
     },
-    createProjects: function () {
+    adminOwners: function () {
       this.clearPanels()
+      this.adminOwnersForm = true
       habitatDb.assureRemoteLogin(this.remoteDb)
-      .then (result => {
-        this.opsDisplay = result.msg
-      })
-      .catch (err => {
-        this.opsDisplay = err.msg
-      })
+        .then (result => {
+          this.opsDisplay = result.msg
+        })
+        .then (() => {
+          this.owner = habitatDb.requestHabitat('create-owner-db').dbName
+          this.dbDisplay = 'Owner: ' + this.owner
+        })
+        .catch (err => {
+          this.opsDisplay = err.msg
+        })
     },
     adminProjects: function () {
       this.clearPanels()
       console.log ('admin projects... ')
+      this.adminProjectsForm = true
       habitatDb.assureRemoteLogin(this.remoteDb)
         .then (result => {
           this.opsDisplay = result.msg
+        })
+        .then (() => {
+          this.project = 'first-project'
+          this.dbDisplay = 'Project: ' + habitatDb.requestHabitat('get-login-identity').identity + ':' + this.project
         })
         .catch (err => {
           this.opsDisplay = err.msg
@@ -178,6 +252,8 @@ export default {
     clearPanels: function () {
       this.opsDisplay = ''
       this.dbDisplay = ''
+      this.adminOwnersForm = false
+      this.adminProjectsForm = false
     },
     preloadDummyProjectInfo: function (marker) {
       // *todo* for the moment, this is dummy data. Soon we'll add it normally, then find with view
