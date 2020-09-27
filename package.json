@@ -13,7 +13,7 @@
   },
   "main": "background.js",
   "dependencies": {
-    "@hardocs-project/habitat-client": "^0.5.20",
+    "@hardocs-project/habitat-client": "^0.5.21",
     "autoprefixer": "^9.8.6",
     "core-js": "^3.6.5",
     "fs": "0.0.1-security",
@@ -23,7 +23,7 @@
     "tiptap": "^1.29.6",
     "tiptap-extensions": "^1.32.6",
     "vue": "^2.6.12",
-    "vue-router": "^3.4.4",
+    "vue-router": "^3.4.5",
     "vue-select": "^3.10.8",
     "wrap-ansi": "^7.0.0"
   },

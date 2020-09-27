@@ -30,7 +30,7 @@
               leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="owner-identity">
           </div>
           <div class="flex items-center justify-between">
-            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <button @click="createOwner" :style="createStyle" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
               Create Owner
             </button>
@@ -83,14 +83,14 @@
 <script>
 
 import ProjectsAdminOpsButtons from '@/components/ProjectsAdminOpsButtons'
-import { habitatDb } from '@hardocs-project/habitat-client'
-import { habitatLocal } from '@hardocs-project/habitat-client'
+import { habitat, habitatLocal, habitatDb } from '@hardocs-project/habitat-client'
 
 export default {
   name: "ProjectsAdmin",
   data: function () {
     return {
       // these are the primary information for a project and its data
+      loginIdentity: 'not logged in',
       owner: null,
       ownerExists: false,
       project: null,
@@ -106,55 +106,89 @@ export default {
       // control of forms
       adminOwnersForm: false,
       adminProjectsForm: false,
+      isOwner: false
     }
   },
   mounted () {
     this.preloadDummyProjectInfo()
   },
+  computed: {
+    createStyle: function () {
+      return this.isOwner
+        ? {
+          color: 'red !important',
+          opacity: '50%'
+        }
+        : {
+          color: 'yellow !important'
+        }
+    }
+  },
   methods: {
     checkStatus: function (dbUrl) {
       this.clearPanels()
-      console.log ('checking db status')
+      console.log('checking db status')
       // *todd* not yet a business, has to be a promise for others, local
       habitatDb.getStatusOfDb(dbUrl)
-        .then (result => {
+        .then(result => {
           console.log('checkStatus: ' + JSON.stringify(result))
           this.opsDisplay = 'Db Status: ' + JSON.stringify(result)
         })
         .catch(err => {
-          console.log('checkStatus:error: ' + err)
-          this.opsDisplay = 'Check Db Status: error: ' + err
+          this.showError('Check Db Status', err)
         })
+    },
+    checkOwner: function (identity) {
+      // will be promise
+      // use to dim/enable button
+      // this probably doesn't want to be hit every time as it calls habitat
+      // so, when? checkOwner button
+      console.log('checking owner')
+      const result = habitat.doRequest('db-exists/'
+        + encodeURIComponent(`${identity}`))
+      this.opsDisplay = result.msg
+      return result.isOwner
     },
     adminOwners: function () {
       this.clearPanels()
       this.adminOwnersForm = true
-      habitatDb.assureRemoteLogin(this.remoteDb)
-        .then (result => {
+      habitat.assureRemoteLogin(this.remoteDb)
+        .then(result => {
           this.opsDisplay = result.msg
         })
-        .then (() => {
-          this.owner = habitatDb.requestHabitat('create-owner-db').dbName
-          this.dbDisplay = 'Owner: ' + this.owner
+        .then(() => {
+          // will be promise habitat.cloudRequest
+          this.loginIdentity = habitatDb.doRequest('get-login-identity').identity
+          this.owner = this.loginIdentity
+          this.isOwner = this.checkOwner(this.loginIdentity)
+          console.log('id: '  + this.loginIdentity + ', is owner: ' + this.isOwner)
+          this.dbDisplay = this.isOwner ? ('Owner: ' + this.owner) : 'not owner yet'
         })
-        .catch (err => {
-          this.opsDisplay = err.msg
+        .catch(err => {
+          this.showError('adminOwners', err)
         })
+    },
+    createOwner: function () {
+      console.log('create owner: ' + this.loginIdentity)
+      // it will, however, be a promise
+      const result = habitat.doRequest('create-owner/'
+        + encodeURIComponent(`${this.loginIdentity}`))
+      this.opsDisplay = result.msg
     },
     adminProjects: function () {
       this.clearPanels()
-      console.log ('admin projects... ')
+      console.log('admin projects... ')
       this.adminProjectsForm = true
-      habitatDb.assureRemoteLogin(this.remoteDb)
-        .then (result => {
+      habitat.assureRemoteLogin(this.remoteDb)
+        .then(result => {
           this.opsDisplay = result.msg
         })
-        .then (() => {
+        .then(() => {
           this.project = 'first-project'
           this.dbDisplay = 'Project: ' + habitatDb.requestHabitat('get-login-identity').identity + ':' + this.project
         })
-        .catch (err => {
-          this.opsDisplay = err.msg
+        .catch(err => {
+          this.showError('adminProjects', err)
         })
     },
     listLocalProjects: function () {
@@ -162,18 +196,18 @@ export default {
       const localDb = 'hardocs-projects'
       habitatDb.listOwnerProjects('hardOwner', localDb)
         .then(result => {
-          console.log ('listLocalProjects: ' + JSON.stringify(result))
+          console.log('listLocalProjects: ' + JSON.stringify(result))
           this.dbDisplay = JSON.stringify(result)
           this.opsDisplay = 'this is not real yet - just listing any records ' +
             'owner can reach - ' + localDb + ' db'
         })
         .catch(err => {
-          this.opsDisplay = err
+          this.showError('listLocalProjects', err)
         })
     },
     clearLocalProjects: function () {
       this.clearPanels()
-      console.log ('clearing local database... ')
+      console.log('clearing local database... ')
 
       habitatDb.clearDatabase()
         .then(result => {
@@ -182,72 +216,74 @@ export default {
             'in real Hardocs!): ' + JSON.stringify(result)
         })
         .catch(err => {
-          console.log('adminProjects:error: ' + err)
-          this.opsDisplay = 'clear database: ' + err
+          this.showError('clearLocalProjects', err)
         })
     },
     listRemoteProjects: function () {
       this.clearPanels()
-      habitatDb.assureRemoteLogin(this.remoteDb)
-        .then (() => {
+      habitat.assureRemoteLogin(this.remoteDb)
+        .then(() => {
           return habitatDb.listOwnerProjects('hardOwner', this.remoteDb)
         })
         .then(result => {
-          console.log ('listLocalProjects: ' + JSON.stringify(result))
+          console.log('listLocalProjects: ' + JSON.stringify(result))
           this.dbDisplay = JSON.stringify(result)
           this.opsDisplay = 'this is not real yet - just listing any records ' +
             'owner can reach - ' + this.remoteDb + ' db'
         })
         .catch(err => {
-          this.opsDisplay = err
+          this.showError('listRemoteProjects', err)
         })
     },
     replicateDb: function () {
       this.clearPanels()
       const cloudDb = this.remoteDb
       const localDb = 'hardocs-projects'
-      console.log ('replicateDb projects from ' + cloudDb + ' to ' + localDb + '... ')
+      console.log('replicateDb projects from ' + cloudDb + ' to ' + localDb + '... ')
       // *todo* look very carefully into consequences of both checkpoint settings below,
       // but also the thing they save from, the odd nature of the 404 setting off CORS
-      habitatDb.assureRemoteLogin(this.remoteDb)
-        .then (() => {
+      habitat.assureRemoteLogin(this.remoteDb)
+        .then(() => {
           return habitatDb.replicateDatabase(cloudDb, localDb)
         })
         .then(result => {
-          console.log ('replicateDb:down:result: ' + JSON.stringify(result))
+          console.log('replicateDb:down:result: ' + JSON.stringify(result))
           this.dbDisplay = 'down: ' + JSON.stringify(result)
         })
-        .then (() => {
+        .then(() => {
           return habitatDb.replicateDatabase(localDb, cloudDb)
         })
         .then(result => {
-          console.log ('replicateDb:up:result: ' + JSON.stringify(result))
+          console.log('replicateDb:up:result: ' + JSON.stringify(result))
           this.dbDisplay += ', up: ' + JSON.stringify(result)
           this.opsDisplay = 'this is not real yet - just listing any records ' +
             'owner can reach - ' + cloudDb + ' db'
         })
         .catch(err => {
-          console.log ('replicateDb:error: ' + err)
-          this.opsDisplay = 'from ' + cloudDb +' to ' + localDb + ': ' + err
+          this.showError('replicateDb from ' +
+            cloudDb + ' to ' + localDb, err)
         })
 
     },
     logOutRemote: function () {
       this.clearPanels()
       habitatLocal.getNodeCookies()
-        .then (result => {
+        .then(result => {
           this.cookies = result
           this.opsDisplay = 'Node Cookies: ' + JSON.stringify(result)
           return result
         })
-        .then (result => {
+        .then(result => {
           habitatLocal.deleteNodeCookies(result)
         })
         .catch(err => {
-          const msg = 'logOutClear:error: ' + err
-          this.opsDisplay = msg
-          console.log(msg)
+          this.showError('logOutRemote', err)
         })
+    },
+    showError: function (action, err) {
+      const msg = `${action}:error: ` + err
+      this.opsDisplay = msg
+      console.log(msg)
     },
     clearPanels: function () {
       this.opsDisplay = ''
@@ -261,8 +297,8 @@ export default {
       this.project = 'firstProject'
       this.projectData = {
         docs: [
-          { doc1: 'doc1 text we will see' },
-          { doc2: 'doc2 text we will also see' },
+          {doc1: 'doc1 text we will see'},
+          {doc2: 'doc2 text we will also see'},
         ],
         metadata: {
           meta1: 'meta1 data',
@@ -270,8 +306,8 @@ export default {
           marker: marker
         },
         imgs: [
-          { name: 'img1', data: 'image1data', type: 'jpg' },
-          { name: 'img2', data: 'image2data', type: 'jpg' },
+          {name: 'img1', data: 'image1data', type: 'jpg'},
+          {name: 'img2', data: 'image2data', type: 'jpg'},
         ],
         countMarker: 0 // this is for keeping track of updates
       }

@@ -71,7 +71,7 @@ export default {
         },
         {
           path: "https://www.google.com/search?q=oceanic&source=lnms&tbm=isch",
-          label: "Another Site",
+          label: "Other site",
           type: 'remote'
         },
         {
