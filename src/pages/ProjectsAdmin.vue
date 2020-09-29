@@ -170,6 +170,10 @@ export default {
         })
     },
     createOwner: function () {
+      if (this.isOwner) {
+        // inactive
+        return
+      }
       console.log('create owner: ' + this.loginIdentity)
       // it will, however, be a promise
       // const cmd =
@@ -180,6 +184,12 @@ export default {
           + encodeURIComponent(`${this.remoteUrl}`), this.remoteUrl)
       })
       .then(result => {
+        if (result.ok) {
+          this.isOwner = true
+          // *todo* make these reactive, rather soon!
+          this.ownerExists = true
+          this.dbDisplay = this.isOwner ? ('Owner: ' + this.owner) : 'not owner yet'
+        }
         this.opsDisplay = result.msg
       })
       .catch(err => {

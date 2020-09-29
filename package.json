@@ -14,10 +14,9 @@
   },
   "main": "background.js",
   "dependencies": {
-    "@hardocs-project/habitat-client": "^0.5.25",
+    "@hardocs-project/habitat-client": "^0.5.26",
     "autoprefixer": "^9.8.6",
     "core-js": "^3.6.5",
-    "fetch-cookie": "^0.10.1",
     "fs": "0.0.1-security",
     "json2md": "^1.7.1",
     "smartwrap": "^2.0.1",
