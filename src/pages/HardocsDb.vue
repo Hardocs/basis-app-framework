@@ -44,6 +44,8 @@ export default {
     // this.preloadsetDummyProjectInfo()
   },
   methods: {
+    // *todo* get in the logged-in check everywhere, and update to suit the
+    // database organization we're actually going to use.
     loadProject: function () {
       this.clearPanels()
       const owner = this.owner

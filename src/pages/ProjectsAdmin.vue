@@ -102,6 +102,7 @@ export default {
       opsDisplay: null,
       // remoteDb: 'localhost:5984',
       remoteDb: 'https://hd.narrationsd.com/hard-api/hardocs-projects',
+      remoteUrl: 'https://hd.narrationsd.com/hard-api',
 
       // control of forms
       adminOwnersForm: false,
@@ -171,9 +172,19 @@ export default {
     createOwner: function () {
       console.log('create owner: ' + this.loginIdentity)
       // it will, however, be a promise
-      const result = habitat.doRequest('create-owner/'
-        + encodeURIComponent(`${this.loginIdentity}`))
-      this.opsDisplay = result.msg
+      // const cmd =
+      habitat.assureRemoteLogin(this.remoteDb)
+      .then (() => {
+        return habitat.doRequest('create-owner/'
+          + encodeURIComponent(`${this.loginIdentity}`) + '/'
+          + encodeURIComponent(`${this.remoteUrl}`), this.remoteUrl)
+      })
+      .then(result => {
+        this.opsDisplay = result.msg
+      })
+      .catch(err => {
+        this.showError('createOwner', err.msg)
+      })
     },
     adminProjects: function () {
       this.clearPanels()
@@ -226,7 +237,7 @@ export default {
           return habitatDb.listOwnerProjects('hardOwner', this.remoteDb)
         })
         .then(result => {
-          console.log('listLocalProjects: ' + JSON.stringify(result))
+          console.log('listRemoteProjects: ' + JSON.stringify(result))
           this.dbDisplay = JSON.stringify(result)
           this.opsDisplay = 'this is not real yet - just listing any records ' +
             'owner can reach - ' + this.remoteDb + ' db'
@@ -281,6 +292,8 @@ export default {
         })
     },
     showError: function (action, err) {
+      // an essential, so we don't need to know which form comes
+      err = typeof err !== 'string' ? JSON.stringify(err) : err
       const msg = `${action}:error: ` + err
       this.opsDisplay = msg
       console.log(msg)
