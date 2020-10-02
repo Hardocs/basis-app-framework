@@ -14,11 +14,11 @@
   },
   "main": "background.js",
   "dependencies": {
-    "@hardocs-project/habitat-client": "^0.5.26",
+    "@hardocs-project/habitat-client": "^0.5.27",
     "autoprefixer": "^9.8.6",
     "core-js": "^3.6.5",
     "fs": "0.0.1-security",
-    "json2md": "^1.7.1",
+    "json2md": "^1.8.0",
     "smartwrap": "^2.0.1",
     "tailwindcss": "^1.8.6",
     "tiptap": "^1.29.6",

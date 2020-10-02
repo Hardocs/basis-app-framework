@@ -5,8 +5,8 @@
     </div>
     <hr>
     <HardocsDbOpsButtons
-      v-on:loadProject="loadProject"
-      v-on:saveProject="saveProject"
+      v-on:loadProjectFromDb="loadProjectFromDb"
+      v-on:saveProjectToDb="saveProjectToDb"
       v-on:clearDatabase="clearDatabase"
     />
     <div v-if="dbDisplay" class="bg-display text-white">
@@ -21,7 +21,7 @@
 <script>
 
 import HardocsDbOpsButtons from '@/components/HardocsDbOpsButtons'
-import { habitatDb } from '@hardocs-project/habitat-client'
+import {habitat, habitatDb} from '@hardocs-project/habitat-client'
 
 export default {
   name: "HardocsDb",
@@ -46,48 +46,69 @@ export default {
   methods: {
     // *todo* get in the logged-in check everywhere, and update to suit the
     // database organization we're actually going to use.
-    loadProject: function () {
+    loadProjectFromDb: function (dbLocation) {
       this.clearPanels()
-      const owner = this.owner
-      for (let count = 0; count < this.countMarker; ++count) {
-        const project = this.projectBase + count
-        console.log ('loading owner: ' + owner + ', project: ' + project)
+      console.log('loadProjectFromDb string: ' + dbLocation)
+      habitat.assureRemoteLogin(dbLocation)
+        .then(() => {
 
-        habitatDb.loadFromDatabase(owner, project)
-          .then(result => {
-            console.log('loaded Project: ' + JSON.stringify(result))
-            this.projectData = result.data
-            this.dbDisplay += (count > 0 ? ', ' : '') +
-              '<' + owner + ':' + project +
-              '> loaded: '+ JSON.stringify(this.projectData)
-          })
-          .catch(err => {
-            this.opsDisplay = JSON.stringify(err)
-            this.opsDisplay = 'load project: ' + project + ' error: ' + err
-          })
-      }
+          const owner = this.owner
+          for (let count = 0; count <= this.countMarker; ++count) {
+            const project = this.projectBase + count
+            console.log('loading owner: ' + owner + ', project: ' + project)
+
+            habitatDb.loadProjectFromDatabase(owner, project, dbLocation)
+              .then(result => {
+                console.log('loaded Project: ' + JSON.stringify(result))
+                this.projectData = result.data
+                this.dbDisplay += (count > 0 ? ', ' : '') +
+                  '<' + owner + ':' + project +
+                  '> loaded: ' + JSON.stringify(this.projectData)
+              })
+              .catch(err => {
+                this.opsDisplay = JSON.stringify(err)
+                this.opsDisplay = 'load project: ' + project + ' error: ' + err
+              })
+          }
+        })
+        .catch(err => {
+          this.showError('listRemoteProjects', err)
+        })
     },
-    saveProject: function () {
+    saveProjectToDb: function (dbLocation) {
       this.clearPanels()
       const owner = this.owner
       const project = this.projectBase + this.countMarker
       this.setDummyProjectInfo()
 
       console.log ('saving owner: ' + owner + ': ' + project)
+      habitat.assureRemoteLogin(dbLocation)
+        .then(() => {
 
-      habitatDb.storeToDatabase(owner, project, this.projectData)
-        .then(result => {
-          console.log('saveProject: result: ' + JSON.stringify(result))
-          this.opsDisplay = result
-          this.dbDisplay = 'For Hardocs Project <' + this.owner + ':' + this.project +
-            '>, app has saved: '+ JSON.stringify(this.projectData)
+          habitatDb.storeProjectToDatabase(owner, project, this.projectData, dbLocation)
+            .then(result => {
+              console.log('saveProjectToDb: result: ' + JSON.stringify(result))
+              this.opsDisplay = result
+              this.dbDisplay = 'For Hardocs Project <' + this.owner + ':' + this.project +
+                '>, app has saved: '+ JSON.stringify(this.projectData)
+            })
+            .catch(err => {
+              console.log('saveProjectToDb:error: ' + err)
+              this.opsDisplay = 'save project: error: ' + err
+            })
         })
         .catch(err => {
-          console.log('saveProject:error: ' + err)
-          this.opsDisplay = 'save project: error: ' + err
+          this.showError('listRemoteProjects', err)
         })
 
       ++this.countMarker // for next time
+    },
+    showError: function (action, err) {
+      // an essential, so we don't need to know which form comes
+      err = typeof err !== 'string' ? JSON.stringify(err) : err
+      const msg = `${action}:error: ` + err
+      this.opsDisplay = msg
+      console.log(msg)
     },
     clearDatabase: function () {
       this.clearPanels()
