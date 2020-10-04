@@ -30,6 +30,10 @@
               leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="owner-identity">
           </div>
           <div class="flex items-center justify-between">
+            <button @click="initializeHabitat" :style="createStyle" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+              focus:outline-none focus:shadow-outline" type="button">
+              Initialize Habitat
+            </button>
             <button @click="createOwner" :style="createStyle" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
               Create Owner
@@ -83,7 +87,7 @@
 <script>
 
 import ProjectsAdminOpsButtons from '@/components/ProjectsAdminOpsButtons'
-import { habitat, habitatLocal, habitatDb } from '@hardocs-project/habitat-client'
+import { habitatCloud, habitatLocal, habitatDb } from '@hardocs-project/habitat-client'
 
 export default {
   name: "ProjectsAdmin",
@@ -145,7 +149,7 @@ export default {
       // this probably doesn't want to be hit every time as it calls habitat
       // so, when? checkOwner button
       console.log('checking owner')
-      const result = habitat.doRequest('db-exists/'
+      const result = habitatCloud.doRequest('db-exists/'
         + encodeURIComponent(`${identity}`))
       this.opsDisplay = result.msg
       return result.isOwner
@@ -153,12 +157,12 @@ export default {
     adminOwners: function () {
       this.clearPanels()
       this.adminOwnersForm = true
-      habitat.assureRemoteLogin(this.remoteDb)
+      habitatCloud.assureRemoteLogin(this.remoteDb)
         .then(result => {
           this.opsDisplay = result.msg
         })
         .then(() => {
-          // will be promise habitat.cloudRequest
+          // will be promise habitatCloud.cloudRequest
           this.loginIdentity = habitatDb.doRequest('get-login-identity').identity
           this.owner = this.loginIdentity
           this.isOwner = this.checkOwner(this.loginIdentity)
@@ -177,9 +181,9 @@ export default {
       console.log('create owner: ' + this.loginIdentity)
       // it will, however, be a promise
       // const cmd =
-      habitat.assureRemoteLogin(this.remoteDb)
+      habitatCloud.assureRemoteLogin(this.remoteDb)
       .then (() => {
-        return habitat.doRequest('create-owner/'
+        return habitatCloud.doRequest('create-owner/'
           + encodeURIComponent(`${this.loginIdentity}`) + '/'
           + encodeURIComponent(`${this.remoteUrl}`), this.remoteUrl)
       })
@@ -200,7 +204,7 @@ export default {
       this.clearPanels()
       console.log('admin projects... ')
       this.adminProjectsForm = true
-      habitat.assureRemoteLogin(this.remoteDb)
+      habitatCloud.assureRemoteLogin(this.remoteDb)
         .then(result => {
           this.opsDisplay = result.msg
         })
@@ -242,7 +246,7 @@ export default {
     },
     listRemoteProjects: function () {
       this.clearPanels()
-      habitat.assureRemoteLogin(this.remoteDb)
+      habitatCloud.assureRemoteLogin(this.remoteDb)
         .then(() => {
           return habitatDb.listOwnerProjects('hardOwner', this.remoteDb)
         })
@@ -263,7 +267,7 @@ export default {
       console.log('replicateDb projects from ' + cloudDb + ' to ' + localDb + '... ')
       // *todo* look very carefully into consequences of both checkpoint settings below,
       // but also the thing they save from, the odd nature of the 404 setting off CORS
-      habitat.assureRemoteLogin(this.remoteDb)
+      habitatCloud.assureRemoteLogin(this.remoteDb)
         .then(() => {
           return habitatDb.replicateDatabase(cloudDb, localDb)
         })
@@ -285,6 +289,35 @@ export default {
             cloudDb + ' to ' + localDb, err)
         })
 
+    },
+    initializeHabitat: function () {
+      this.clearPanels()
+      console.log('initializing Habitat...')
+
+      habitatCloud.assureRemoteLogin(this.remoteDb)
+        .then(result => {
+          this.opsDisplay = result.msg
+          return
+        })
+        .then(() => {
+          console.log('headed for initialize')
+          const result = habitatCloud.doRequest(
+            'initialize-cloud/'
+            + encodeURIComponent(`${this.remoteUrl}`))
+          console.log('type of doRequest result: ' + typeof result)
+          console.log('doRequest result: ' + JSON.stringify(result))
+          return result
+        })
+        .then(result => {
+          console.log('back from initialize: ' + JSON.stringify(result))
+          this.dbDisplay = 'Initializing Cloud: '
+            + JSON.stringify(result)
+          console.log('initializeHabitat', JSON.stringify(result))
+        })
+        .catch(err => {
+          console.log('initializeHabitat', err)
+          this.showError('initializeHabitat', err)
+        })
     },
     logOutRemote: function () {
       this.clearPanels()

@@ -17,6 +17,7 @@
     "@hardocs-project/habitat-client": "^0.5.27",
     "autoprefixer": "^9.8.6",
     "core-js": "^3.6.5",
+    "dotenv": "^8.2.0",
     "fs": "0.0.1-security",
     "json2md": "^1.8.0",
     "smartwrap": "^2.0.1",
