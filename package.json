@@ -14,7 +14,7 @@
   },
   "main": "background.js",
   "dependencies": {
-    "@hardocs-project/habitat-client": "^0.5.27",
+    "@hardocs-project/habitat-client": "^0.5.28",
     "autoprefixer": "^9.8.6",
     "core-js": "^3.6.5",
     "dotenv": "^8.2.0",
