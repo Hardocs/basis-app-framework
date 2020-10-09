@@ -26,6 +26,7 @@
     "vue": "^2.6.12",
     "vue-router": "^3.4.5",
     "vue-select": "^3.10.8",
+    "webpack-bundle-analyzer": "^3.9.0",
     "wrap-ansi": "^7.0.0"
   },
   "devDependencies": {
