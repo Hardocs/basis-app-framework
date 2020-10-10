@@ -178,15 +178,15 @@ export default {
         // inactive
         return
       }
+
       console.log('create owner: ' + this.loginIdentity)
-      // it will, however, be a promise
-      // const cmd =
       habitatCloud.assureRemoteLogin(this.remoteDb)
       .then (() => {
-        return habitatCloud.doRequest('create-owner/'
-          + encodeURIComponent(`${this.loginIdentity}`) + '/'
-          + encodeURIComponent(`${this.remoteUrl}`), this.remoteUrl)
+        return habitatCloud.doRequest('create-owner', this.remoteUrl, { owner: this.loginIdentity })
       })
+      // .then (result => {
+      //   // *todo* replicate the initialized db down here
+      // })
       .then(result => {
         if (result.ok) {
           this.isOwner = true
@@ -245,6 +245,7 @@ export default {
         })
     },
     listRemoteProjects: function () {
+      // *todo* this goes out or becomes doRemote as we move into designed cloud
       this.clearPanels()
       habitatCloud.assureRemoteLogin(this.remoteDb)
         .then(() => {
@@ -301,21 +302,17 @@ export default {
         })
         .then(() => {
           console.log('headed for initialize')
-          const result = habitatCloud.doRequest(
-            'initialize-cloud/'
-            + encodeURIComponent(`${this.remoteUrl}`))
+          const result = habitatCloud.doRequest('initialize-cloud', this.remoteUrl)
           console.log('type of doRequest result: ' + typeof result)
-          console.log('doRequest result: ' + JSON.stringify(result))
           return result
         })
         .then(result => {
-          console.log('back from initialize: ' + JSON.stringify(result))
+          console.log('back from initializeHabitat: ' + JSON.stringify(result))
           this.dbDisplay = 'Initializing Cloud: '
             + JSON.stringify(result)
           console.log('initializeHabitat', JSON.stringify(result))
         })
         .catch(err => {
-          console.log('initializeHabitat', err)
           this.showError('initializeHabitat', err)
         })
     },
