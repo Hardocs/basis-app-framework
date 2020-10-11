@@ -23,10 +23,10 @@
       <div class="w-full max-w-xs">
         <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
           <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="username">
-              Owner
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="identity">
+              Identity
             </label>
-            <input v-model="owner" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
+            <input v-model="loginIdentity" id="identity" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
               leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="owner-identity">
           </div>
           <div class="flex items-center justify-between">
@@ -50,10 +50,10 @@
         <div class="w-full max-w-xs">
           <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
             <div class="mb-4">
-              <label class="block text-gray-700 text-sm font-bold mb-2" for="username">
+              <label class="block text-gray-700 text-sm font-bold mb-2" for="our-owner">
                 Ownership
               </label>
-              <input v-model="owner" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
+              <input v-model="owner" id="our-owner" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
               leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="owner-identity">
             </div>
             <div class="mb-6">
@@ -144,27 +144,37 @@ export default {
         })
     },
     checkOwner: function (identity) {
+      console.log ('checkOwner: ' + identity)
+      return false // *todo* until habitat can actually do it
+
+      // *todo* this is now looking wrong several ways - ck intent, reformulate to
+      // match advancing habitat design.
+
       // will be promise
       // use to dim/enable button
       // this probably doesn't want to be hit every time as it calls habitat
       // so, when? checkOwner button
-      console.log('checking owner')
-      const result = habitatCloud.doRequest('db-exists/'
-        + encodeURIComponent(`${identity}`))
-      this.opsDisplay = result.msg
-      return result.isOwner
+      // console.log('checking owner')
+      // const result = habitatCloud.doRequest('db-exists/'
+      //   + encodeURIComponent(`${identity}`))
+      // this.opsDisplay = result.msg
+      // return result.isOwner
     },
     adminOwners: function () {
       this.clearPanels()
       this.adminOwnersForm = true
+      console.log ('A this.remoteDb: ' + this.remoteDb)
       habitatCloud.assureRemoteLogin(this.remoteDb)
         .then(result => {
           this.opsDisplay = result.msg
         })
-        .then(() => {
-          // will be promise habitatCloud.cloudRequest
-          this.loginIdentity = habitatDb.doRequest('get-login-identity').identity
-          this.owner = this.loginIdentity
+        .then (() => {
+          console.log ('B this.remoteUrl: ' + this.remoteUrl)
+          return  habitatCloud.doRequest('get-login-identity', this.remoteUrl)
+        })
+        .then (result => {
+          console.log('C - identity: ' + JSON.stringify(result))
+          this.loginIdentity = result.identity
           this.isOwner = this.checkOwner(this.loginIdentity)
           console.log('id: '  + this.loginIdentity + ', is owner: ' + this.isOwner)
           this.dbDisplay = this.isOwner ? ('Owner: ' + this.owner) : 'not owner yet'
@@ -204,9 +214,17 @@ export default {
       this.clearPanels()
       console.log('admin projects... ')
       this.adminProjectsForm = true
+      console.log ('A this.remoteDb: ' + this.remoteDb)
       habitatCloud.assureRemoteLogin(this.remoteDb)
         .then(result => {
           this.opsDisplay = result.msg
+        })
+        .then (() => {
+          console.log ('B this.remoteDb: ' + this.remoteDb)
+          return  habitatCloud.getLoginIdentity(this.remoteDb)
+        })
+        .then (result => {
+          this.loginIdentity = result
         })
         .then(() => {
           this.project = 'first-project'
