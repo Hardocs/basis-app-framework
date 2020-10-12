@@ -104,8 +104,10 @@ export default {
 
       // where we can indicate issues to screen
       opsDisplay: null,
+      // *todo* REVISE how this works, to a current db, or an _all_dbs, or habitat-request,
+      // *todo* also consider how initiate is going to use it...or not...
       // remoteDb: 'localhost:5984',
-      remoteDb: 'https://hd.narrationsd.com/hard-api/hardocs-projects',
+      remoteDb: 'https://hd.narrationsd.com/hard-api/habitat-projects',
       remoteUrl: 'https://hd.narrationsd.com/hard-api',
 
       // control of forms
