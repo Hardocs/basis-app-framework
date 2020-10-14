@@ -341,7 +341,7 @@ export default {
       habitatLocal.getNodeCookies()
         .then(result => {
           this.cookies = result
-          this.opsDisplay = 'sNode Cookies: ' + JSON.stringify(result)
+          this.opsDisplay = 'Node Cookies: ' + JSON.stringify(result)
           return result
         })
         .then(result => {
