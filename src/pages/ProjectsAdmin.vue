@@ -69,7 +69,7 @@
               focus:outline-none focus:shadow-outline" type="button">
                 Load Project
               </button>
-              <button v-else class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+              <button v-else @click="createProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
                 Create Project
               </button>
@@ -98,7 +98,7 @@ export default {
       owner: null,
       ownerExists: false,
       project: null,
-      projectExists: true,
+      projectExists: false,
       projectData: null, // expected connect to Vuex
       dbDisplay: null, // temporary measure, to first view
 
@@ -197,7 +197,7 @@ export default {
         return habitatCloud.doRequest('create-owner', this.remoteUrl, { owner: this.loginIdentity })
       })
       // .then (result => {
-      //   // *todo* replicate the initialized db down here
+      //   // *todo* replicate the initialized db down here??
       // })
       .then(result => {
         if (result.ok) {
@@ -234,6 +234,34 @@ export default {
         })
         .catch(err => {
           this.showError('adminProjects', err)
+        })
+    },
+    createProject: function () {
+      if (this.isOwner) {
+        // inactive
+        return
+      }
+
+      console.log('create project: ' + this.loginIdentity)
+      habitatCloud.assureRemoteLogin(this.remoteDb)
+        .then (() => {
+          return habitatCloud.doRequest('create-project', this.remoteUrl, { owner: this.loginIdentity })
+        })
+        // .then (result => {
+        //   // *todo* replicate the initialized project down here??
+        // })
+        // *todo* when implementing, can be not owner, or project already, or? better way needed
+        .then(result => {
+          if (result.ok) {
+            this.isOwner = true
+            // *todo* make these reactive, rather soon!
+            this.ownerExists = true
+            this.dbDisplay = this.isOwner ? ('Owner: ' + this.owner) : 'not owner yet'
+          }
+          this.opsDisplay = result.msg
+        })
+        .catch(err => {
+          this.showError('createProject', err.msg)
         })
     },
     listLocalProjects: function () {
