@@ -8,7 +8,7 @@
   "scripts": {
     "electron:build": "vue-cli-service electron:build",
     "electron:serve": "vue-cli-service electron:serve",
-    "electron:serve-bug": "vue-cli-service electron:serve --inspect-brk=5893",
+    "electron:serve-debug": "node --inspect=5893 node_modules/@vue/cli-service/bin/vue-cli-service.js electron:serve",
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps"
   },
@@ -20,11 +20,11 @@
     "dotenv": "^8.2.0",
     "json2md": "^1.8.0",
     "smartwrap": "^2.0.1",
-    "tailwindcss": "^1.9.0",
+    "tailwindcss": "^1.9.3",
     "tiptap": "^1.29.6",
-    "tiptap-extensions": "^1.33.1",
+    "tiptap-extensions": "^1.33.2",
     "vue": "^2.6.12",
-    "vue-router": "^3.4.5",
+    "vue-router": "^3.4.7",
     "vue-select": "^3.10.8",
     "webpack-bundle-analyzer": "^3.9.0",
     "wrap-ansi": "^7.0.0"
