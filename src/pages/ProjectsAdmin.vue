@@ -24,10 +24,15 @@
         <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
           <div class="mb-4">
             <label class="block text-gray-700 text-sm font-bold mb-2" for="identity">
-              Identity
+              Validated Identity
             </label>
             <input v-model="loginIdentity" id="identity" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
               leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="owner-identity">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="owner-name">
+              Projects Owner
+            </label>
+            <input v-model="ownerName" id="owner-name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
+              leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="project-owner-name">
           </div>
           <div class="flex items-center justify-between">
             <button @click="initializeHabitat" :style="createStyle" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
@@ -95,6 +100,7 @@ export default {
     return {
       // these are the primary information for a project and its data
       loginIdentity: 'not logged in',
+      ownerName: null,
       owner: null,
       ownerExists: false,
       project: null,
@@ -113,7 +119,7 @@ export default {
       // control of forms
       adminOwnersForm: false,
       adminProjectsForm: false,
-      isOwner: false
+      isAgent: false
     }
   },
   mounted () {
@@ -121,7 +127,7 @@ export default {
   },
   computed: {
     createStyle: function () {
-      return this.isOwner
+      return this.isAgent
         ? {
           color: 'red !important',
           opacity: '50%'
@@ -160,7 +166,7 @@ export default {
       // const result = habitatCloud.doRequest('db-exists/'
       //   + encodeURIComponent(`${identity}`))
       // this.opsDisplay = result.msg
-      // return result.isOwner
+      // return result.isAgent
     },
     adminOwners: function () {
       this.clearPanels()
@@ -177,34 +183,38 @@ export default {
         .then (result => {
           console.log('C - identity: ' + JSON.stringify(result))
           this.loginIdentity = result.identity
-          this.isOwner = this.checkOwner(this.loginIdentity)
-          console.log('id: '  + this.loginIdentity + ', is owner: ' + this.isOwner)
-          this.dbDisplay = this.isOwner ? ('Owner: ' + this.owner) : 'not owner yet'
+          this.isAgent = this.checkOwner(this.loginIdentity)
+          console.log('id: '  + this.loginIdentity + ', is owner: ' + this.isAgent)
+          this.dbDisplay = this.isAgent ? ('Owner: ' + this.owner) : 'not agent yet'
         })
         .catch(err => {
           this.showError('adminOwners', err)
         })
     },
     createOwner: function () {
-      if (this.isOwner) {
-        // inactive
+      this.isAgent = true // *todo*
+      if (!this.isAgent) {
+        this.opsDisplay = 'Sorry, ' + this.loginIdentity +
+          ' isn\'t an agent, thus permitted to create Project Owners...'
         return
       }
 
-      console.log('create owner: ' + this.loginIdentity)
+      console.log('create owner: ' + this.ownerName + ' via agent: ' + this.loginIdentity)
       habitatCloud.assureRemoteLogin(this.remoteDb)
       .then (() => {
-        return habitatCloud.doRequest('create-owner', this.remoteUrl, { owner: this.loginIdentity })
+        return habitatCloud.doRequest(
+          'create-owner',
+          this.remoteUrl,
+          { owner: this.ownerName, agent: this.loginIdentity }
+        )
       })
       // .then (result => {
       //   // *todo* replicate the initialized db down here??
       // })
       .then(result => {
         if (result.ok) {
-          this.isOwner = true
-          // *todo* make these reactive, rather soon!
           this.ownerExists = true
-          this.dbDisplay = this.isOwner ? ('Owner: ' + this.owner) : 'not owner yet'
+          this.dbDisplay = 'Owner ' + this.ownerName + ' created'
         }
         this.opsDisplay = result.msg
       })
@@ -237,7 +247,7 @@ export default {
         })
     },
     createProject: function () {
-      if (this.isOwner) {
+      if (this.isAgent) {
         // inactive
         return
       }
@@ -245,18 +255,22 @@ export default {
       console.log('create project: ' + this.loginIdentity)
       habitatCloud.assureRemoteLogin(this.remoteDb)
         .then (() => {
-          return habitatCloud.doRequest('create-project', this.remoteUrl, { owner: this.loginIdentity })
+          return habitatCloud.doRequest(
+            'create-project',
+            this.remoteUrl,
+            { owner: this.ownerName, agent: this.loginIdentity }
+            )
         })
         // .then (result => {
         //   // *todo* replicate the initialized project down here??
         // })
-        // *todo* when implementing, can be not owner, or project already, or? better way needed
+        // *todo* when implementing, can be not agent, or project already, or? better way needed
         .then(result => {
           if (result.ok) {
-            this.isOwner = true
+            this.isAgent = true
             // *todo* make these reactive, rather soon!
             this.ownerExists = true
-            this.dbDisplay = this.isOwner ? ('Owner: ' + this.owner) : 'not owner yet'
+            this.dbDisplay = this.isAgent ? ('Owner: ' + this.owner) : 'not agent yet'
           }
           this.opsDisplay = result.msg
         })
