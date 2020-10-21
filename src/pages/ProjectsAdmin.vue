@@ -171,13 +171,11 @@ export default {
     adminOwners: function () {
       this.clearPanels()
       this.adminOwnersForm = true
-      console.log ('A this.remoteDb: ' + this.remoteDb)
       habitatCloud.assureRemoteLogin(this.remoteDb)
         .then(result => {
           this.opsDisplay = result.msg
         })
         .then (() => {
-          console.log ('B this.remoteUrl: ' + this.remoteUrl)
           return  habitatCloud.doRequest('get-login-identity', this.remoteUrl)
         })
         .then (result => {
@@ -226,17 +224,15 @@ export default {
       this.clearPanels()
       console.log('admin projects... ')
       this.adminProjectsForm = true
-      console.log ('A this.remoteDb: ' + this.remoteDb)
       habitatCloud.assureRemoteLogin(this.remoteDb)
         .then(result => {
           this.opsDisplay = result.msg
         })
         .then (() => {
-          console.log ('B this.remoteDb: ' + this.remoteDb)
-          return  habitatCloud.getLoginIdentity(this.remoteDb)
+          return  habitatCloud.doRequest('get-login-identity', this.remoteUrl)
         })
         .then (result => {
-          this.loginIdentity = result
+          this.loginIdentity = result.identity
         })
         .then(() => {
           this.project = 'first-project'
@@ -247,18 +243,25 @@ export default {
         })
     },
     createProject: function () {
-      if (this.isAgent) {
-        // inactive
+      this.isAgent = true // *todo*
+      if (!this.isAgent) {
+        this.opsDisplay = 'Sorry, ' + this.loginIdentity +
+          ' isn\'t an agent, thus permitted to create Project...'
         return
       }
 
-      console.log('create project: ' + this.loginIdentity)
+      console.log('create project: ' + this.project +
+        ', owner: ' + this.owner + ', identity: ' + this.loginIdentity)
       habitatCloud.assureRemoteLogin(this.remoteDb)
         .then (() => {
           return habitatCloud.doRequest(
             'create-project',
             this.remoteUrl,
-            { owner: this.ownerName, agent: this.loginIdentity }
+            {
+              owner: this.owner,
+              identity: this.loginIdentity,
+              project: this.project,
+            }
             )
         })
         // .then (result => {
@@ -408,8 +411,8 @@ export default {
     },
     preloadDummyProjectInfo: function (marker) {
       // *todo* for the moment, this is dummy data. Soon we'll add it normally, then find with view
-      this.owner = 'hardOwner'
-      this.project = 'firstProject'
+      this.owner = 'hard-owner'
+      this.project = 'first-project'
       this.projectData = {
         docs: [
           {doc1: 'doc1 text we will see'},
