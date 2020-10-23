@@ -5,7 +5,7 @@
     </div>
     <hr>
     <ProjectsAdminOpsButtons
-      v-on:adminOwners="adminOwners"
+      v-on:adminLocations="adminLocations"
       v-on:listLocalProjects="listLocalProjects"
       v-on:listRemoteProjects="listRemoteProjects"
       v-on:replicateDb="replicateDb"
@@ -19,7 +19,7 @@
     <div v-if="opsDisplay" class="bg-display text-white">
       {{ opsDisplay }}
     </div>
-    <div v-if="adminOwnersForm">
+    <div v-if="adminLocationsForm">
       <div class="w-full max-w-xs">
         <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
           <div class="mb-4">
@@ -27,25 +27,25 @@
               Validated Identity
             </label>
             <input v-model="loginIdentity" id="identity" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
-              leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="owner-identity">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="owner-name">
-              Projects Owner
+              leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="location-identity">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="location-name">
+              Projects Location
             </label>
-            <input v-model="ownerName" id="owner-name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
-              leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="project-owner-name">
+            <input v-model="location" id="location-name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
+              leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="project-location-name">
           </div>
           <div class="flex items-center justify-between">
             <button @click="initializeHabitat" :style="createStyle" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
               Initialize Habitat
             </button>
-            <button @click="createOwner" :style="createStyle" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <button @click="createLocation" :style="createStyle" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Create Owner
+              Create Location
             </button>
-            <button v-if="ownerExists" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <button v-if="locationExists" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Delete Owner
+              Delete Location
             </button>
           </div>
         </form>
@@ -55,11 +55,11 @@
         <div class="w-full max-w-xs">
           <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
             <div class="mb-4">
-              <label class="block text-gray-700 text-sm font-bold mb-2" for="our-owner">
-                Ownership
+              <label class="block text-gray-700 text-sm font-bold mb-2" for="our-location">
+                Location
               </label>
-              <input v-model="owner" id="our-owner" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
-              leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="owner-identity">
+              <input v-model="location" id="our-location" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
+              leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="location-identity">
             </div>
             <div class="mb-6">
               <label class="block text-gray-700 text-sm font-bold mb-2" for="project">
@@ -100,9 +100,8 @@ export default {
     return {
       // these are the primary information for a project and its data
       loginIdentity: 'not logged in',
-      ownerName: null,
-      owner: null,
-      ownerExists: false,
+      location: null,
+      locationExists: false,
       project: null,
       projectExists: false,
       projectData: null, // expected connect to Vuex
@@ -117,7 +116,7 @@ export default {
       remoteUrl: 'https://hd.narrationsd.com/hard-api',
 
       // control of forms
-      adminOwnersForm: false,
+      adminLocationsForm: false,
       adminProjectsForm: false,
       isAgent: false
     }
@@ -151,8 +150,8 @@ export default {
           this.showError('Check Db Status', err)
         })
     },
-    checkOwner: function (identity) {
-      console.log ('checkOwner: ' + identity)
+    checkLocation: function (identity) {
+      console.log ('checkLocation: ' + identity)
       return false // *todo* until habitat can actually do it
 
       // *todo* this is now looking wrong several ways - ck intent, reformulate to
@@ -161,16 +160,16 @@ export default {
       // will be promise
       // use to dim/enable button
       // this probably doesn't want to be hit every time as it calls habitat
-      // so, when? checkOwner button
-      // console.log('checking owner')
+      // so, when? checkLocation button
+      // console.log('checking location')
       // const result = habitatCloud.doRequest('db-exists/'
       //   + encodeURIComponent(`${identity}`))
       // this.opsDisplay = result.msg
       // return result.isAgent
     },
-    adminOwners: function () {
+    adminLocations: function () {
       this.clearPanels()
-      this.adminOwnersForm = true
+      this.adminLocationsForm = true
       habitatCloud.assureRemoteLogin(this.remoteDb)
         .then(result => {
           this.opsDisplay = result.msg
@@ -181,29 +180,29 @@ export default {
         .then (result => {
           console.log('C - identity: ' + JSON.stringify(result))
           this.loginIdentity = result.identity
-          this.isAgent = this.checkOwner(this.loginIdentity)
-          console.log('id: '  + this.loginIdentity + ', is owner: ' + this.isAgent)
-          this.dbDisplay = this.isAgent ? ('Owner: ' + this.owner) : 'not agent yet'
+          this.isAgent = this.checkLocation(this.loginIdentity)
+          console.log('id: '  + this.loginIdentity + ', is location: ' + this.isAgent)
+          this.dbDisplay = this.isAgent ? ('Location: ' + this.location) : 'not agent yet'
         })
         .catch(err => {
-          this.showError('adminOwners', err)
+          this.showError('adminLocations', err)
         })
     },
-    createOwner: function () {
+    createLocation: function () {
       this.isAgent = true // *todo*
       if (!this.isAgent) {
         this.opsDisplay = 'Sorry, ' + this.loginIdentity +
-          ' isn\'t an agent, thus permitted to create Project Owners...'
+          ' isn\'t an agent, thus permitted to create Project Locations...'
         return
       }
 
-      console.log('create owner: ' + this.ownerName + ' via agent: ' + this.loginIdentity)
+      console.log('create location: ' + this.location + ' via identity: ' + this.loginIdentity)
       habitatCloud.assureRemoteLogin(this.remoteDb)
       .then (() => {
         return habitatCloud.doRequest(
-          'create-owner',
+          'create-location',
           this.remoteUrl,
-          { owner: this.ownerName, agent: this.loginIdentity }
+          { location: this.location, identity: this.loginIdentity }
         )
       })
       // .then (result => {
@@ -211,13 +210,13 @@ export default {
       // })
       .then(result => {
         if (result.ok) {
-          this.ownerExists = true
-          this.dbDisplay = 'Owner ' + this.ownerName + ' created'
+          this.locationExists = true
+          this.dbDisplay = 'Location ' + this.location + ' created'
         }
         this.opsDisplay = result.msg
       })
       .catch(err => {
-        this.showError('createOwner', err.msg)
+        this.showError('createLocation', err.msg)
       })
     },
     adminProjects: function () {
@@ -251,14 +250,14 @@ export default {
       }
 
       console.log('create project: ' + this.project +
-        ', owner: ' + this.owner + ', identity: ' + this.loginIdentity)
+        ', location: ' + this.location + ', identity: ' + this.loginIdentity)
       habitatCloud.assureRemoteLogin(this.remoteDb)
         .then (() => {
           return habitatCloud.doRequest(
             'create-project',
             this.remoteUrl,
             {
-              owner: this.owner,
+              location: this.location,
               identity: this.loginIdentity,
               project: this.project,
             }
@@ -272,8 +271,8 @@ export default {
           if (result.ok) {
             this.isAgent = true
             // *todo* make these reactive, rather soon!
-            this.ownerExists = true
-            this.dbDisplay = this.isAgent ? ('Owner: ' + this.owner) : 'not agent yet'
+            this.locationExists = true
+            this.dbDisplay = this.isAgent ? ('Location: ' + this.location) : 'not agent yet'
           }
           this.opsDisplay = result.msg
         })
@@ -284,12 +283,12 @@ export default {
     listLocalProjects: function () {
       this.clearPanels()
       const localDb = 'hardocs-projects'
-      habitatDb.listOwnerProjects('hardOwner', localDb)
+      habitatDb.listLocationProjects('hardLocation', localDb)
         .then(result => {
           console.log('listLocalProjects: ' + JSON.stringify(result))
           this.dbDisplay = JSON.stringify(result)
           this.opsDisplay = 'this is not real yet - just listing any records ' +
-            'owner can reach - ' + localDb + ' db'
+            'location can reach - ' + localDb + ' db'
         })
         .catch(err => {
           this.showError('listLocalProjects', err)
@@ -314,13 +313,13 @@ export default {
       this.clearPanels()
       habitatCloud.assureRemoteLogin(this.remoteDb)
         .then(() => {
-          return habitatDb.listOwnerProjects('hardOwner', this.remoteDb)
+          return habitatDb.listLocationProjects('hardLocation', this.remoteDb)
         })
         .then(result => {
           console.log('listRemoteProjects: ' + JSON.stringify(result))
           this.dbDisplay = JSON.stringify(result)
           this.opsDisplay = 'this is not real yet - just listing any records ' +
-            'owner can reach - ' + this.remoteDb + ' db'
+            'location can reach - ' + this.remoteDb + ' db'
         })
         .catch(err => {
           this.showError('listRemoteProjects', err)
@@ -348,7 +347,7 @@ export default {
           console.log('replicateDb:up:result: ' + JSON.stringify(result))
           this.dbDisplay += ', up: ' + JSON.stringify(result)
           this.opsDisplay = 'this is not real yet - just listing any records ' +
-            'owner can reach - ' + cloudDb + ' db'
+            'location can reach - ' + cloudDb + ' db'
         })
         .catch(err => {
           this.showError('replicateDb from ' +
@@ -406,12 +405,12 @@ export default {
     clearPanels: function () {
       this.opsDisplay = ''
       this.dbDisplay = ''
-      this.adminOwnersForm = false
+      this.adminLocationsForm = false
       this.adminProjectsForm = false
     },
     preloadDummyProjectInfo: function (marker) {
       // *todo* for the moment, this is dummy data. Soon we'll add it normally, then find with view
-      this.owner = 'hard-owner'
+      this.location = 'hard-location'
       this.project = 'first-project'
       this.projectData = {
         docs: [

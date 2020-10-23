@@ -32,8 +32,8 @@ export default {
     return {
       items: [
         {
-          label: "Administer Owners",
-          action: this.adminOwners
+          label: "Administer Locations",
+          action: this.adminLocations
         },
         {
           label: "Administer Projects",
@@ -67,8 +67,8 @@ export default {
     }
   },
   methods: {
-    adminOwners: function () {
-      this.$emit('adminOwners')
+    adminLocations: function () {
+      this.$emit('adminLocations')
     },
     listRemoteProjects: function () {
       this.$emit('listRemoteProjects')
