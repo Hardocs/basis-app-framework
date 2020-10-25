@@ -44,16 +44,16 @@ export default {
           action: this.listLocalProjects
         },
         {
-          label: "Clear Local Projects",
-          action: this.clearLocalProjects
-        },
-        {
           label: "List Remote Projects",
           action: this.listRemoteProjects
         },
         {
           label: "Sync With Hardocs Cloud",
           action: this.replicateDb
+        },
+        {
+          label: "Clear Local Projects",
+          action: this.clearLocalProjects
         },
         {
           label: "Log Out Hardocs Cloud",

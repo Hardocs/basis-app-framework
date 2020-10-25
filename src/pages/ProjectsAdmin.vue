@@ -346,8 +346,8 @@ export default {
         .then(result => {
           console.log('replicateDb:up:result: ' + JSON.stringify(result))
           this.dbDisplay += ', up: ' + JSON.stringify(result)
-          this.opsDisplay = 'this is not real yet - just listing any records ' +
-            'location can reach - ' + cloudDb + ' db'
+          this.opsDisplay = 'this is not real yet - not operating on a proper ' +
+            'Location yet - ' + cloudDb + ' db'
         })
         .catch(err => {
           this.showError('replicateDb from ' +
