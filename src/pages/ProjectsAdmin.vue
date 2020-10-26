@@ -221,21 +221,23 @@ export default {
     },
     adminProjects: function () {
       this.clearPanels()
-      console.log('admin projects... ')
+      console.log('adminProjects:remoteDb: ' + this.remoteDb)
       this.adminProjectsForm = true
-      habitatCloud.assureRemoteLogin(this.remoteDb)
-        .then(result => {
-          this.opsDisplay = result.msg
-        })
-        .then (() => {
-          return  habitatCloud.doRequest('get-login-identity', this.remoteUrl)
-        })
+      // habitatCloud.assureRemoteLogin(this.remoteDb)
+      //   .then(result => {
+      //     this.opsDisplay = result.msg
+      //   })
+      //   .then (() => {
+      //     return  habitatCloud.doRequest('get-login-identity', this.remoteUrl)
+      //   })
+      habitatCloud.doRequest('get-login-identity', this.remoteUrl)
         .then (result => {
           this.loginIdentity = result.identity
+          return result.identity
         })
-        .then(() => {
-          this.project = 'first-project'
-          this.dbDisplay = 'Project: ' + habitatDb.requestHabitat('get-login-identity').identity + ':' + this.project
+        .then(result => {
+          this.project = 'your-project'
+          this.dbDisplay = 'Project creation identity: ' + result
         })
         .catch(err => {
           this.showError('adminProjects', err)
@@ -249,7 +251,7 @@ export default {
         return
       }
 
-      console.log('create project: ' + this.project +
+      console.log('app:create project: ' + this.project +
         ', location: ' + this.location + ', identity: ' + this.loginIdentity)
       habitatCloud.assureRemoteLogin(this.remoteDb)
         .then (() => {
