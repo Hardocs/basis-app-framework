@@ -31,8 +31,8 @@
 <script>
 
 const dbLocations = [
-  { label: 'Local', signature: 'hardocs-projects' },
-  { label: 'Habitat Cloud', signature: 'https://hd.narrationsd.com/hard-api/hardocs-projects' },
+  { label: 'Local', signature: 'habitat-projects' },
+  { label: 'Habitat Cloud', signature: 'https://hd.narrationsd.com/hard-api/habitat-projects' },
 ]
 
 import VueSelect from 'vue-select'

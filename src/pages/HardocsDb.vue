@@ -21,7 +21,7 @@
 <script>
 
 import HardocsDbOpsButtons from '@/components/HardocsDbOpsButtons'
-import {habitat, habitatDb} from '@hardocs-project/habitat-client'
+import {habitatCloud, habitatDb} from '@hardocs-project/habitat-client'
 
 export default {
   name: "HardocsDb",
@@ -49,7 +49,7 @@ export default {
     loadProjectFromDb: function (dbLocation) {
       this.clearPanels()
       console.log('loadProjectFromDb string: ' + dbLocation)
-      habitat.assureRemoteLogin(dbLocation)
+      habitatCloud.assureRemoteLogin(dbLocation)
         .then(() => {
 
           const owner = this.owner
@@ -67,7 +67,7 @@ export default {
               })
               .catch(err => {
                 this.opsDisplay = JSON.stringify(err)
-                this.opsDisplay = 'load project: ' + project + ' error: ' + err
+                this.opsDisplay = 'load project: ' + project + ' error: ' + JSON.stringify(err)
               })
           }
         })
@@ -82,7 +82,7 @@ export default {
       this.setDummyProjectInfo()
 
       console.log ('saving owner: ' + owner + ': ' + project)
-      habitat.assureRemoteLogin(dbLocation)
+      habitatCloud.assureRemoteLogin(dbLocation)
         .then(() => {
 
           habitatDb.storeProjectToDatabase(owner, project, this.projectData, dbLocation)
@@ -93,8 +93,8 @@ export default {
                 '>, app has saved: '+ JSON.stringify(this.projectData)
             })
             .catch(err => {
-              console.log('saveProjectToDb:error: ' + err)
-              this.opsDisplay = 'save project: error: ' + err
+              console.log('saveProjectToDb:error: ' + JSON.stringify(err))
+              this.opsDisplay = 'save project: error: ' + JSON.stringify(err)
             })
         })
         .catch(err => {

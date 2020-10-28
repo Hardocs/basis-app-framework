@@ -112,8 +112,9 @@ export default {
       // *todo* REVISE how this works, to a current db, or an _all_dbs, or habitat-request,
       // *todo* also consider how initiate is going to use it...or not...
       // remoteDb: 'localhost:5984',
-      remoteDb: 'https://hd.narrationsd.com/hard-api/habitat-projects',
+      cloudDb: 'https://hd.narrationsd.com/hard-api/habitat-projects',
       remoteUrl: 'https://hd.narrationsd.com/hard-api',
+      localDb: 'habitat-projects',
 
       // control of forms
       adminLocationsForm: false,
@@ -170,7 +171,7 @@ export default {
     adminLocations: function () {
       this.clearPanels()
       this.adminLocationsForm = true
-      habitatCloud.assureRemoteLogin(this.remoteDb)
+      habitatCloud.assureRemoteLogin( this.cloudDb)
         .then(result => {
           this.opsDisplay = result.msg
         })
@@ -197,7 +198,7 @@ export default {
       }
 
       console.log('create location: ' + this.location + ' via identity: ' + this.loginIdentity)
-      habitatCloud.assureRemoteLogin(this.remoteDb)
+      habitatCloud.assureRemoteLogin( this.cloudDb)
       .then (() => {
         return habitatCloud.doRequest(
           'create-location',
@@ -206,7 +207,7 @@ export default {
         )
       })
       // .then (result => {
-      //   // *todo* replicate the initialized db down here??
+      //   // *todo* replicateDb the initialized db down here??
       // })
       .then(result => {
         if (result.ok) {
@@ -221,9 +222,9 @@ export default {
     },
     adminProjects: function () {
       this.clearPanels()
-      console.log('adminProjects:remoteDb: ' + this.remoteDb)
+      console.log('adminProjects:remoteDb: ' +  this.cloudDb)
       this.adminProjectsForm = true
-      // habitatCloud.assureRemoteLogin(this.remoteDb)
+      // habitatCloud.assureRemoteLogin( this.cloudDb)
       //   .then(result => {
       //     this.opsDisplay = result.msg
       //   })
@@ -253,7 +254,7 @@ export default {
 
       console.log('app:create project: ' + this.project +
         ', location: ' + this.location + ', identity: ' + this.loginIdentity)
-      habitatCloud.assureRemoteLogin(this.remoteDb)
+      habitatCloud.assureRemoteLogin( this.cloudDb)
         .then (() => {
           return habitatCloud.doRequest(
             'create-project',
@@ -266,7 +267,7 @@ export default {
             )
         })
         // .then (result => {
-        //   // *todo* replicate the initialized project down here??
+        //   // *todo* replicateDb the initialized project down here??
         // })
         // *todo* when implementing, can be not agent, or project already, or? better way needed
         .then(result => {
@@ -284,13 +285,12 @@ export default {
     },
     listLocalProjects: function () {
       this.clearPanels()
-      const localDb = 'hardocs-projects'
-      habitatDb.listLocationProjects('hardLocation', localDb)
+      habitatDb.listLocationProjects('hardLocation', this.localDb)
         .then(result => {
           console.log('listLocalProjects: ' + JSON.stringify(result))
           this.dbDisplay = JSON.stringify(result)
           this.opsDisplay = 'this is not real yet - just listing any records ' +
-            'location can reach - ' + localDb + ' db'
+            'location can reach - ' + this.localDb + ' db'
         })
         .catch(err => {
           this.showError('listLocalProjects', err)
@@ -300,7 +300,7 @@ export default {
       this.clearPanels()
       console.log('clearing local database... ')
 
-      habitatDb.clearDatabase()
+      habitatDb.clearDatabase(this.localDb)
         .then(result => {
           console.log('adminProjects: result: ' + JSON.stringify(result))
           this.opsDisplay = 'Cleared Entire Hardocs database (we won\'t have this ' +
@@ -313,15 +313,15 @@ export default {
     listRemoteProjects: function () {
       // *todo* this goes out or becomes doRemote as we move into designed cloud
       this.clearPanels()
-      habitatCloud.assureRemoteLogin(this.remoteDb)
+      habitatCloud.assureRemoteLogin( this.cloudDb)
         .then(() => {
-          return habitatDb.listLocationProjects('hardLocation', this.remoteDb)
+          return habitatDb.listLocationProjects('hardLocation',  this.cloudDb)
         })
         .then(result => {
           console.log('listRemoteProjects: ' + JSON.stringify(result))
           this.dbDisplay = JSON.stringify(result)
           this.opsDisplay = 'this is not real yet - just listing any records ' +
-            'location can reach - ' + this.remoteDb + ' db'
+            'location can reach - ' +  this.cloudDb + ' db'
         })
         .catch(err => {
           this.showError('listRemoteProjects', err)
@@ -329,31 +329,34 @@ export default {
     },
     replicateDb: function () {
       this.clearPanels()
-      const cloudDb = this.remoteDb
-      const localDb = 'hardocs-projects'
-      console.log('replicateDb projects from ' + cloudDb + ' to ' + localDb + '... ')
+      let locForErrs = 'replicateDb'
+      console.log('replicateDb projects from ' + this.cloudDb + ' to ' + this.localDb + '... ')
       // *todo* look very carefully into consequences of both checkpoint settings below,
       // but also the thing they save from, the odd nature of the 404 setting off CORS
-      habitatCloud.assureRemoteLogin(this.remoteDb)
+      habitatCloud.assureRemoteLogin(this.cloudDb)
         .then(() => {
-          return habitatDb.replicateDatabase(cloudDb, localDb)
+          locForErrs = 'replicateDb down from: ' + this.cloudDb
+          // *todo* temporary replication control discovery next
+          const options = {
+            filter: 'projects/onlyTheLonely'
+          }
+
+          return habitatDb.replicateDatabase(this.cloudDb, this.localDb, options)
         })
         .then(result => {
           console.log('replicateDb:down:result: ' + JSON.stringify(result))
           this.dbDisplay = 'down: ' + JSON.stringify(result)
-        })
-        .then(() => {
-          return habitatDb.replicateDatabase(localDb, cloudDb)
+          locForErrs = 'replicateDb up to: ' + this.cloudDb
+          return habitatDb.replicateDatabase(this.localDb, this.cloudDb)
         })
         .then(result => {
           console.log('replicateDb:up:result: ' + JSON.stringify(result))
           this.dbDisplay += ', up: ' + JSON.stringify(result)
           this.opsDisplay = 'this is not real yet - not operating on a proper ' +
-            'Location yet - ' + cloudDb + ' db'
+            'Location yet - ' + this.cloudDb + ' db'
         })
         .catch(err => {
-          this.showError('replicateDb from ' +
-            cloudDb + ' to ' + localDb, err)
+          this.showError(this.localDb + ' ' + locForErrs, err)
         })
 
     },
@@ -361,7 +364,7 @@ export default {
       this.clearPanels()
       console.log('initializing Habitat...')
 
-      habitatCloud.assureRemoteLogin(this.remoteDb)
+      habitatCloud.assureRemoteLogin( this.cloudDb)
         .then(result => {
           this.opsDisplay = result.msg
           return
@@ -400,7 +403,7 @@ export default {
     showError: function (action, err) {
       // an essential, so we don't need to know which form comes
       err = typeof err !== 'string' ? JSON.stringify(err) : err
-      const msg = `${action}:error: ` + err
+      const msg = `Error:  ${action}: ` + err
       this.opsDisplay = msg
       console.log(msg)
     },
