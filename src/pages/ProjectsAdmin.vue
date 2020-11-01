@@ -171,7 +171,7 @@ export default {
     adminLocations: function () {
       this.clearPanels()
       this.adminLocationsForm = true
-      habitatCloud.assureRemoteLogin( this.cloudDb)
+      habitatCloud.assureRemoteLogin()
         .then(result => {
           this.opsDisplay = result.msg
         })
@@ -198,7 +198,7 @@ export default {
       }
 
       console.log('create location: ' + this.location + ' via identity: ' + this.loginIdentity)
-      habitatCloud.assureRemoteLogin( this.cloudDb)
+      habitatCloud.assureRemoteLogin()
       .then (() => {
         return habitatCloud.doRequest(
           'create-location',
@@ -224,14 +224,14 @@ export default {
       this.clearPanels()
       console.log('adminProjects:remoteDb: ' +  this.cloudDb)
       this.adminProjectsForm = true
-      // habitatCloud.assureRemoteLogin( this.cloudDb)
-      //   .then(result => {
-      //     this.opsDisplay = result.msg
-      //   })
-      //   .then (() => {
-      //     return  habitatCloud.doRequest('get-login-identity', this.remoteUrl)
-      //   })
-      habitatCloud.doRequest('get-login-identity', this.remoteUrl)
+      habitatCloud.assureRemoteLogin()
+        .then(result => {
+          this.opsDisplay = result.msg
+        })
+        .then (() => {
+          return  habitatCloud.doRequest('get-login-identity', this.remoteUrl)
+        })
+      // habitatCloud.doRequest('get-login-identity', this.remoteUrl)
         .then (result => {
           this.loginIdentity = result.identity
           return result.identity
@@ -254,7 +254,7 @@ export default {
 
       console.log('app:create project: ' + this.project +
         ', location: ' + this.location + ', identity: ' + this.loginIdentity)
-      habitatCloud.assureRemoteLogin( this.cloudDb)
+      habitatCloud.assureRemoteLogin()
         .then (() => {
           return habitatCloud.doRequest(
             'create-project',
@@ -313,7 +313,7 @@ export default {
     listRemoteProjects: function () {
       // *todo* this goes out or becomes doRemote as we move into designed cloud
       this.clearPanels()
-      habitatCloud.assureRemoteLogin( this.cloudDb)
+      habitatCloud.assureRemoteLogin()
         .then(() => {
           return habitatDb.listLocationProjects('hardLocation',  this.cloudDb)
         })
@@ -333,7 +333,7 @@ export default {
       console.log('replicateDb projects from ' + this.cloudDb + ' to ' + this.localDb + '... ')
       // *todo* look very carefully into consequences of both checkpoint settings below,
       // but also the thing they save from, the odd nature of the 404 setting off CORS
-      habitatCloud.assureRemoteLogin(this.cloudDb)
+      habitatCloud.assureRemoteLogin()
         .then(() => {
           locForErrs = 'replicateDb down from: ' + this.cloudDb
           // *todo* temporary replication control discovery next
@@ -364,7 +364,7 @@ export default {
       this.clearPanels()
       console.log('initializing Habitat...')
 
-      habitatCloud.assureRemoteLogin( this.cloudDb)
+      habitatCloud.assureRemoteLogin()
         .then(result => {
           this.opsDisplay = result.msg
           return
