@@ -163,7 +163,7 @@ export default {
       // this probably doesn't want to be hit every time as it calls habitat
       // so, when? checkLocation button
       // console.log('checking location')
-      // const result = habitatCloud.doRequest('db-exists/'
+      // const result = habitatCloud.doRequest('dbExists/'
       //   + encodeURIComponent(`${identity}`))
       // this.opsDisplay = result.msg
       // return result.isAgent
@@ -176,7 +176,7 @@ export default {
           this.opsDisplay = result.msg
         })
         .then (() => {
-          return  habitatCloud.doRequest('get-login-identity', this.remoteUrl)
+          return  habitatCloud.doRequest('getLoginIdentity', this.remoteUrl)
         })
         .then (result => {
           console.log('C - identity: ' + JSON.stringify(result))
@@ -201,7 +201,7 @@ export default {
       habitatCloud.assureRemoteLogin()
       .then (() => {
         return habitatCloud.doRequest(
-          'create-location',
+          'createLocation',
           this.remoteUrl,
           { location: this.location, identity: this.loginIdentity }
         )
@@ -229,9 +229,9 @@ export default {
           this.opsDisplay = result.msg
         })
         .then (() => {
-          return  habitatCloud.doRequest('get-login-identity', this.remoteUrl)
+          return  habitatCloud.doRequest('getLoginIdentity', this.remoteUrl)
         })
-      // habitatCloud.doRequest('get-login-identity', this.remoteUrl)
+      // habitatCloud.doRequest('getLoginIdentity, this.remoteUrl)
         .then (result => {
           this.loginIdentity = result.identity
           return result.identity
@@ -257,7 +257,7 @@ export default {
       habitatCloud.assureRemoteLogin()
         .then (() => {
           return habitatCloud.doRequest(
-            'create-project',
+            'createProject',
             this.remoteUrl,
             {
               location: this.location,
@@ -371,7 +371,7 @@ export default {
         })
         .then(() => {
           console.log('headed for initialize')
-          const result = habitatCloud.doRequest('initialize-cloud', this.remoteUrl)
+          const result = habitatCloud.doRequest('initializeCloud', this.remoteUrl)
           console.log('type of doRequest result: ' + typeof result)
           return result
         })
