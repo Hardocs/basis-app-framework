@@ -336,7 +336,7 @@ export default {
       // but also the thing they save from, the odd nature of the 404 setting off CORS
 
       let locForErrs = 'replicateTestProject'
-      habitatCloud.assureRemoteLogin()
+      habitatCloud.assureRemoteLogin(remoteLocation, {})
         .then(() => {
           locForErrs = 'replicateTestProject down from: ' + testLocation
           // *todo* temporary replication control discovery next
