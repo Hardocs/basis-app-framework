@@ -11,6 +11,7 @@
       v-on:replicateDb="replicateDb"
       v-on:adminProjects="adminProjects"
       v-on:clearLocalProjects="clearLocalProjects"
+      v-on:testSaveLocalProjects="testSaveLocalProjects"
       v-on:logOutRemote="logOutRemote"
     />
     <div v-if="dbDisplay" class="bg-display text-white">
@@ -52,39 +53,70 @@
       </div>
     </div>
     <div v-if="adminProjectsForm">
-        <div class="w-full max-w-xs">
-          <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-            <div class="mb-4">
-              <label class="block text-gray-700 text-sm font-bold mb-2" for="our-location">
-                Location
-              </label>
-              <input v-model="location" id="our-location" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
+      <div class="w-full max-w-xs">
+        <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+          <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="our-location">
+              Location
+            </label>
+            <input v-model="location" id="our-location" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
               leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="location-identity">
-            </div>
-            <div class="mb-6">
-              <label class="block text-gray-700 text-sm font-bold mb-2" for="project">
-                Project
-              </label>
-              <input v-model="project" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
+          </div>
+          <div class="mb-6">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="project">
+              Project
+            </label>
+            <input v-model="project" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
               leading-tight focus:outline-none focus:shadow-outline" type="text" id="project" placeholder="project-name">
-              <p v-if="!projectExists" class="text-red-500 text-xs italic">Please choose a project name (can have dashes, no colons).</p>
-            </div>
-            <div class="flex items-center justify-between">
-              <button v-if="projectExists" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <p v-if="!projectExists" class="text-red-500 text-xs italic">Please choose a project name (can have dashes, no colons).</p>
+          </div>
+          <div class="flex items-center justify-between">
+            <button v-if="projectExists" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-                Load Project
-              </button>
-              <button v-else @click="createProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+              Load Project
+            </button>
+            <button v-else @click="createProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-                Create Project
-              </button>
-              <button v-if="projectExists" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+              Create Project
+            </button>
+            <button v-if="projectExists" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-                Delete Project
-              </button>
-            </div>
-          </form>
-        </div>
+              Delete Project
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div v-if="testSaveProjectsForm">
+      <div class="w-full max-w-xs">
+        <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+          <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="our-location">
+              Location
+            </label>
+            <input v-model="location" id="our-location" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
+              leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="location-identity">
+          </div>
+          <div class="mb-6">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="project">
+              Project
+            </label>
+            <input v-model="project" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
+              leading-tight focus:outline-none focus:shadow-outline" type="text" id="project" placeholder="project-name">
+            <p v-if="!projectExists" class="text-red-500 text-xs italic">Please choose a project name (can have dashes, no colons).</p>
+          </div>
+          <div class="flex items-center justify-between">
+            <button @click="saveTestProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+              focus:outline-none focus:shadow-outline" type="button">
+              Save Project
+            </button>
+            <button @click="replicateTestProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+              focus:outline-none focus:shadow-outline" type="button">
+              Replicate Project
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </template>
@@ -119,7 +151,11 @@ export default {
       // control of forms
       adminLocationsForm: false,
       adminProjectsForm: false,
-      isAgent: false
+      testSaveProjectsForm: false,
+      isAgent: false,
+
+      // testing
+      testCount: 0,
     }
   },
   mounted () {
@@ -244,6 +280,88 @@ export default {
           this.showError('adminProjects', err)
         })
     },
+    testSaveLocalProjects: function () {
+      this.clearPanels()
+      console.log('testSaveLocalProjects:remoteDb: ' +  this.cloudDb)
+      this.testSaveProjectsForm = true
+      habitatCloud.assureRemoteLogin()
+        .then(result => {
+          this.opsDisplay = result.msg
+        })
+        .then (() => {
+          return  habitatCloud.doRequest('getLoginIdentity', this.remoteUrl)
+        })
+        // habitatCloud.doRequest('getLoginIdentity, this.remoteUrl)
+        .then (result => {
+          this.loginIdentity = result.identity
+          return result.identity
+        })
+        .then(result => {
+          this.project = 'your-project'
+          this.dbDisplay = 'Project creation identity: ' + result
+        })
+        .catch(err => {
+          this.showError('adminProjects', err)
+        })
+    },
+    saveTestProject: function () {
+      const testLocation = 'test-location'
+      const testProject = 'test-project'
+      console.log('saveTestProject:to: ' + testLocation + '/' + testProject)
+      const dbData = Object.assign (this.projectData, {
+        count: this.testCount++
+      })
+      console.log ('dbData: ' + JSON.stringify(dbData))
+      this.clearPanels()
+
+      habitatDb.saveHardocsObject (dbData, testLocation, testProject)
+        .then (result => {
+          const msg = 'stored ' + testLocation + '/' + testProject + ': ' + JSON.stringify(result)
+          console.log(msg)
+          this.opsDisplay = msg
+        })
+        .catch (err => {
+          const msg = 'stored ' + testLocation + '/' + testProject + ':error: ' + JSON.stringify(err)
+          console.log(msg)
+          this.opsDisplay = msg
+        })
+    },
+    replicateTestProject: function () {
+      this.clearPanels()
+      const testLocation = 'test-location'
+      const remoteLocation = 'https://hd.narrationsd.com/hard-api/' + testLocation
+      console.log('replicateTestProject projects from ' + testLocation + ' to ' + remoteLocation + '... ')
+
+      // *todo* look very carefully into consequences of both checkpoint settings below,
+      // but also the thing they save from, the odd nature of the 404 setting off CORS
+
+      let locForErrs = 'replicateTestProject'
+      habitatCloud.assureRemoteLogin()
+        .then(() => {
+          locForErrs = 'replicateTestProject down from: ' + testLocation
+          // *todo* temporary replication control discovery next
+          const options = {
+            filter: 'location-projects/onlyTheLonely'
+          }
+
+          return habitatDb.replicateDatabase(remoteLocation, testLocation, options)
+        })
+        .then(result => {
+          console.log('replicateTestProject:down:result: ' + JSON.stringify(result))
+          this.dbDisplay = 'down: ' + JSON.stringify(result)
+          locForErrs = 'replicateTestProject up to: ' + remoteLocation
+          return habitatDb.replicateDatabase(testLocation, remoteLocation)
+        })
+        .then(result => {
+          console.log('replicateTestProject:up:result: ' + JSON.stringify(result))
+          this.dbDisplay += ', up: ' + JSON.stringify(result)
+          this.opsDisplay = 'this is not real yet - not operating on a proper ' +
+            'Location yet - ' + remoteLocation + ' db'
+        })
+        .catch(err => {
+          this.showError('replicateTestProject' + ':' + locForErrs, err)
+        })
+    },
     createProject: function () {
       this.isAgent = true // *todo*
       if (!this.isAgent) {
@@ -356,9 +474,8 @@ export default {
             'Location yet - ' + this.cloudDb + ' db'
         })
         .catch(err => {
-          this.showError(this.localDb + ' ' + locForErrs, err)
+          this.showError(this.localDb + ':' + locForErrs, err)
         })
-
     },
     initializeHabitat: function () {
       this.clearPanels()
@@ -412,6 +529,7 @@ export default {
       this.dbDisplay = ''
       this.adminLocationsForm = false
       this.adminProjectsForm = false
+      this.testSaveProjectsForm = false
     },
     preloadDummyProjectInfo: function (marker) {
       // *todo* for the moment, this is dummy data. Soon we'll add it normally, then find with view
