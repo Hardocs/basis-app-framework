@@ -57,7 +57,7 @@ export default {
             const project = this.projectBase + count
             console.log('loading owner: ' + owner + ', project: ' + project)
 
-            habitatDb.loadProjectFromDatabase(owner, project, dbLocation)
+            habitatDb.loadHardocsObject(owner, project, dbLocation)
               .then(result => {
                 console.log('loaded Project: ' + JSON.stringify(result))
                 this.projectData = result.data
@@ -85,7 +85,7 @@ export default {
       habitatCloud.assureRemoteLogin(dbLocation)
         .then(() => {
 
-          habitatDb.storeProjectToDatabase(owner, project, this.projectData, dbLocation)
+          habitatDb.storeHardocsObject(owner, project, this.projectData, dbLocation)
             .then(result => {
               console.log('saveProjectToDb: result: ' + JSON.stringify(result))
               this.opsDisplay = result

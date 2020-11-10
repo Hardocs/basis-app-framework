@@ -71,10 +71,16 @@
             <p v-if="!projectExists" class="text-red-500 text-xs italic">Please choose a project name (can have dashes, no colons).</p>
           </div>
           <div class="flex items-center justify-between">
-            <button v-if="projectExists" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <div v-if="projectExists">
+              <button @click="loadProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Load Project
-            </button>
+                Load Project
+              </button>
+              <button @click="addProjectMember" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+              focus:outline-none focus:shadow-outline" type="button">
+                Add Member
+              </button>
+            </div>
             <button v-else @click="createProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
               Create Project
@@ -106,13 +112,17 @@
             <p v-if="!projectExists" class="text-red-500 text-xs italic">Please choose a project name (can have dashes, no colons).</p>
           </div>
           <div class="flex items-center justify-between">
-            <button @click="saveTestProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <button @click="loadTestProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Save Project
+              Load Test Project
             </button>
-            <button @click="replicateTestProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <button @click="storeTestProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Replicate Project
+              Store Test Project
+            </button>
+            <button @click="replicateTestLocation" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+              focus:outline-none focus:shadow-outline" type="button">
+              Replicate Teat Location
             </button>
           </div>
         </form>
@@ -135,6 +145,7 @@ export default {
       location: null,
       locationExists: false,
       project: null,
+      projectMember: null,
       projectExists: false,
       projectData: null, // expected connect to Vuex
       dbDisplay: null, // temporary measure, to first view
@@ -280,6 +291,39 @@ export default {
           this.showError('adminProjects', err)
         })
     },
+    loadProject: function () {
+      this.clearPanels()
+      console.log('load project - not implemented')
+    },
+    addProjectMember: function () {
+      this.clearPanels()
+      console.log('add project member - on the way')
+      habitatCloud.assureRemoteLogin()
+        .then(result => {
+          this.opsDisplay = result.msg
+        })
+        .then (() => {
+          return  habitatCloud.doRequest('addProjectMember', this.remoteUrl,
+            {
+              location: this.location,
+              project: this.project,
+              member: this.projectMember
+            }
+          )
+        })
+        // habitatCloud.doRequest('getLoginIdentity, this.remoteUrl)
+        .then (result => {
+          this.loginIdentity = result.identity
+          return result.identity
+        })
+        .then(result => {
+          this.project = 'your-project'
+          this.dbDisplay = 'Project creation identity: ' + result
+        })
+        .catch(err => {
+          this.showError('adminProjects', err)
+        })
+    },
     testSaveLocalProjects: function () {
       this.clearPanels()
       console.log('testSaveLocalProjects:remoteDb: ' +  this.cloudDb)
@@ -304,17 +348,39 @@ export default {
           this.showError('adminProjects', err)
         })
     },
-    saveTestProject: function () {
+    loadTestProject: function () {
       const testLocation = 'test-location'
       const testProject = 'test-project'
-      console.log('saveTestProject:to: ' + testLocation + '/' + testProject)
+      console.log('loadTestProject:to: ' + testLocation + '/' + testProject)
       const dbData = Object.assign (this.projectData, {
         count: this.testCount++
       })
       console.log ('dbData: ' + JSON.stringify(dbData))
       this.clearPanels()
 
-      habitatDb.saveHardocsObject (dbData, testLocation, testProject)
+      habitatDb.loadHardocsObject (testLocation, testProject)
+        .then (result => {
+          const msg = 'loaded ' + testLocation + '/' + testProject + ': ' + JSON.stringify(result)
+          console.log(msg)
+          this.opsDisplay = msg
+        })
+        .catch (err => {
+          const msg = 'loaded ' + testLocation + '/' + testProject + ':error: ' + JSON.stringify(err)
+          console.log(msg)
+          this.opsDisplay = msg
+        })
+    },
+    storeTestProject: function () {
+      const testLocation = 'test-location'
+      const testProject = 'test-project'
+      console.log('storeTestProject:to: ' + testLocation + '/' + testProject)
+      const dbData = Object.assign (this.projectData, {
+        count: this.testCount++
+      })
+      console.log ('dbData: ' + JSON.stringify(dbData))
+      this.clearPanels()
+
+      habitatDb.storeHardocsObject (testLocation, testProject, dbData)
         .then (result => {
           const msg = 'stored ' + testLocation + '/' + testProject + ': ' + JSON.stringify(result)
           console.log(msg)
@@ -326,7 +392,7 @@ export default {
           this.opsDisplay = msg
         })
     },
-    replicateTestProject: function () {
+    replicateTestLocation: function () {
       this.clearPanels()
       const testLocation = 'test-location'
       const remoteLocation = 'https://hd.narrationsd.com/hard-api/' + testLocation
@@ -382,7 +448,7 @@ export default {
               identity: this.loginIdentity,
               project: this.project,
             }
-            )
+          )
         })
         // .then (result => {
         //   // *todo* replicateDb the initialized project down here??
