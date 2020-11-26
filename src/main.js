@@ -4,11 +4,14 @@ import VueRouter from 'vue-router'
 import dotEnv from 'dotenv'
 dotEnv.config()
 
+import CKEditor from '@ckeditor/ckeditor5-vue';
+
 import App from '@/App.vue'
 import Home from '@/pages/Home'
 import MasterDetail from '@/pages/MasterDetail'
 import HardocsDb from '@/pages/HardocsDb';
 import DocsTrans from '@/pages/DocsTrans'
+import ImageOps from '@/pages/ImageOps'
 import ProjectsAdmin from '@/pages/ProjectsAdmin'
 import Documentation from '@/pages/Documentation'
 import About from '@/pages/About'
@@ -19,6 +22,7 @@ import '@/main.css'
 Vue.config.productionTip = false
 
 Vue.use(VueRouter)
+Vue.use(CKEditor)
 
 const router = new VueRouter({
   routes: [
@@ -27,6 +31,7 @@ const router = new VueRouter({
     { path: '/hardocs-db', component: HardocsDb },
     { path: '/master-detail', component: MasterDetail },
     { path: '/docs-trans', component: DocsTrans },
+    { path: '/image-ops', component: ImageOps },
     { path: '/projects-admin', component: ProjectsAdmin },
     { path: '/documentation', component: Documentation },
     { path: '/about', component: About, props: { appVersion: process.env.HD_APP_VERSION } },
