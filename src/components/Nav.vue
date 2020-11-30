@@ -65,8 +65,14 @@ export default {
           type: 'local'
         },
         {
-          path: "https://www.google.com/search?q=oceanic&source=lnms&tbm=isch",
-          label: "Remote Website",
+          path: "/projects-admin",
+          label: "Hardocs Projects",
+          type: 'local'
+        },
+        {
+          // path: "https://www.google.com/search?q=oceanic&source=lnms&tbm=isch",
+          path: "https://hd.narrationsd.com/hard-api/_utils",
+          label: "Other site",
           type: 'remote'
         },
         {

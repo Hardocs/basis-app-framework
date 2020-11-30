@@ -16,11 +16,26 @@
           <p class="cursor-p">{{ item.label }}</p>
         </div>
       </div>
+      <div class="flex px-4 items-center">
+        <h2 class="px-2 text-white text-lg">dB to Use: </h2>
+        <VueSelect
+          v-model="dbLocation"
+          :options="dbLocations"
+          :clearable="false"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script>
+
+const dbLocations = [
+  { label: 'Local', signature: 'habitat-projects' },
+  { label: 'Habitat Cloud', signature: 'https://hd.narrationsd.com/hard-api/habitat-projects' },
+]
+
+import VueSelect from 'vue-select'
 
 export default {
 
@@ -47,21 +62,26 @@ export default {
         //   label: "Another Example (not yet)",
         //   action: this.noOp
         // },
-      ]
+      ],
+      dbLocations: dbLocations,
+      dbLocation: dbLocations[0]
     }
   },
   methods: {
     loadProjectFromDb: function () {
-      this.$emit('loadProject')
+      this.$emit('loadProjectFromDb', this.dbLocation.signature)
     },
     saveProjectToDb: function () {
-      this.$emit('saveProject')
+      this.$emit('saveProjectToDb', this.dbLocation.signature)
     },
     clearDb: function () {
       this.$emit('clearDatabase')
     },
     noOp: () => {} // but don't do arrows when you want to use this.anything
   },
+  components: {
+    VueSelect
+  }
 }
 </script>
 

@@ -5,8 +5,8 @@
     </div>
     <hr>
     <HardocsDbOpsButtons
-      v-on:loadProject="loadProject"
-      v-on:saveProject="saveProject"
+      v-on:loadProjectFromDb="loadProjectFromDb"
+      v-on:saveProjectToDb="saveProjectToDb"
       v-on:clearDatabase="clearDatabase"
     />
     <div v-if="dbDisplay" class="bg-display text-white">
@@ -21,14 +21,17 @@
 <script>
 
 import HardocsDbOpsButtons from '@/components/HardocsDbOpsButtons'
-import { habitatDb } from '@hardocs-project/habitat-client'
+import {habitatCloud, habitatDb} from '@hardocs-project/habitat-client'
 
 export default {
   name: "HardocsDb",
   data: function () {
     return {
+      countMarker: 0,
+
       // these are the primary information for a project and its data
       owner: null,
+      projectBase: 'framework-project',
       project: null,
       projectData: null, // expected connect to Vuex
       dbDisplay: null, // temporary measure, to first view
@@ -38,49 +41,79 @@ export default {
     }
   },
   mounted () {
-    this.preloadDummyProjectInfo()
+    // this.preloadsetDummyProjectInfo()
   },
   methods: {
-    loadProject: function () {
+    // *todo* get in the logged-in check everywhere, and update to suit the
+    // database organization we're actually going to use.
+    loadProjectFromDb: function (dbLocation) {
       this.clearPanels()
-      console.log ('loading owner: ' + this.owner + ', project: ' + this.project)
-      this.dbDisplay = 'app is loading project owner: ' +
-        this.owner + ', project: ' + this.project
+      console.log('loadProjectFromDb string: ' + dbLocation)
+      habitatCloud.assureRemoteLogin(dbLocation)
+        .then(() => {
 
-      habitatDb.loadFromDatabase()
-        .then(result => {
-          console.log('loaded Project: ' + JSON.stringify(result))
-          this.projectData = result.data
-          this.dbDisplay = 'From Hardocs Project <' + this.owner + ':' + this.project +
-            '>, app has loaded: '+ JSON.stringify(this.projectData)
+          const owner = this.owner
+          for (let count = 0; count <= this.countMarker; ++count) {
+            const project = this.projectBase + count
+            console.log('loading owner: ' + owner + ', project: ' + project)
+
+            habitatDb.loadHardocsObject(owner, project, dbLocation)
+              .then(result => {
+                console.log('loaded Project: ' + JSON.stringify(result))
+                this.projectData = result.data
+                this.dbDisplay += (count > 0 ? ', ' : '') +
+                  '<' + owner + ':' + project +
+                  '> loaded: ' + JSON.stringify(this.projectData)
+              })
+              .catch(err => {
+                this.opsDisplay = JSON.stringify(err)
+                this.opsDisplay = 'load project: ' + project + ' error: ' + JSON.stringify(err)
+              })
+          }
         })
         .catch(err => {
-          this.opsDisplay = JSON.stringify(err)
-          this.opsDisplay = 'load project: error: ' + err
+          this.showError('listRemoteProjects', err)
         })
     },
-    saveProject: function () {
+    saveProjectToDb: function (dbLocation) {
       this.clearPanels()
-      console.log ('saving owner: ' + this.owner + ', project: ' + this.project)
+      const owner = this.owner
+      const project = this.projectBase + this.countMarker
+      this.setDummyProjectInfo()
 
-      // first make a change that we can see, in this level of demo
-      this.projectData.countMarker += 1
+      console.log ('saving owner: ' + owner + ': ' + project)
+      habitatCloud.assureRemoteLogin(dbLocation)
+        .then(() => {
 
-      habitatDb.storeToDatabase(this.owner, this.project, this.projectData)
-        .then(result => {
-          console.log('saveProject: result: ' + JSON.stringify(result))
-          this.opsDisplay = result
-          this.dbDisplay = 'For Hardocs Project <' + this.owner + ':' + this.project +
-            '>, app has saved: '+ JSON.stringify(this.projectData)
+          habitatDb.storeHardocsObject(owner, project, this.projectData, dbLocation)
+            .then(result => {
+              console.log('saveProjectToDb: result: ' + JSON.stringify(result))
+              this.opsDisplay = result
+              this.dbDisplay = 'For Hardocs Project <' + this.owner + ':' + this.project +
+                '>, app has saved: '+ JSON.stringify(this.projectData)
+            })
+            .catch(err => {
+              console.log('saveProjectToDb:error: ' + JSON.stringify(err))
+              this.opsDisplay = 'save project: error: ' + JSON.stringify(err)
+            })
         })
         .catch(err => {
-          console.log('saveProject:error: ' + err)
-          this.opsDisplay = 'save project: error: ' + err
+          this.showError('listRemoteProjects', err)
         })
+
+      ++this.countMarker // for next time
+    },
+    showError: function (action, err) {
+      // an essential, so we don't need to know which form comes
+      err = typeof err !== 'string' ? JSON.stringify(err) : err
+      const msg = `${action}:error: ` + err
+      this.opsDisplay = msg
+      console.log(msg)
     },
     clearDatabase: function () {
       this.clearPanels()
       console.log ('clearing database... ')
+      this.countMarker = 0 // reset for next time
 
       habitatDb.clearDatabase()
         .then(result => {
@@ -94,13 +127,13 @@ export default {
         })
     },
     clearPanels: function () {
-      this.opsDisplay = null
-      this.dbDisplay = null
+      this.opsDisplay = ''
+      this.dbDisplay = ''
     },
-    preloadDummyProjectInfo: function () {
+    setDummyProjectInfo: function () {
       // *todo* for the moment, this is dummy data. Soon we'll add it normally, then find with view
-      this.owner = 'hardOwner'
-      this.project = 'firstProject'
+      this.owner = 'hardocs-projects'
+      this.project = 'framework-project' + this.countMarker
       this.projectData = {
         docs: [
           { doc1: 'doc1 text we will see' },
@@ -114,7 +147,7 @@ export default {
           { name: 'img1', data: 'image1data', type: 'jpg' },
           { name: 'img2', data: 'image2data', type: 'jpg' },
         ],
-        countMarker: 0 // this is for keeping track of updates
+        countMarker: this.countMarker // this is for keeping track of updates
       }
     }
   },
