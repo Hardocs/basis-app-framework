@@ -1,6 +1,38 @@
-# Hardocs Application Framework, a basis
+# Hardocs Application Framework - 29 November 2020
 
-Here's a first draft, but it should be enough to get you going.
+## How we've used this, throughout Hardocs researches and development
+
+This software has been the developmental basis for many Hardocs abilities, during the initial program. It has had a number of branches, each with the explorations which have led to our emerging application and cloud abilities.
+
+These include taming the Electron application environment's local services for ease and effective user interface, the few local operations on a database, and the client command interface which operates Habitat, the Hardocs cloud.
+
+The Framework itself has been a demonstrator for many user interface and coding practices, from structuring of events to the effective use of Promises to get a nicely responsive user experience.
+
+## Status
+
+A current branch which is mostly dedicated to showing the cloud Habitat abilities will soon be merged as master, to enable demonstrations.
+
+This demonstrator will likely also include a panel to show the `pandoc` translation abilities, also created but not integrated yet.
+
+This add-om facet will enable Hardocs to maintain its very solid basis in our 'lingua franca' encapsulated HTML format for its documents, while equally allowing those to be edited if desired in a range of common methods methods, Word and Markdown among them.
+
+The metadata accompanying in the Hardocs object is always created and maintained in its very helpful Hardocs editor.
+
+## Earlier documentation
+
+It should be noted that this is by now somewhat out of date, though it can furnish a good basis for understandings.
+
+It does indicate how we've centralized on a single Hardocs object, which is very effective through carrying all lingua franca documentation along with its metadata, in a unified package for each project.
+
+This package is recorded very simply to a local area, and then replicated, interchanging with the cloud to give full Hardocs capabilities which can come to include multiple contributors. The demonstrator shows this basis in operation.
+
+With this scope of changes in mind, the initial notes that follow, written in the framing of their time in our project, may have some use to understand how the Framework is organized.
+
+Only the local operations for Hardocs data are described -- we'll add discussion of the Habitat cloud capabilities later.
+
+## The early version
+
+Here's a draft, which should be enough to get you going.
 
 There's a section at the end about why the calls are all Promises, in notes mentioning how useful that actually is in getting our smooth and responsive UX good experience.
 
@@ -8,31 +40,31 @@ There's a section at the end about why the calls are all Promises, in notes ment
 
 The Habitat API is sectioned between exposing calls for using the database, and calls to efficiently use local services: the filesystem access and expected Windows etc. widgets we get through Electron.
 
-You can find each of these in the Framework page examples, used in their proper way. 
+You can find each of these in the Framework page examples, used in their proper way.
 
 For now at least, please refer to the Habitat source to discover calling parameters and types of values.
 
 Some of the abilities employ lower-level routines that are not exposed, to make everything as straightforward as possible, keeping our application code clean.
 
-As the Promises section will explain, for each call you'll be provided a result from the Promise, or separately an error String if one occurs. These are both callbacks, so they will be where you code to set data in the Vue component itself, or to be reflected in the Vuex store, so that the screen will update as the data arrives. 
+As the Promises section will explain, for each call you'll be provided a result from the Promise, or separately an error String if one occurs. These are both callbacks, so they will be where you code to set data in the Vue component itself, or to be reflected in the Vuex store, so that the screen will update as the data arrives.
 
 You must never provide or look for a return value directly from the calls themselves - it wouldn't be there, or reliably, because results only arrive in event time.
 
 ## Database Operations
 
 ### `createOrOpenDatabase`
-  
+
 In CouchDB and its local version PouchDb, there isn't a distinction between creating and opening a database, so this is just one call. It not only accesses the database, it checks status to be sure all is well, as opening doesn't do this itself.
 
 The result from this Promise will give you the db handle, which you'll set in the Vue data content.
 
-An error would arrive as a String, to be put in an appropriate spot in data also, for reflection on screen.
+An error would arrive indicated and with a String, to be put in an appropriate spot in data also, for reflection on screen.
 
-Once you have the db handle, you can use it in the following very straightforward calls, to load or store the entire Design Project as an object complete: carrying is metadata, docs, and imgs areas just as you'd expect. 
+Once you have the db handle, you can use it in the following very straightforward calls, to load or store the entire Design Project as an object complete: carrying is metadata, docs, and imgs areas just as you'd expect.
 
 ### `loadFromDatabase`
 
-This loads a Design Project from the database, given a proper Hardocs-format identifier pair for it. This will be an `owner` and a `project` name.
+This loads a Design Project from the database, given a proper Hardocs-format identifier for it. This will be from an owning `location` and a `project` name.
 
 Your project data object will come as the result, for local data and/or pushing into the Vuex store, as we develop how we want that.
 
@@ -48,15 +80,15 @@ You don't need to check that, because an error would instead show up as a String
 
 ### Notes
 
-And that's it, very simple and powerful, for our fundamental use of the database. Later, as the cloud end becomes available, there will be equally simple calls to deal with replication. 
+And that's it, very simple and powerful, for our fundamental use of the database. Later, as the cloud end becomes available, there will be equally simple calls to deal with replication.
 
-What about data dependability?  Here is where CoucnDb shines. It will never lose data, is the statement made not only in the design, but by those who use it. 
+What about data dependability?  Here is where CoucnDb shines. It will never lose data, is the statement made not only in the design, but by those who use it.
 
 Even when there may be the natural issues that can occur at times with multiple locations and users, it makes an automatic 'best' choice, and then keeps all the updates available for later conflict resolution. We'll develop a call or two for this, down the road, but it's not important for now.
 
 ## Local Service Calls
 
-Local services are the ones for each platform that Electron aids us to run on. 
+Local services are the ones for each platform that Electron aids us to run on.
 
 The ones we most directly need are reading and writing to the filesystem, but also for some cases dialogs that are expected to choose folders or files. These calls give you all of those.
 
@@ -68,13 +100,13 @@ These are what you use when you need to manually select a file or folder, and br
 
 Once again we use Promises, so that there's a separate code area for you to handle results or errors...when in event time the Promise actually comes back.
 
-There are several needs we'll have, thus several calls -- each for its purpose. 
+There are several needs we'll have, thus several calls -- each for its purpose.
 
 \[n.b.I And in writing this first documentation for the services area, I may have spotted a further need or so, noted, and if so, these will appear in an update, along with other needs if you discover some and tell me...\]
 
 ### `selectContentFromFolder`
 
-This will put up a dialog allowing you to select a file, and then return its contents. It's used for a single file, and there are other calls to use if  you want several. 
+This will put up a dialog allowing you to select a file, and then return its contents. It's used for a single file, and there are other calls to use if  you want several.
 
 Note that you must set the `fileExts` for the file type you want, with the dot, as `".md"`, and `typeName` to name that in the dialog. I've just noticed that the code needs a small change to allow multiple type possibilities - this will come on next update.
 
@@ -86,7 +118,7 @@ The error fork will give you a string indicating a Cancel by the user, or if the
 
 Now, what if you want to simply selectt a folder, later for a use  such as loading multiple files of a type which exist there?
 
-In this case, you'll want to have a Dialog to select a folder, and this call can give you that.  
+In this case, you'll want to have a Dialog to select a folder, and this call can give you that.
 
 There's memory in Electron for 'last folder used', so let's see if that's sufficient.
 
@@ -107,7 +139,7 @@ This is the way you get the expected 'save' dialog, able to select a folder and 
 The result fork will provide you an object with the path and the operating system success return value.
 
 The error fork would give you a String for a Cancel, or describing the issue.
- 
+
 ## Direct Filesystem calls
 
 These calls let you get content from, and put content to files, whose names you might have already in the app, but more likely initially gained from the dialog calls.
@@ -115,11 +147,11 @@ These calls let you get content from, and put content to files, whose names you 
 ### 'loadContentFromFilePath`
 
 Wherever you have a filePath, you can upload its content with this call.
- 
+
 The result fork will provide a FileContent object, containing the `path` as may be convenient to keep together, along with the `data`.
 
 On the error branch, as expected, you would get a string explaining the problem.
- 
+
 ### 'putContentToFilePath`
 
 As you'd expect, this is also a straightforward call, to be used when you have the filePath for the file to be written.
@@ -147,12 +179,12 @@ More description will follow here, but the shellProcess call is used in a very s
 
 ## why everything's a promise
 - every Habitat call is a Promise
-- so you always have a .then ({}).catch({}) pattern to use it -- just as all my code does. 
+- so you always have a .then ({}).catch({}) pattern to use it -- just as all my code does.
 - But what is that doing? And why?
 - the .then area is where you code for the result, as aways when it comes back, firing that data into the gui presentation  -- it won't be available until the promise returns.
 - the .catch area is where you handle the alternative:  that there was an error. Just the same, you'd put that into your gui from the code within.
 - if you ever try to code action 'after' the Promise call, it will happen immediately. Thus anything you think you might use from the Promise call will almostnever be there -- except maybe to fool you if the Promise return is very instant, but then on another day the information won't be there.
 - how you properly respond to anything in Promise call is always by reactivity. If the .catch or .err change something in the Vue data items, then anything that depends on them (like a field in the template) will automatically respond to the new value.
 - reactivity is entirely dependable, and in concept, very tied indeed what Promises offer....
-- you've got lots of examples of this Promise-set-reactive-data pattern, in the pages of the app. 
+- you've got lots of examples of this Promise-set-reactive-data pattern, in the pages of the app.
 - Once you get into it, I think you'll really enjoy the way this works.  It's a fresh kind of building blocks, and really suits the things we do.
