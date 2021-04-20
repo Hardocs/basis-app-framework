@@ -60,6 +60,10 @@ export default {
           action: this.clearLocalProjects
         },
         {
+          label: "Try Gnu",
+          action: this.tryGql
+        },
+        {
           label: "Log Out Hardocs Cloud",
           action: this.logOutRemote
         },
@@ -94,6 +98,9 @@ export default {
     },
     logOutRemote: function () {
       this.$emit('logOutRemote')
+    },
+    tryGql: function () {
+      this.$emit('tryGql')
     },
     noOp: () => {} // but don't do arrows when you want to use this.anything
   },

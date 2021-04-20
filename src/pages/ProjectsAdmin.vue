@@ -12,6 +12,7 @@
       v-on:adminProjects="adminProjects"
       v-on:clearLocalProjects="clearLocalProjects"
       v-on:testSaveLocalProjects="testSaveLocalProjects"
+      v-on:tryGql="tryGql"
       v-on:logOutRemote="logOutRemote"
     />
     <div v-if="dbDisplay" class="bg-display text-white">
@@ -567,6 +568,21 @@ export default {
         .catch(err => {
           this.showError('initializeHabitat', err)
         })
+    },
+    tryGql: function () {
+      this.clearPanels()
+      const query = '{ hello }'
+      this.dbDisplay = 'Gql query: ' + query
+      habitatCloud.doRequest(
+          'tryGql',
+          this.remoteUrl,
+          { query: query })
+      .then (result => {
+        this.opsDisplay += 'Gql result: ' + JSON.stringify(result)
+      })
+      .catch(err => {
+        this.showError('tryGql', err)
+      })
     },
     logOutRemote: function () {
       this.clearPanels()
