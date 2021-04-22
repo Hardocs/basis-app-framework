@@ -571,7 +571,10 @@ export default {
     },
     tryGql: function () {
       this.clearPanels()
-      const query = '{ hello }'
+      // const query = 'query { hello }'
+      const query = 'query { docs { doc } }'
+      // const query = 'query { docs { doc { locale } }  }'
+      // const query = 'query { hello { hello } }'
       this.dbDisplay = 'Gql query: ' + query
       habitatCloud.doRequest(
           'tryGql',
