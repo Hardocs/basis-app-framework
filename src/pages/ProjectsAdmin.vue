@@ -571,16 +571,15 @@ export default {
     },
     tryGql: function () {
       this.clearPanels()
-      // const query = 'query { hello }'
-      // const query = 'query { docs { doc } }'
-      const query = 'query { docs { all } }'
-      // const query = 'query { docs { doc { locale } }  }'
-      // const query = 'query { hello { hello } }'
+      // const query = 'query { all { locale project description metadata docs { title content } } }'
+      // const query = 'query { item(id: 1) { locale project description metadata docs { title content } } }'
+      // const query = 'query { projects(locale: "NSD") { locale project description metadata docs { title content } } }'
+      const query = 'query { project(locale: "NSD", project: "Habitat HD Client") { locale project description metadata docs { title content } } }'
       this.dbDisplay = 'Gql query: ' + query
 
       habitatCloud.assureRemoteLogin()
         .then(result => {
-          this.opsDisplay = result.msg + '\n'
+          this.opsDisplay = result.msg + '\r'
           return
         })
         .then(() => {
