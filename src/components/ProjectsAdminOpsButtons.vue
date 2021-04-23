@@ -60,7 +60,7 @@ export default {
           action: this.clearLocalProjects
         },
         {
-          label: "Try Gnu",
+          label: "Try GraphQL",
           action: this.tryGql
         },
         {

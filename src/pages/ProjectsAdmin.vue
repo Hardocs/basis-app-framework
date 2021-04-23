@@ -572,20 +572,29 @@ export default {
     tryGql: function () {
       this.clearPanels()
       // const query = 'query { hello }'
-      const query = 'query { docs { doc } }'
+      // const query = 'query { docs { doc } }'
+      const query = 'query { docs { all } }'
       // const query = 'query { docs { doc { locale } }  }'
       // const query = 'query { hello { hello } }'
       this.dbDisplay = 'Gql query: ' + query
-      habitatCloud.doRequest(
-          'tryGql',
-          this.remoteUrl,
-          { query: query })
-      .then (result => {
-        this.opsDisplay += 'Gql result: ' + JSON.stringify(result)
-      })
-      .catch(err => {
-        this.showError('tryGql', err)
-      })
+
+      habitatCloud.assureRemoteLogin()
+        .then(result => {
+          this.opsDisplay = result.msg + '\n'
+          return
+        })
+        .then(() => {
+          return habitatCloud.doRequest(
+            'tryGql',
+            this.remoteUrl,
+            {query: query})
+        })
+        .then (result => {
+          this.opsDisplay += 'Gql result: ' + JSON.stringify(result)
+        })
+        .catch(err => {
+          this.showError('tryGql', JSON.stringify(err))
+        })
     },
     logOutRemote: function () {
       this.clearPanels()
