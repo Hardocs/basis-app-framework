@@ -60,7 +60,11 @@ export default {
           action: this.clearLocalProjects
         },
         {
-          label: "Try GraphQL",
+          label: "Publish Project",
+          action: this.publishProject
+        },
+        {
+          label: "Try GqL",
           action: this.tryGql
         },
         {
@@ -98,6 +102,9 @@ export default {
     },
     logOutRemote: function () {
       this.$emit('logOutRemote')
+    },
+    publishProject: function () {
+      this.$emit('publishProject')
     },
     tryGql: function () {
       this.$emit('tryGql')

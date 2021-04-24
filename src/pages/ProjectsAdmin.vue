@@ -12,6 +12,7 @@
       v-on:adminProjects="adminProjects"
       v-on:clearLocalProjects="clearLocalProjects"
       v-on:testSaveLocalProjects="testSaveLocalProjects"
+      v-on:publishProject="publishProject"
       v-on:tryGql="tryGql"
       v-on:logOutRemote="logOutRemote"
     />
@@ -567,6 +568,31 @@ export default {
         })
         .catch(err => {
           this.showError('initializeHabitat', err)
+        })
+    },
+    publishProject: function () { // *todo* in progress at this point
+      this.clearPanels()
+      const requestedStatus = false
+      const location = 'dummy Location'
+      const project = 'dummy Project'
+      this.dbDisplay = 'publishProject state requested: ' + requestedStatus
+
+      habitatCloud.assureRemoteLogin()
+        .then(result => {
+          this.opsDisplay = result.msg + '\r'
+          return
+        })
+        .then(() => {
+          return habitatCloud.doRequest(
+            'publishProject',
+            this.remoteUrl,
+            {status: requestedStatus, location: location, project: project})
+        })
+        .then (result => {
+          this.opsDisplay += 'Gql result: ' + JSON.stringify(result)
+        })
+        .catch(err => {
+          this.showError('tryGql', JSON.stringify(err))
         })
     },
     tryGql: function () {
