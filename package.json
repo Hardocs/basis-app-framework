@@ -20,6 +20,7 @@
     "core-js": "^3.6.5",
     "dotenv": "^8.2.0",
     "json2md": "^1.8.0",
+    "prettyprintjs": "^0.1.12",
     "smartwrap": "^2.0.1",
     "tailwindcss": "^1.9.6",
     "tiptap": "^1.29.6",

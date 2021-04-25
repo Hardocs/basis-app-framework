@@ -19,8 +19,9 @@
     <div v-if="dbDisplay" class="bg-display text-white">
       {{ dbDisplay }}
     </div>
-    <div v-if="opsDisplay" class="bg-display text-white">
-      {{ opsDisplay }}
+    <div v-if="opsDisplay" class="bg-display html-data text-white">
+      <span v-html="opsDisplay"></span>
+<!--      {{ opsDisplay }}-->
     </div>
     <div v-if="adminLocationsForm">
       <div class="w-full max-w-xs">
@@ -137,6 +138,7 @@
 
 import ProjectsAdminOpsButtons from '@/components/ProjectsAdminOpsButtons'
 import { habitatCloud, habitatLocal, habitatDb } from '@hardocs-project/habitat-client'
+import prettyJson from 'prettyprintjs'
 
 export default {
   name: "ProjectsAdmin",
@@ -589,10 +591,10 @@ export default {
             {status: requestedStatus, location: location, project: project})
         })
         .then (result => {
-          this.opsDisplay += 'Gql result: ' + JSON.stringify(result)
+          this.opsDisplay += 'Publish project result: ' + JSON.stringify(result)
         })
         .catch(err => {
-          this.showError('tryGql', JSON.stringify(err))
+          this.showError('publishProject', JSON.stringify(err))
         })
     },
     tryGql: function () {
@@ -615,10 +617,13 @@ export default {
             {query: query})
         })
         .then (result => {
-          this.opsDisplay += 'Gql result: ' + JSON.stringify(result)
+          // with gql, results contain data or its own errors
+          // thus, ok is critical to handling, and result is json either waay
+          this.opsDisplay = 'Gql result: ' + this.jsonResult(result);
         })
         .catch(err => {
-          this.showError('tryGql', JSON.stringify(err))
+          // our library errors are strings, simple
+          this.showError('tryGql', err)
         })
     },
     logOutRemote: function () {
@@ -636,6 +641,25 @@ export default {
           this.showError('logOutRemote', err)
         })
     },
+    jsonResult: function (result) {
+      let screenText
+      // *todo* look into this, may be actual format problem
+      // if (result.ok) {
+        let json = 'no json string'
+        json = result.msg
+        try {
+          json = JSON.parse(result.msg)
+        } catch (e) {
+          json = e
+        }
+        screenText = ': (ok: ' + result.ok + '):<br>' +
+          prettyJson(json, 4, 'html')
+      // } else {
+      //   screenText = result.msg
+      // }
+      return screenText
+    },
+
     showError: function (action, err) {
       // an essential, so we don't need to know which form comes
       err = typeof err !== 'string' ? JSON.stringify(err) : err
@@ -729,6 +753,6 @@ body {
 .html-data {
   text-align: left;
   white-space: normal;
-  margin: 20px;
+  padding: 0 15%;
 }
 </style>
