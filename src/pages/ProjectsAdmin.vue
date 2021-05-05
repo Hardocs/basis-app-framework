@@ -200,6 +200,16 @@ export default {
           this.showError('Check Db Status', err)
         })
     },
+    checkRole: function (role) {
+      return habitatCloud.doRequest('checkRoles', this.remoteUrl)
+        .then (result => {
+          console.log ('checkRole returns: ' + JSON.stringify(result) + ', for check: ' + role)
+          return result.msg === role
+        })
+        .catch(err => {
+          this.showError('Check Db Status', err)
+        })
+    },
     checkLocale: function (identity) {
       console.log ('checkLocale: ' + identity)
       return false // *todo* until habitat can actually do it
@@ -225,14 +235,15 @@ export default {
           this.opsDisplay = result.msg
         })
         .then (() => {
-          return  habitatCloud.doRequest('getLoginIdentity', this.remoteUrl)
+         return  habitatCloud.doRequest('getLoginIdentity', this.remoteUrl)
         })
         .then (result => {
           console.log('C - identity: ' + JSON.stringify(result))
           this.loginIdentity = result.identity
-          this.isAgent = this.checkLocale(this.loginIdentity)
+          // *todo* my, my -- this has all moved on, upgrade to superAdmin...
+          this.isAgent = this.checkRole('_admin') // *todo* this is just for informing, soon
           console.log('id: '  + this.loginIdentity + ', is location: ' + this.isAgent)
-          this.dbDisplay = this.isAgent ? ('Location: ' + this.location) : 'not agent yet'
+          this.dbDisplay = this.isAgent ? ('Location: ' + this.location) : 'not superadmin yet'
         })
         .catch(err => {
           this.showError('adminLocales', err)
@@ -251,7 +262,7 @@ export default {
         return habitatCloud.doRequest(
           'createLocation',
           this.remoteUrl,
-          { location: this.locale, identity: this.loginIdentity }
+          { location: this.locale } // identity check is properly in cloud
         )
       })
       // .then (result => {
@@ -284,7 +295,7 @@ export default {
         .then (result => {
           console.log('C - identity: ' + JSON.stringify(result))
           this.loginIdentity = result.identity
-          this.isAgent = this.checkLocale(this.loginIdentity)
+          this.isAgent = this.checkRole('agent')
           console.log('id: '  + this.loginIdentity + ', is agent: ' + this.isAgent)
           this.dbDisplay = this.isAgent ? ('Locale: ' + this.locale) : 'not agent yet'
           return result.identity
@@ -450,9 +461,8 @@ export default {
           return habitatCloud.doRequest(
             'createProject',
             this.remoteUrl,
-            {
+            {  // identity check is properly in cloud
               location: this.locale,
-              identity: this.loginIdentity,
               project: this.project,
             }
           )
@@ -466,7 +476,6 @@ export default {
             this.isAgent = true
             // *todo* make these reactive, rather soon!
             this.localeExists = true
-            this.dbDisplay = this.isAgent ? ('Locale: ' + this.locale) : 'not agent yet'
           }
           this.opsDisplay = result.msg
         })
