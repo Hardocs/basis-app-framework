@@ -5,7 +5,7 @@
     </div>
     <hr>
     <ProjectsAdminOpsButtons
-      v-on:adminLocations="adminLocations"
+      v-on:adminLocales="adminLocales"
       v-on:listLocalProjects="listLocalProjects"
       v-on:listRemoteProjects="listRemoteProjects"
       v-on:replicateDb="replicateDb"
@@ -16,14 +16,13 @@
       v-on:tryGql="tryGql"
       v-on:logOutRemote="logOutRemote"
     />
-    <div v-if="dbDisplay" class="bg-display text-white">
-      {{ dbDisplay }}
+    <div v-if="dbDisplay" class="bg-display html-data text-white">
+      <span v-html="dbDisplay"></span>
     </div>
     <div v-if="opsDisplay" class="bg-display html-data text-white">
       <span v-html="opsDisplay"></span>
-<!--      {{ opsDisplay }}-->
     </div>
-    <div v-if="adminLocationsForm">
+    <div v-if="adminLocalesForm">
       <div class="w-full max-w-xs">
         <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
           <div class="mb-4">
@@ -31,25 +30,25 @@
               Validated Identity
             </label>
             <input v-model="loginIdentity" id="identity" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
-              leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="location-identity">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="location-name">
-              Projects Location
+              leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="locale-identity">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="locale-name">
+              Projects Locale
             </label>
-            <input v-model="location" id="location-name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
-              leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="project-location-name">
+            <input v-model="locale" id="locale-name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
+              leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="project-locale-name">
           </div>
           <div class="flex items-center justify-between">
             <button @click="initializeHabitat" :style="createStyle" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
               Initialize Habitat
             </button>
-            <button @click="createLocation" :style="createStyle" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <button @click="createLocale" :style="createStyle" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Create Location
+              Create Locale
             </button>
-            <button v-if="locationExists" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <button v-if="localeExists" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Delete Location
+              Delete Locale
             </button>
           </div>
         </form>
@@ -59,11 +58,11 @@
       <div class="w-full max-w-xs">
         <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
           <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="our-location">
-              Location
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="admin-locale">
+              Locale
             </label>
-            <input v-model="location" id="our-location" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
-              leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="location-identity">
+            <input v-model="locale" id="admin-locale" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
+              leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="locale-identity">
           </div>
           <div class="mb-6">
             <label class="block text-gray-700 text-sm font-bold mb-2" for="project">
@@ -100,11 +99,11 @@
       <div class="w-full max-w-xs">
         <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
           <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="our-location">
-              Location
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="our-locale">
+              Locale
             </label>
-            <input v-model="location" id="our-location" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
-              leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="location-identity">
+            <input v-model="locale" id="our-locale" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
+              leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="locale-identity">
           </div>
           <div class="mb-6">
             <label class="block text-gray-700 text-sm font-bold mb-2" for="project">
@@ -123,9 +122,9 @@
               focus:outline-none focus:shadow-outline" type="button">
               Store Test Project
             </button>
-            <button @click="replicateTestLocation" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <button @click="replicateTestLocale" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Replicate Test Location
+              Replicate Test Locale
             </button>
           </div>
         </form>
@@ -146,8 +145,8 @@ export default {
     return {
       // these are the primary information for a project and its data
       loginIdentity: 'not logged in',
-      location: null,
-      locationExists: false,
+      locale: null,
+      localeExists: false,
       project: null,
       projectMember: null,
       projectExists: false,
@@ -158,13 +157,12 @@ export default {
       opsDisplay: null,
       // *todo* REVISE how this works, to a current db, or an _all_dbs, or habitat-request,
       // *todo* also consider how initiate is going to use it...or not...
-      // remoteDb: 'localhost:5984',
       cloudDb: 'https://hd.narrationsd.com/hard-api/habitat-projects',
       remoteUrl: 'https://hd.narrationsd.com/hard-api',
       localDb: 'habitat-projects',
 
       // control of forms
-      adminLocationsForm: false,
+      adminLocalesForm: false,
       adminProjectsForm: false,
       testSaveProjectsForm: false,
       isAgent: false,
@@ -202,8 +200,8 @@ export default {
           this.showError('Check Db Status', err)
         })
     },
-    checkLocation: function (identity) {
-      console.log ('checkLocation: ' + identity)
+    checkLocale: function (identity) {
+      console.log ('checkLocale: ' + identity)
       return false // *todo* until habitat can actually do it
 
       // *todo* this is now looking wrong several ways - ck intent, reformulate to
@@ -212,16 +210,16 @@ export default {
       // will be promise
       // use to dim/enable button
       // this probably doesn't want to be hit every time as it calls habitat
-      // so, when? checkLocation button
-      // console.log('checking location')
+      // so, when? checkLocale button
+      // console.log('checking locale')
       // const result = habitatCloud.doRequest('dbExists/'
       //   + encodeURIComponent(`${identity}`))
       // this.opsDisplay = result.msg
       // return result.isAgent
     },
-    adminLocations: function () {
+    adminLocales: function () {
       this.clearPanels()
-      this.adminLocationsForm = true
+      this.adminLocalesForm = true
       habitatCloud.assureRemoteLogin()
         .then(result => {
           this.opsDisplay = result.msg
@@ -232,29 +230,28 @@ export default {
         .then (result => {
           console.log('C - identity: ' + JSON.stringify(result))
           this.loginIdentity = result.identity
-          this.isAgent = this.checkLocation(this.loginIdentity)
+          this.isAgent = this.checkLocale(this.loginIdentity)
           console.log('id: '  + this.loginIdentity + ', is location: ' + this.isAgent)
           this.dbDisplay = this.isAgent ? ('Location: ' + this.location) : 'not agent yet'
         })
         .catch(err => {
-          this.showError('adminLocations', err)
+          this.showError('adminLocales', err)
         })
     },
-    createLocation: function () {
-      this.isAgent = true // *todo*
+    createLocale: function () {
       if (!this.isAgent) {
         this.opsDisplay = 'Sorry, ' + this.loginIdentity +
-          ' isn\'t an agent, thus permitted to create Project Locations...'
+          ' isn\'t an agent, thus isn\'t permitted to create Locales...'
         return
       }
 
-      console.log('create location: ' + this.location + ' via identity: ' + this.loginIdentity)
+      console.log('create locale: ' + this.locale + ' via identity: ' + this.loginIdentity)
       habitatCloud.assureRemoteLogin()
       .then (() => {
         return habitatCloud.doRequest(
           'createLocation',
           this.remoteUrl,
-          { location: this.location, identity: this.loginIdentity }
+          { location: this.locale, identity: this.loginIdentity }
         )
       })
       // .then (result => {
@@ -262,13 +259,13 @@ export default {
       // })
       .then(result => {
         if (result.ok) {
-          this.locationExists = true
-          this.dbDisplay = 'Location ' + this.location + ' created'
+          this.localeExists = true
+          this.dbDisplay = 'Locale ' + this.locale + ' created'
         }
         this.opsDisplay = result.msg
       })
       .catch(err => {
-        this.showError('createLocation', err.msg)
+        this.showError('createLocale', err.msg)
       })
     },
     adminProjects: function () {
@@ -276,15 +273,20 @@ export default {
       console.log('adminProjects:remoteDb: ' +  this.cloudDb)
       this.adminProjectsForm = true
       habitatCloud.assureRemoteLogin()
-        .then(result => {
-          this.opsDisplay = result.msg
+        .then(() => {
+          // .then(result => {
+          // *todo* see plan related
+          this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
         })
         .then (() => {
           return  habitatCloud.doRequest('getLoginIdentity', this.remoteUrl)
         })
-      // habitatCloud.doRequest('getLoginIdentity, this.remoteUrl)
         .then (result => {
+          console.log('C - identity: ' + JSON.stringify(result))
           this.loginIdentity = result.identity
+          this.isAgent = this.checkLocale(this.loginIdentity)
+          console.log('id: '  + this.loginIdentity + ', is agent: ' + this.isAgent)
+          this.dbDisplay = this.isAgent ? ('Locale: ' + this.locale) : 'not agent yet'
           return result.identity
         })
         .then(result => {
@@ -303,13 +305,15 @@ export default {
       this.clearPanels()
       console.log('add project member - on the way')
       habitatCloud.assureRemoteLogin()
-        .then(result => {
-          this.opsDisplay = result.msg
+        .then(() => {
+            // .then(result => {
+            // *todo* see plan related
+            this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
         })
         .then (() => {
           return  habitatCloud.doRequest('addProjectMember', this.remoteUrl,
             {
-              location: this.location,
+              location: this.locale,
               project: this.project,
               member: this.projectMember
             }
@@ -333,8 +337,10 @@ export default {
       console.log('testSaveLocalProjects:remoteDb: ' +  this.cloudDb)
       this.testSaveProjectsForm = true
       habitatCloud.assureRemoteLogin()
-        .then(result => {
-          this.opsDisplay = result.msg
+        .then(() => {
+            // .then(result => {
+            // *todo* see plan related
+            this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
         })
         .then (() => {
           return  habitatCloud.doRequest('getLoginIdentity', this.remoteUrl)
@@ -353,102 +359,99 @@ export default {
         })
     },
     loadTestProject: function () {
-      const testLocation = 'test-location'
+      const testLocale = 'test-locale'
       const testProject = 'test-project'
-      console.log('loadTestProject:to: ' + testLocation + '/' + testProject)
+      console.log('loadTestProject:to: ' + testLocale + '/' + testProject)
       const dbData = Object.assign (this.projectData, {
         count: this.testCount++
       })
       console.log ('dbData: ' + JSON.stringify(dbData))
       this.clearPanels()
 
-      habitatDb.loadHardocsObject (testLocation, testProject)
+      habitatDb.loadHardocsObject (testLocale, testProject)
         .then (result => {
-          const msg = 'loaded ' + testLocation + '/' + testProject + ': ' + JSON.stringify(result)
+          const msg = 'loaded ' + testLocale + '/' + testProject + ': ' + JSON.stringify(result)
           console.log(msg)
           this.opsDisplay = msg
         })
         .catch (err => {
-          const msg = 'loaded ' + testLocation + '/' + testProject + ':error: ' + JSON.stringify(err)
+          const msg = 'loaded ' + testLocale + '/' + testProject + ':error: ' + JSON.stringify(err)
           console.log(msg)
           this.opsDisplay = msg
         })
     },
     storeTestProject: function () {
-      const testLocation = 'test-location'
+      const testLocale = 'test-locale'
       const testProject = 'test-project'
-      console.log('storeTestProject:to: ' + testLocation + '/' + testProject)
+      console.log('storeTestProject:to: ' + testLocale + '/' + testProject)
       const dbData = Object.assign (this.projectData, {
         count: this.testCount++
       })
       console.log ('dbData: ' + JSON.stringify(dbData))
       this.clearPanels()
 
-      habitatDb.storeHardocsObject (testLocation, testProject, dbData)
+      habitatDb.storeHardocsObject (testLocale, testProject, dbData)
         .then (result => {
-          const msg = 'stored ' + testLocation + '/' + testProject + ': ' + JSON.stringify(result)
+          const msg = 'stored ' + testLocale + '/' + testProject + ': ' + JSON.stringify(result)
           console.log(msg)
           this.opsDisplay = msg
         })
         .catch (err => {
-          const msg = 'stored ' + testLocation + '/' + testProject + ':error: ' + JSON.stringify(err)
+          const msg = 'stored ' + testLocale + '/' + testProject + ':error: ' + JSON.stringify(err)
           console.log(msg)
           this.opsDisplay = msg
         })
     },
-    replicateTestLocation: function () {
+    replicateTestLocale: function () {
       this.clearPanels()
-      const testLocation = 'test-location'
-      const remoteLocation = 'https://hd.narrationsd.com/hard-api/' + testLocation
-      console.log('replicateTestProject projects from ' + testLocation + ' to ' + remoteLocation + '... ')
+      const testLocale = 'test-locale'
+      const remoteLocale = 'https://hd.narrationsd.com/hard-api/' + testLocale
+      console.log('replicateTestProject projects from ' + testLocale + ' to ' + remoteLocale + '... ')
 
       // *todo* look very carefully into consequences of both checkpoint settings below,
       // but also the thing they save from, the odd nature of the 404 setting off CORS
 
       let locForErrs = 'replicateTestProject'
-      habitatCloud.assureRemoteLogin(remoteLocation, {})
+      habitatCloud.assureRemoteLogin(remoteLocale, {})
         .then(() => {
-          locForErrs = 'replicateTestProject down from: ' + testLocation
+          locForErrs = 'replicateTestProject down from: ' + testLocale
           // *todo* temporary replication control discovery next
           const options = {
-            filter: 'location-projects/onlyTheLonely'
+            filter: 'locale-projects/onlyTheLonely'
           }
-
-          return habitatDb.replicateDatabase(remoteLocation, testLocation, options)
+          return habitatDb.replicateDatabase(remoteLocale, testLocale, options)
         })
         .then(result => {
           console.log('replicateTestProject:down:result: ' + JSON.stringify(result))
           this.dbDisplay = 'down: ' + JSON.stringify(result)
-          locForErrs = 'replicateTestProject up to: ' + remoteLocation
-          return habitatDb.replicateDatabase(testLocation, remoteLocation)
+          locForErrs = 'replicateTestProject up to: ' + remoteLocale
+          return habitatDb.replicateDatabase(testLocale, remoteLocale)
         })
         .then(result => {
           console.log('replicateTestProject:up:result: ' + JSON.stringify(result))
           this.dbDisplay += ', up: ' + JSON.stringify(result)
           this.opsDisplay = 'this is not real yet - not operating on a proper ' +
-            'Location yet - ' + remoteLocation + ' db'
+            'Locale yet - ' + remoteLocale + ' db'
         })
         .catch(err => {
           this.showError('replicateTestProject' + ':' + locForErrs, err)
         })
     },
     createProject: function () {
-      this.isAgent = true // *todo*
       if (!this.isAgent) {
         this.opsDisplay = 'Sorry, ' + this.loginIdentity +
-          ' isn\'t an agent, thus permitted to create Project...'
+          ' isn\'t an agent, thus isn\'t permitted to create Project...'
         return
       }
-
       console.log('app:create project: ' + this.project +
-        ', location: ' + this.location + ', identity: ' + this.loginIdentity)
+        ', locale: ' + this.locale + ', identity: ' + this.loginIdentity)
       habitatCloud.assureRemoteLogin()
         .then (() => {
           return habitatCloud.doRequest(
             'createProject',
             this.remoteUrl,
             {
-              location: this.location,
+              location: this.locale,
               identity: this.loginIdentity,
               project: this.project,
             }
@@ -462,8 +465,8 @@ export default {
           if (result.ok) {
             this.isAgent = true
             // *todo* make these reactive, rather soon!
-            this.locationExists = true
-            this.dbDisplay = this.isAgent ? ('Location: ' + this.location) : 'not agent yet'
+            this.localeExists = true
+            this.dbDisplay = this.isAgent ? ('Locale: ' + this.locale) : 'not agent yet'
           }
           this.opsDisplay = result.msg
         })
@@ -473,12 +476,12 @@ export default {
     },
     listLocalProjects: function () {
       this.clearPanels()
-      habitatDb.listLocationProjects('hardLocation', this.localDb)
+      habitatDb.listLocationProjects('hardLocale', this.localDb)
         .then(result => {
           console.log('listLocalProjects: ' + JSON.stringify(result))
-          this.dbDisplay = JSON.stringify(result)
+          this.dbDisplay = this.$htmlJson(result)
           this.opsDisplay = 'this is not real yet - just listing any records ' +
-            'location can reach - ' + this.localDb + ' db'
+            'locale can reach - ' + this.localDb + ' db'
         })
         .catch(err => {
           this.showError('listLocalProjects', err)
@@ -507,9 +510,9 @@ export default {
         })
         .then(result => {
           console.log('listRemoteProjects: ' + JSON.stringify(result))
-          this.dbDisplay = JSON.stringify(result)
+          this.dbDisplay = this.$htmlJson(result)
           this.opsDisplay = 'this is not real yet - just listing any records ' +
-            'location can reach - ' +  this.cloudDb + ' db'
+            'locale can reach - ' +  this.cloudDb + ' db'
         })
         .catch(err => {
           this.showError('listRemoteProjects', err)
@@ -533,15 +536,15 @@ export default {
         })
         .then(result => {
           console.log('replicateDb:down:result: ' + JSON.stringify(result))
-          this.dbDisplay = 'down: ' + JSON.stringify(result)
+          this.dbDisplay = 'down: ' + this.$htmlJson(result)
           locForErrs = 'replicateDb up to: ' + this.cloudDb
           return habitatDb.replicateDatabase(this.localDb, this.cloudDb)
         })
         .then(result => {
           console.log('replicateDb:up:result: ' + JSON.stringify(result))
-          this.dbDisplay += ', up: ' + JSON.stringify(result)
+          this.dbDisplay += ', up: ' + this.$htmlJson(result)
           this.opsDisplay = 'this is not real yet - not operating on a proper ' +
-            'Location yet - ' + this.cloudDb + ' db'
+            'Locale yet - ' + this.cloudDb + ' db'
         })
         .catch(err => {
           this.showError(this.localDb + ':' + locForErrs, err)
@@ -631,7 +634,7 @@ export default {
       habitatLocal.getNodeCookies()
         .then(result => {
           this.cookies = result
-          this.opsDisplay = 'Node Cookies: ' + JSON.stringify(result)
+          this.opsDisplay = 'Now logged out...'
           return result
         })
         .then(result => {
@@ -670,14 +673,14 @@ export default {
     clearPanels: function () {
       this.opsDisplay = ''
       this.dbDisplay = ''
-      this.adminLocationsForm = false
+      this.adminLocalesForm = false
       this.adminProjectsForm = false
       this.testSaveProjectsForm = false
     },
     preloadDummyProjectInfo: function (marker) {
       // *todo* for the moment, this is dummy data. Soon we'll add it normally, then find with view
-      this.location = 'hard-location'
-      this.project = 'first-project'
+      this.locale = 'hardocs-team'
+      this.project = 'test-project'
       this.projectData = {
         docs: [
           {doc1: 'doc1 text we will see'},

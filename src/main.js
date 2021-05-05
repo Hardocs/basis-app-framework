@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-// require ('dotenv').config() // Node...
+import { AdminHelpers } from './plugins/admin-helpers.js'
+
 import dotEnv from 'dotenv'
 dotEnv.config()
 
@@ -19,6 +20,7 @@ import '@/main.css'
 Vue.config.productionTip = false
 
 Vue.use(VueRouter)
+Vue.use(AdminHelpers)
 
 const router = new VueRouter({
   routes: [
