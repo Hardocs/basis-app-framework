@@ -242,8 +242,8 @@ export default {
           this.loginIdentity = result.identity
           // *todo* my, my -- this has all moved on, upgrade to superAdmin...
           this.isAgent = this.checkRole('_admin') // *todo* this is just for informing, soon
-          console.log('id: '  + this.loginIdentity + ', is location: ' + this.isAgent)
-          this.dbDisplay = this.isAgent ? ('Location: ' + this.location) : 'not superadmin yet'
+          console.log('id: '  + this.loginIdentity + ', is locale: ' + this.isAgent)
+          this.dbDisplay = this.isAgent ? ('Locale: ' + this.locale) : 'not superadmin yet'
         })
         .catch(err => {
           this.showError('adminLocales', err)
@@ -260,9 +260,9 @@ export default {
       habitatCloud.assureRemoteLogin()
       .then (() => {
         return habitatCloud.doRequest(
-          'createLocation',
+          'createLocale',
           this.remoteUrl,
-          { location: this.locale } // identity check is properly in cloud
+          { locale: this.locale } // identity check is properly in cloud
         )
       })
       // .then (result => {
@@ -324,7 +324,7 @@ export default {
         .then (() => {
           return  habitatCloud.doRequest('addProjectMember', this.remoteUrl,
             {
-              location: this.locale,
+              locale: this.locale,
               project: this.project,
               member: this.projectMember
             }
@@ -462,7 +462,7 @@ export default {
             'createProject',
             this.remoteUrl,
             {  // identity check is properly in cloud
-              location: this.locale,
+              locale: this.locale,
               project: this.project,
             }
           )
@@ -485,7 +485,7 @@ export default {
     },
     listLocalProjects: function () {
       this.clearPanels()
-      habitatDb.listLocationProjects('hardLocale', this.localDb)
+      habitatDb.listLocaleProjects('hardLocale', this.localDb)
         .then(result => {
           console.log('listLocalProjects: ' + JSON.stringify(result))
           this.dbDisplay = this.$htmlJson(result)
@@ -515,7 +515,7 @@ export default {
       this.clearPanels()
       habitatCloud.assureRemoteLogin()
         .then(() => {
-          return habitatDb.listLocationProjects('hardLocation',  this.cloudDb)
+          return habitatDb.listLocaleProjects('hardLocale',  this.cloudDb)
         })
         .then(result => {
           console.log('listRemoteProjects: ' + JSON.stringify(result))
@@ -587,7 +587,7 @@ export default {
     publishProject: function () { // *todo* in progress at this point
       this.clearPanels()
       const requestedStatus = false
-      const location = 'dummy Location'
+      const locale = 'dummy Locale'
       const project = 'dummy Project'
       this.dbDisplay = 'publishProject state requested: ' + requestedStatus
 
@@ -600,7 +600,7 @@ export default {
           return habitatCloud.doRequest(
             'publishProject',
             this.remoteUrl,
-            {status: requestedStatus, location: location, project: project})
+            {status: requestedStatus, locale: locale, project: project})
         })
         .then (result => {
           this.opsDisplay += 'Publish project result: ' + JSON.stringify(result)

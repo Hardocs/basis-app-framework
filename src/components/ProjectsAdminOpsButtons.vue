@@ -32,8 +32,8 @@ export default {
     return {
       items: [
         {
-          label: "Administer Locales",
-          action: this.adminLocales
+          label: "Administer Locale",
+          action: this.adminLocale
         },
         {
           label: "Administer Projects",
@@ -79,8 +79,8 @@ export default {
     }
   },
   methods: {
-    adminLocales: function () {
-      this.$emit('adminLocales')
+    adminLocale: function () {
+      this.$emit('adminLocale')
     },
     listRemoteProjects: function () {
       this.$emit('listRemoteProjects')
