@@ -382,8 +382,7 @@ export default {
         })
     },
     loadProject: function () {
-      this.clearPanels()
-      console.log('loadProject from: ' + this.locale + ':' + this.project)
+       console.log('loadProject from: ' + this.locale + ':' + this.project)
 
       habitatCloud.assureRemoteLogin()
         .then(() => {
@@ -401,9 +400,13 @@ export default {
         .then (result => {
           console.log('loadProject:result: ' + JSON.stringify(result))
           if (result.ok) {
-            this.projectData = result.projectObject
+            const jsonData = JSON.parse (result.msg) // error will throw for catch
+            console.log ('jsonData: ' + JSON.stringify(jsonData))
+            this.projectData = jsonData
             console.log ('projectData: ' + JSON.stringify(this.projectData))
-            this.dbDisplay = 'Project dataObject ok for : ' + result.keys.name
+            const msg = 'Project dataObject ok for : ' + this.projectData.keys.name
+            console.log(msg)
+            this.dbDisplay = msg
           } else {
             throw new Error (result.msg)
           }
@@ -413,7 +416,6 @@ export default {
         })
     },
     updateProject: function () {
-      this.clearPanels()
       console.log('updateProject from: ' + this.locale + ':' + this.project)
 
       habitatCloud.assureRemoteLogin()
@@ -589,7 +591,7 @@ export default {
         })
     },
     initializeHabitat: function () {
-      this.clearPanels()
+      // this.clearPanels()
       console.log('initializing Habitat...')
 
       habitatCloud.assureRemoteLogin()
@@ -713,6 +715,7 @@ export default {
       console.log(msg)
     },
     clearPanels: function () {
+      console.log ('clearPanels')
       this.opsDisplay = ''
       this.dbDisplay = ''
       this.adminLocaleForm = false
