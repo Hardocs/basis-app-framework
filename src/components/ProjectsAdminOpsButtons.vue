@@ -40,8 +40,8 @@ export default {
           action: this.adminProjects
         },
         {
-          label: "Test Local Projects",
-          action: this.testSaveLocalProjects
+          label: "Interact With Project",
+          action: this.interactWithProject
         },
         {
           label: "List Local Projects",
@@ -85,8 +85,8 @@ export default {
     listRemoteProjects: function () {
       this.$emit('listRemoteProjects')
     },
-    testSaveLocalProjects: function () {
-      this.$emit('testSaveLocalProjects')
+    interactWithProject: function () {
+      this.$emit('interactWithProject')
     },
     listLocalProjects: function () {
       this.$emit('listLocalProjects')

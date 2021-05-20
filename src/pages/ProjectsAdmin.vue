@@ -5,13 +5,12 @@
     </div>
     <hr>
     <ProjectsAdminOpsButtons
-      v-on:adminLocales="adminLocales"
-      v-on:listLocalProjects="listLocalProjects"
-      v-on:listRemoteProjects="listRemoteProjects"
-      v-on:replicateDb="replicateDb"
+      v-on:adminLocale="adminLocale"
       v-on:adminProjects="adminProjects"
+      v-on:interactWithProject="interactWithProject"
+      v-on:updateProject="updateProject"
+      v-on:replicateDb="replicateDb"
       v-on:clearLocalProjects="clearLocalProjects"
-      v-on:testSaveLocalProjects="testSaveLocalProjects"
       v-on:publishProject="publishProject"
       v-on:tryGql="tryGql"
       v-on:logOutRemote="logOutRemote"
@@ -22,7 +21,7 @@
     <div v-if="opsDisplay" class="bg-display html-data text-white">
       <span v-html="opsDisplay"></span>
     </div>
-    <div v-if="adminLocalesForm">
+    <div v-if="adminLocaleForm">
       <div class="w-full max-w-xs">
         <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
           <div class="mb-4">
@@ -95,9 +94,10 @@
         </form>
       </div>
     </div>
-    <div v-if="testSaveProjectsForm">
-      <div class="w-full max-w-xs">
-        <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+    <div v-if="interactWithProjectForm">
+      <div class="flex mb-4 h-full">
+<!--        <div class="w-full max-w-xs">-->
+        <form class="w-1/2 bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
           <div class="mb-4">
             <label class="block text-gray-700 text-sm font-bold mb-2" for="our-locale">
               Locale
@@ -114,20 +114,28 @@
             <p v-if="!projectExists" class="text-red-500 text-xs italic">Please choose a project name (can have dashes, no colons).</p>
           </div>
           <div class="flex items-center justify-between">
-            <button @click="loadTestProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <button @click="loadProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Load Test Project
+              Load Project
             </button>
-            <button @click="storeTestProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <button @click="updateProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Store Test Project
+              Update Project
             </button>
-            <button @click="replicateTestLocale" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
-              focus:outline-none focus:shadow-outline" type="button">
-              Replicate Test Locale
-            </button>
+<!--            <button @click="replicateTestLocale" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-->
+<!--              focus:outline-none focus:shadow-outline" type="button">-->
+<!--              Replicate Test Locale-->
+<!--            </button>-->
           </div>
         </form>
+        <div class="w-1/2 bg-gray-500 h-12 px-2 border-l-2 border-gray-600 h-full">
+          <vue-json-editor v-model="projectData"
+                           :show-btns="true"
+                           :expandedOnStart="true"
+          >
+          </vue-json-editor>
+          <!--        @json-change="onJsonChange"-->
+        </div>
       </div>
     </div>
   </div>
@@ -138,6 +146,7 @@
 import ProjectsAdminOpsButtons from '@/components/ProjectsAdminOpsButtons'
 import { habitatCloud, habitatLocal, habitatDb } from '@hardocs-project/habitat-client'
 import prettyJson from 'prettyprintjs'
+import VueJsonEditor from 'vue-json-editor'
 
 export default {
   name: "ProjectsAdmin",
@@ -152,6 +161,7 @@ export default {
       projectExists: false,
       projectData: null, // expected connect to Vuex
       dbDisplay: null, // temporary measure, to first view
+      jsonEditor: null, // for project update exercise
 
       // where we can indicate issues to screen
       opsDisplay: null,
@@ -162,9 +172,9 @@ export default {
       localDb: 'habitat-projects',
 
       // control of forms
-      adminLocalesForm: false,
+      adminLocaleForm: false,
       adminProjectsForm: false,
-      testSaveProjectsForm: false,
+      interactWithProjectForm: false,
       isAgent: false,
 
       // testing
@@ -227,9 +237,9 @@ export default {
       // this.opsDisplay = result.msg
       // return result.isAgent
     },
-    adminLocales: function () {
+    adminLocale: function () {
       this.clearPanels()
-      this.adminLocalesForm = true
+      this.adminLocaleForm = true
       habitatCloud.assureRemoteLogin()
         .then(result => {
           this.opsDisplay = result.msg
@@ -246,7 +256,7 @@ export default {
           this.dbDisplay = this.isAgent ? ('Locale: ' + this.locale) : 'not superadmin yet'
         })
         .catch(err => {
-          this.showError('adminLocales', err)
+          this.showError('adminLocale', err)
         })
     },
     createLocale: function () {
@@ -308,11 +318,13 @@ export default {
           this.showError('adminProjects', err)
         })
     },
-    loadProject: function () {
+    interactWithProject: function () {
       this.clearPanels()
-      console.log('load project - not implemented')
+      this.interactWithProjectForm = true
+      this.projectData = { projectName: 'dummy', projectMeta: 'some meta'}
+      console.log('Interact With Projects - initialized')
     },
-    addProjectMember: function () {
+    addProjectMember: function () { // *todo* think this goes out
       this.clearPanels()
       console.log('add project member - on the way')
       habitatCloud.assureRemoteLogin()
@@ -369,48 +381,65 @@ export default {
           this.showError('adminProjects', err)
         })
     },
-    loadTestProject: function () {
-      const testLocale = 'test-locale'
-      const testProject = 'test-project'
-      console.log('loadTestProject:to: ' + testLocale + '/' + testProject)
-      const dbData = Object.assign (this.projectData, {
-        count: this.testCount++
-      })
-      console.log ('dbData: ' + JSON.stringify(dbData))
+    loadProject: function () {
       this.clearPanels()
+      console.log('loadProject from: ' + this.locale + ':' + this.project)
 
-      habitatDb.loadHardocsObject (testLocale, testProject)
-        .then (result => {
-          const msg = 'loaded ' + testLocale + '/' + testProject + ': ' + JSON.stringify(result)
-          console.log(msg)
-          this.opsDisplay = msg
+      habitatCloud.assureRemoteLogin()
+        .then(() => {
+          this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
         })
-        .catch (err => {
-          const msg = 'loaded ' + testLocale + '/' + testProject + ':error: ' + JSON.stringify(err)
-          console.log(msg)
-          this.opsDisplay = msg
+        .then (() => {
+          return  habitatCloud.doRequest('loadProject', this.remoteUrl,
+            {
+              locale: this.locale,
+              project: this.project,
+              identity: 'no identities now'
+            }
+          )
+        })
+        .then (result => {
+          console.log('loadProject:result: ' + JSON.stringify(result))
+          if (result.ok) {
+            this.projectData = result.projectObject
+            console.log ('projectData: ' + JSON.stringify(this.projectData))
+            this.dbDisplay = 'Project dataObject ok for : ' + result.keys.name
+          } else {
+            throw new Error (result.msg)
+          }
+        })
+        .catch(err => {
+          this.showError('loadProject', err)
         })
     },
-    storeTestProject: function () {
-      const testLocale = 'test-locale'
-      const testProject = 'test-project'
-      console.log('storeTestProject:to: ' + testLocale + '/' + testProject)
-      const dbData = Object.assign (this.projectData, {
-        count: this.testCount++
-      })
-      console.log ('dbData: ' + JSON.stringify(dbData))
+    updateProject: function () {
       this.clearPanels()
+      console.log('updateProject from: ' + this.locale + ':' + this.project)
 
-      habitatDb.storeHardocsObject (testLocale, testProject, dbData)
-        .then (result => {
-          const msg = 'stored ' + testLocale + '/' + testProject + ': ' + JSON.stringify(result)
-          console.log(msg)
-          this.opsDisplay = msg
+      habitatCloud.assureRemoteLogin()
+        .then(() => {
+          this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
         })
-        .catch (err => {
-          const msg = 'stored ' + testLocale + '/' + testProject + ':error: ' + JSON.stringify(err)
-          console.log(msg)
-          this.opsDisplay = msg
+        .then (() => {
+          return  habitatCloud.doRequest('updateProject', this.remoteUrl,
+            {
+              locale: this.locale,
+              project: this.project,
+              identity: 'no identities now',
+              projectData: this.projectData
+            }
+          )
+        })
+        .then (result => {
+          console.log('updateProject:result: ' + JSON.stringify(result))
+          if (result.ok) {
+            this.dbDisplay = 'Project dataObject ok for : ' + result.keys.name
+          } else {
+            throw new Error (result.msg)
+          }
+        })
+        .catch(err => {
+          this.showError('updateProject', err)
         })
     },
     replicateTestLocale: function () {
@@ -671,10 +700,14 @@ export default {
       // }
       return screenText
     },
-
+    onJsonChange (value) {
+      console.log('value:', value)
+    },
     showError: function (action, err) {
       // an essential, so we don't need to know which form comes
-      err = typeof err !== 'string' ? JSON.stringify(err) : err
+      // if it's not an Error, it's string or JSON
+      // we ourselves always throe Errors, but libraries...
+      err = err instanceof Error ? err.message : JSON.stringify(err)
       const msg = `Error:  ${action}: ` + err
       this.opsDisplay = msg
       console.log(msg)
@@ -682,9 +715,9 @@ export default {
     clearPanels: function () {
       this.opsDisplay = ''
       this.dbDisplay = ''
-      this.adminLocalesForm = false
+      this.adminLocaleForm = false
       this.adminProjectsForm = false
-      this.testSaveProjectsForm = false
+      this.interactWithProjectForm = false
     },
     preloadDummyProjectInfo: function (marker) {
       // *todo* for the moment, this is dummy data. Soon we'll add it normally, then find with view
@@ -710,6 +743,7 @@ export default {
   },
   components: {
     ProjectsAdminOpsButtons,
+    VueJsonEditor
   }
 }
 </script>
