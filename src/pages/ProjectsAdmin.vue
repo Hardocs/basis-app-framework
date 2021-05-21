@@ -9,6 +9,8 @@
       v-on:adminProjects="adminProjects"
       v-on:interactWithProject="interactWithProject"
       v-on:updateProject="updateProject"
+      v-on:listLocalProjects="listLocalProjects"
+      v-on:listRemoteProjects="listRemoteProjects"
       v-on:replicateDb="replicateDb"
       v-on:clearLocalProjects="clearLocalProjects"
       v-on:publishProject="publishProject"
@@ -111,12 +113,15 @@
             </label>
             <input v-model="project" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
               leading-tight focus:outline-none focus:shadow-outline" type="text" id="project" placeholder="project-name">
-            <p v-if="!projectExists" class="text-red-500 text-xs italic">Please choose a project name (can have dashes, no colons).</p>
           </div>
           <div class="flex items-center justify-between">
             <button @click="loadProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
               Load Project
+            </button>
+            <button @click="saveProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+              focus:outline-none focus:shadow-outline" type="button">
+              Save Project
             </button>
             <button @click="updateProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
@@ -413,6 +418,35 @@ export default {
         })
         .catch(err => {
           this.showError('loadProject', err)
+        })
+    },
+    saveProject: function () {
+      console.log('saveProject from: ' + this.locale + ':' + this.project)
+
+      habitatCloud.assureRemoteLogin()
+        .then(() => {
+          this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
+        })
+        .then (() => {
+          return  habitatCloud.doRequest('saveProject', this.remoteUrl,
+            {
+              locale: this.locale,
+              project: this.project,
+              identity: 'no identities now',
+              projectData: this.projectData
+            }
+          )
+        })
+        .then (result => {
+          console.log('saveProject:result: ' + JSON.stringify(result))
+          if (result.ok) {
+            this.dbDisplay = 'Project dataObject ok for : ' + result.keys.name
+          } else {
+            throw new Error (result.msg)
+          }
+        })
+        .catch(err => {
+          this.showError('saveProject', err)
         })
     },
     updateProject: function () {

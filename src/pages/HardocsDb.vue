@@ -85,7 +85,8 @@ export default {
       habitatCloud.assureRemoteLogin(dbLocation)
         .then(() => {
 
-          habitatDb.storeHardocsObject(owner, project, this.projectData, dbLocation)
+          // *todo* signature all wrong, and the function too..
+          habitatDb.clearSaveHabitatObject(owner, project, this.projectData, dbLocation)
             .then(result => {
               console.log('saveProjectToDb: result: ' + JSON.stringify(result))
               this.opsDisplay = result
