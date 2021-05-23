@@ -404,8 +404,9 @@ export default {
         })
         .then (result => {
           console.log('loadProject:result: ' + JSON.stringify(result))
+          let jsonData
           if (result.ok) {
-            const jsonData = JSON.parse (result.msg) // error will throw for catch
+            jsonData = JSON.parse (result.msg) // error will throw for catch
             console.log ('jsonData: ' + JSON.stringify(jsonData))
             this.projectData = jsonData
             console.log ('projectData: ' + JSON.stringify(this.projectData))
@@ -413,8 +414,17 @@ export default {
             console.log(msg)
             this.dbDisplay = msg
           } else {
+            this.projectData = {}
             throw new Error (result.msg)
           }
+          return jsonData
+        })
+        .then (jsonData => {
+          // *todo* later no localDb, use default habitat-projectts to match cloud
+          return habitatDb.saveHabitatObject(jsonData, true, this.localDb)
+        })
+        .then (result => {
+          this.dbDisplay += ', saved: ' + result.ok
         })
         .catch(err => {
           this.showError('loadProject', err)
@@ -423,24 +433,11 @@ export default {
     saveProject: function () {
       console.log('saveProject from: ' + this.locale + ':' + this.project)
 
-      habitatCloud.assureRemoteLogin()
-        .then(() => {
-          this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
-        })
-        .then (() => {
-          return  habitatCloud.doRequest('saveProject', this.remoteUrl,
-            {
-              locale: this.locale,
-              project: this.project,
-              identity: 'no identities now',
-              projectData: this.projectData
-            }
-          )
-        })
+      habitatDb.saveProjectObject (this.projectData)
         .then (result => {
           console.log('saveProject:result: ' + JSON.stringify(result))
           if (result.ok) {
-            this.dbDisplay = 'Project dataObject ok for : ' + result.keys.name
+            this.dbDisplay = 'Project save ok for : ' + this.projectdata.keys.project
           } else {
             throw new Error (result.msg)
           }
@@ -448,10 +445,37 @@ export default {
         .catch(err => {
           this.showError('saveProject', err)
         })
+
+      // habitatCloud.assureRemoteLogin()
+      //   .then(() => {
+      //     this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
+      //   })
+      //   .then (() => {
+      //     return  habitatCloud.doRequest('saveProject', this.remoteUrl,
+      //       {
+      //         locale: this.locale,
+      //         project: this.project,
+      //         identity: 'no identities now',
+      //         projectData: this.projectData
+      //       }
+      //     )
+      //   })
+      //   .then (result => {
+      //     console.log('saveProject:result: ' + JSON.stringify(result))
+      //     if (result.ok) {
+      //       this.dbDisplay = 'Project dataObject ok for : ' + result.keys.name
+      //     } else {
+      //       throw new Error (result.msg)
+      //     }
+      //   })
+      //   .catch(err => {
+      //     this.showError('saveProject', err)
+      //   })
     },
     updateProject: function () {
       console.log('updateProject from: ' + this.locale + ':' + this.project)
 
+      // *todo* actually this needs to be the replication
       habitatCloud.assureRemoteLogin()
         .then(() => {
           this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
