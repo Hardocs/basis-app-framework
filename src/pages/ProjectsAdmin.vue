@@ -125,7 +125,7 @@
             </button>
             <button @click="updateProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Update Project
+              Update to Cloud
             </button>
 <!--            <button @click="replicateTestLocale" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-->
 <!--              focus:outline-none focus:shadow-outline" type="button">-->
@@ -436,8 +436,10 @@ export default {
       habitatDb.saveProjectObject (this.projectData)
         .then (result => {
           console.log('saveProject:result: ' + JSON.stringify(result))
-          if (result.ok) {
-            this.dbDisplay = 'Project save ok for : ' + this.projectdata.keys.project
+          if (result.updated) {
+            this.dbDisplay = 'Project save ok for : ' +
+              this.projectData.keys.name +
+              ', rev: ' + result.rev
           } else {
             throw new Error (result.msg)
           }
@@ -473,6 +475,7 @@ export default {
       //   })
     },
     updateProject: function () {
+      let locForErrs = 'begin updateProject'
       console.log('updateProject from: ' + this.locale + ':' + this.project)
 
       // *todo* actually this needs to be the replication
@@ -481,25 +484,28 @@ export default {
           this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
         })
         .then (() => {
-          return  habitatCloud.doRequest('updateProject', this.remoteUrl,
-            {
-              locale: this.locale,
-              project: this.project,
-              identity: 'no identities now',
-              projectData: this.projectData
-            }
-          )
+          locForErrs = 'replicateDb up to: ' + this.cloudDb
+          // uploading only the current project is critical - slow net times
+          return habitatDb.replicateDatabase(
+            this.localDb,
+            this.cloudDb,
+            { doc_ids: [ this.projectData._id ] })
         })
-        .then (result => {
+      .then (result => {
+        console.log('replicateDb:up:result: ' + JSON.stringify(result))
+        // this.dbDisplay = 'up: ' + this.$htmlJson(result)
           console.log('updateProject:result: ' + JSON.stringify(result))
+          // console.log('replicateDb:up:result: ' + JSON.stringify(result))
+          // this.dbDisplay = 'up: ' + this.$htmlJson(result)
+
           if (result.ok) {
-            this.dbDisplay = 'Project dataObject ok for : ' + result.keys.name
+            this.dbDisplay = 'Project dataObject ok for : ' + this.projectData.keys.name
           } else {
             throw new Error (result.msg)
           }
         })
         .catch(err => {
-          this.showError('updateProject', err)
+          this.showError('updateProject' + locForErrs, err)
         })
     },
     replicateTestLocale: function () {
@@ -782,8 +788,8 @@ export default {
     },
     preloadDummyProjectInfo: function (marker) {
       // *todo* for the moment, this is dummy data. Soon we'll add it normally, then find with view
-      this.locale = 'hardocs-team'
-      this.project = 'test-project'
+      this.locale = 'delft-lab01'
+      this.project = 'your-project'
       this.projectData = {
         docs: [
           {doc1: 'doc1 text we will see'},
