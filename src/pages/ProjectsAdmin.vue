@@ -117,20 +117,26 @@
           <div class="flex items-center justify-between">
             <button @click="loadProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Load Project
+              Load Cloud Project
             </button>
-            <button @click="saveProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <button @click="readLocalProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Save Project
-            </button>
-            <button @click="updateProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
-              focus:outline-none focus:shadow-outline" type="button">
-              Update to Cloud
+              Read Local Project
             </button>
 <!--            <button @click="replicateTestLocale" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-->
 <!--              focus:outline-none focus:shadow-outline" type="button">-->
 <!--              Replicate Test Locale-->
 <!--            </button>-->
+          </div>
+          <div class="flex items-center justify-between">
+            <button @click="saveProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+              focus:outline-none focus:shadow-outline" type="button">
+              Save Local Project
+            </button>
+            <button @click="updateProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+              focus:outline-none focus:shadow-outline" type="button">
+              Update to Cloud
+            </button>
           </div>
         </form>
         <div class="w-1/2 bg-gray-500 h-12 px-2 border-l-2 border-gray-600 h-full">
@@ -245,24 +251,7 @@ export default {
     adminLocale: function () {
       this.clearPanels()
       this.adminLocaleForm = true
-      habitatCloud.assureRemoteLogin()
-        .then(result => {
-          this.opsDisplay = result.msg
-        })
-        .then (() => {
-         return  habitatCloud.doRequest('getLoginIdentity', this.remoteUrl)
-        })
-        .then (result => {
-          console.log('C - identity: ' + JSON.stringify(result))
-          this.loginIdentity = result.identity
-          // *todo* my, my -- this has all moved on, upgrade to superAdmin...
-          this.isAgent = this.checkRole('_admin') // *todo* this is just for informing, soon
-          console.log('id: '  + this.loginIdentity + ', is locale: ' + this.isAgent)
-          this.dbDisplay = this.isAgent ? ('Locale: ' + this.locale) : 'not superadmin yet'
-        })
-        .catch(err => {
-          this.showError('adminLocale', err)
-        })
+      this.setUpForCloudActions()
     },
     createLocale: function () {
       if (!this.isAgent) {
@@ -294,40 +283,43 @@ export default {
         this.showError('createLocale', err.msg)
       })
     },
-    adminProjects: function () {
-      this.clearPanels()
-      console.log('adminProjects:remoteDb: ' +  this.cloudDb)
-      this.adminProjectsForm = true
+    setUpForCloudActions: function () {
       habitatCloud.assureRemoteLogin()
         .then(() => {
           // .then(result => {
           // *todo* see plan related
           this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
         })
-        .then (() => {
-          return  habitatCloud.doRequest('getLoginIdentity', this.remoteUrl)
+        .then(() => {
+          return habitatCloud.doRequest('getLoginIdentity', this.remoteUrl)
         })
-        .then (result => {
+        .then(result => {
           console.log('C - identity: ' + JSON.stringify(result))
           this.loginIdentity = result.identity
           this.isAgent = this.checkRole('agent')
-          console.log('id: '  + this.loginIdentity + ', is agent: ' + this.isAgent)
+          console.log('id: ' + this.loginIdentity + ', is agent: ' + this.isAgent)
           this.dbDisplay = this.isAgent ? ('Locale: ' + this.locale) : 'not agent yet'
           return result.identity
         })
         .then(result => {
           this.project = 'your-project'
-          this.dbDisplay = 'Project creation identity: ' + result
+          this.dbDisplay = 'Actions identity: ' + result
         })
         .catch(err => {
           this.showError('adminProjects', err)
         })
     },
+    adminProjects: function () {
+      this.clearPanels()
+      console.log('adminProjects:remoteDb: ' +  this.cloudDb)
+      this.adminProjectsForm = true
+      this.setUpForCloudActions()
+   },
     interactWithProject: function () {
       this.clearPanels()
       this.interactWithProjectForm = true
       this.projectData = { projectName: 'dummy', projectMeta: 'some meta'}
-      console.log('Interact With Projects - initialized')
+      this.setUpForCloudActions()
     },
     addProjectMember: function () { // *todo* think this goes out
       this.clearPanels()
@@ -386,8 +378,44 @@ export default {
           this.showError('adminProjects', err)
         })
     },
+    readLocalProject: function () {
+      console.log('readLocalProject from: ' + this.locale + ':' + this.project)
+
+      // local, but we need this to have the identity...
+      habitatCloud.assureRemoteLogin()
+        .then(() => {
+          return habitatDb.readLocalProjectObject(this.locale, this.project, this.loginIdentity)
+        })
+        .then (result => {
+          console.log('readLocalProject:result: ' + JSON.stringify(result))
+          let jsonData
+          if (result.ok) {
+            jsonData = JSON.parse (result.msg) // error will throw for catch
+            console.log ('jsonData: ' + JSON.stringify(jsonData))
+            this.projectData = jsonData
+            console.log ('projectData: ' + JSON.stringify(this.projectData))
+            const msg = 'Project dataObject ok for : ' + this.projectData.keys.name
+            console.log(msg)
+            this.dbDisplay = msg
+          } else {
+            this.projectData = {}
+            throw new Error (result.msg)
+          }
+          return jsonData
+        })
+        .then (jsonData => {
+          // *todo* later no localDb, use default habitat-projectts to match cloud
+          return habitatDb.saveHabitatObject(jsonData, true, this.localDb)
+        })
+        .then (result => {
+          this.dbDisplay += ', saved: ' + result.ok
+        })
+        .catch(err => {
+          this.showError('readLocalProject', err)
+        })
+    },
     loadProject: function () {
-       console.log('loadProject from: ' + this.locale + ':' + this.project)
+      console.log('loadProject from: ' + this.locale + ':' + this.project)
 
       habitatCloud.assureRemoteLogin()
         .then(() => {
@@ -484,6 +512,9 @@ export default {
           this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
         })
         .then (() => {
+          if(!this.projectData.keys) {
+            throw new Error ('Local Hardocs Project not present yet to replicate!')
+          }
           locForErrs = 'replicateDb up to: ' + this.cloudDb
           // uploading only the current project is critical - slow net times
           return habitatDb.replicateDatabase(
@@ -497,11 +528,11 @@ export default {
           console.log('updateProject:result: ' + JSON.stringify(result))
           // console.log('replicateDb:up:result: ' + JSON.stringify(result))
           // this.dbDisplay = 'up: ' + this.$htmlJson(result)
-
           if (result.ok) {
-            this.dbDisplay = 'Project dataObject ok for : ' + this.projectData.keys.name
+            this.dbDisplay = 'Project data successfully uploaded to Habitat Cloud, ' +
+              ' for : ' + this.projectData._id
           } else {
-            throw new Error (result.msg)
+            throw new Error (locForErrs + ':' + result.msg)
           }
         })
         .catch(err => {
@@ -540,7 +571,7 @@ export default {
             'Locale yet - ' + remoteLocale + ' db'
         })
         .catch(err => {
-          this.showError('replicateTestProject' + ':' + locForErrs, err)
+          this.showError('replicateTestProject' + ': \n' + locForErrs, err)
         })
     },
     createProject: function () {
