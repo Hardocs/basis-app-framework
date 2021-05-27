@@ -767,7 +767,15 @@ export default {
       // const query = 'query { all { locale project description metadata docs { title content } } }'
       // const query = 'query { item(id: 1) { locale project description metadata docs { title content } } }'
       // const query = 'query { projects(locale: "NSD") { locale project description metadata docs { title content } } }'
-      const query = 'query { project(locale: "NSD", project: "Habitat HD Client") { locale project description metadata docs { title content } } }'
+      // const query = 'query { project(locale: "NSD", project: "Habitat HD Client") { locale project description metadata docs { title content } } }'
+      const query = 'query { projects(locale: "NSD") { locale project description metadata docs { title content } } }'
+      // queries below for actual db
+      // const query = 'query { projects(locale: "delft-lab01") { locale project description metadata docs { title content } } }'
+      // const query = 'query { project(locale: "delft-lab01", project: "your-project") { locale project description } }'
+      // const query = 'query { project(locale: "delft-lab01", project: "your-project") { _id keys { locale name identity }  locale project description } }'
+      // const query = 'query { projects(locale: "delft-lab01") { _id keys { locale name identity }  locale project description } }'
+      // const query = 'query { project(locale: "delft-lab01", project: "your-project") { _id keys { locale name } } }'
+      // const query = 'query { project(locale: "delft-lab01", project: "your-project") { _id } }'
       this.dbDisplay = 'Gql query: ' + query
 
       habitatCloud.assureRemoteLogin()
