@@ -138,6 +138,12 @@
               Update to Cloud
             </button>
           </div>
+          <div class="flex items-center justify-between v-spaced">
+            <button @click="resolveConflicts" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+              focus:outline-none focus:shadow-outline" type="button">
+              Resolve Conflicts
+            </button>
+          </div>
         </form>
         <div class="w-1/2 bg-gray-500 h-12 px-2 border-l-2 border-gray-600 h-full">
           <vue-json-editor v-model="projectData"
@@ -415,7 +421,7 @@ export default {
         })
     },
     loadProject: function () {
-      console.log('loadProject from: ' + this.locale + ':' + this.project)
+      console.log('cloud loadProject from: ' + this.locale + ':' + this.project)
 
       habitatCloud.assureRemoteLogin()
         .then(() => {
@@ -426,7 +432,8 @@ export default {
             {
               locale: this.locale,
               project: this.project,
-              identity: 'no identities now'
+              identity: 'no identities now',
+              options: { conflicts: true }
             }
           )
         })
@@ -458,6 +465,51 @@ export default {
           this.showError('loadProject', err)
         })
     },
+    resolveConflicts: function () {
+      console.log('cloud resolveConflicts from: ' + this.locale + ':' + this.project)
+
+      habitatCloud.assureRemoteLogin()
+        .then(() => {
+          this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
+        })
+        .then (() => {
+          return  habitatCloud.doRequest('resolveConflicts', this.remoteUrl,
+            {
+              locale: this.locale,
+              project: this.project,
+              identity: 'no identities now',
+              options: { conflicts: true }
+            }
+          )
+        })
+        .then (result => {
+          console.log('resolveConflicts:result: ' + JSON.stringify(result))
+          let jsonData
+          if (result.ok) {
+            jsonData = JSON.parse (result.msg) // error will throw for catch
+            console.log ('jsonData: ' + JSON.stringify(jsonData))
+            this.projectData = jsonData
+            console.log ('projectData: ' + JSON.stringify(this.projectData))
+            const msg = 'Project dataObject ok for : ' + this.projectData.keys.name
+            console.log(msg)
+            this.dbDisplay = msg
+          } else {
+            this.projectData = {}
+            throw new Error (result.msg)
+          }
+          return jsonData
+        })
+        .then (jsonData => {
+          // *todo* later no localDb, use default habitat-projectts to match cloud
+          return habitatDb.saveHabitatObject(jsonData, true, this.localDb)
+        })
+        .then (result => {
+          this.dbDisplay += ', saved: ' + result.ok
+        })
+        .catch(err => {
+          this.showError('resolveConflicts', err)
+        })
+    },
     saveProject: function () {
       console.log('saveProject from: ' + this.locale + ':' + this.project)
 
@@ -475,32 +527,6 @@ export default {
         .catch(err => {
           this.showError('saveProject', err)
         })
-
-      // habitatCloud.assureRemoteLogin()
-      //   .then(() => {
-      //     this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
-      //   })
-      //   .then (() => {
-      //     return  habitatCloud.doRequest('saveProject', this.remoteUrl,
-      //       {
-      //         locale: this.locale,
-      //         project: this.project,
-      //         identity: 'no identities now',
-      //         projectData: this.projectData
-      //       }
-      //     )
-      //   })
-      //   .then (result => {
-      //     console.log('saveProject:result: ' + JSON.stringify(result))
-      //     if (result.ok) {
-      //       this.dbDisplay = 'Project dataObject ok for : ' + result.keys.name
-      //     } else {
-      //       throw new Error (result.msg)
-      //     }
-      //   })
-      //   .catch(err => {
-      //     this.showError('saveProject', err)
-      //   })
     },
     updateProject: function () {
       let locForErrs = 'begin updateProject'
@@ -737,6 +763,7 @@ export default {
     },
     tryGql: function () {
       this.clearPanels()
+      // *todo* test alternates
       // const query = 'query { all { locale project description metadata docs { title content } } }'
       // const query = 'query { item(id: 1) { locale project description metadata docs { title content } } }'
       // const query = 'query { projects(locale: "NSD") { locale project description metadata docs { title content } } }'
@@ -880,6 +907,10 @@ body {
   width: 50%;
   padding: 0 2%;
 
+}
+
+.v-spaced {
+  margin-top: 1em;
 }
 
 .bg-title {
