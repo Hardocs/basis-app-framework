@@ -478,19 +478,27 @@ export default {
               locale: this.locale,
               project: this.project,
               identity: 'no identities now',
-              options: { conflicts: true }
+              options: { conflicts: true, resolveMode: 'latest' }
             }
           )
         })
         .then (result => {
           console.log('resolveConflicts:result: ' + JSON.stringify(result))
           let jsonData
+          let msg
           if (result.ok) {
-            jsonData = JSON.parse (result.msg) // error will throw for catch
-            console.log ('jsonData: ' + JSON.stringify(jsonData))
-            this.projectData = jsonData
-            console.log ('projectData: ' + JSON.stringify(this.projectData))
-            const msg = 'Project dataObject ok for : ' + this.projectData.keys.name
+            try {
+              // this is anticipating we sent the total winner back
+              // better than requiring another get on its new _id
+              jsonData = JSON.parse (result.msg)
+              console.log ('jsonData: ' + JSON.stringify(jsonData))
+              this.projectData = jsonData
+              console.log ('projectData: ' + JSON.stringify(this.projectData))
+              msg = 'Project dataObject ok for : ' + this.projectData.keys.name
+            } catch (err) {
+              // it was actually a string message
+              msg = 'Resolved ok: ' + result.msg
+            }
             console.log(msg)
             this.dbDisplay = msg
           } else {
@@ -499,13 +507,15 @@ export default {
           }
           return jsonData
         })
-        .then (jsonData => {
-          // *todo* later no localDb, use default habitat-projectts to match cloud
-          return habitatDb.saveHabitatObject(jsonData, true, this.localDb)
-        })
-        .then (result => {
-          this.dbDisplay += ', saved: ' + result.ok
-        })
+        // *todo* NONONO this during development, work out what if any to do with local db
+        // we should probably write it back, but when we get an actual object...
+        // .then (jsonData => {
+        //   // *todo* later no localDb, use default habitat-projectts to match cloud
+        //   return habitatDb.saveHabitatObject(jsonData, true, this.localDb)
+        // })
+        // .then (result => {
+        //   this.dbDisplay += ', saved: ' + result.ok
+        // })
         .catch(err => {
           this.showError('resolveConflicts', err)
         })
