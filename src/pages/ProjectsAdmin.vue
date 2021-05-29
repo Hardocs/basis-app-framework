@@ -507,7 +507,7 @@ export default {
           }
           return jsonData
         })
-        // *todo* NONONO this during development, work out what if any to do with local db
+        // *todo* NONO NO this during development, work out what if any to do with local db
         // we should probably write it back, but when we get an actual object...
         // .then (jsonData => {
         //   // *todo* later no localDb, use default habitat-projectts to match cloud
