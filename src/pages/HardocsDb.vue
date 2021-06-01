@@ -57,7 +57,7 @@ export default {
             const project = this.projectBase + count
             console.log('loading owner: ' + owner + ', project: ' + project)
 
-            habitatDb.loadHardocsObject(owner, project, dbLocation)
+            habitatDb.loadHabitatObject(owner, project, dbLocation)
               .then(result => {
                 console.log('loaded Project: ' + JSON.stringify(result))
                 this.projectData = result.data
