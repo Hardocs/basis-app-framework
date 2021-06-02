@@ -540,9 +540,8 @@ export default {
     },
     updateProject: function () {
       let locForErrs = 'begin updateProject'
-      console.log('updateProject from: ' + this.locale + ':' + this.project)
+      console.log('updateProject from local: ' + this.locale + ':' + this.project)
 
-      // *todo* actually this needs to be the replication
       habitatCloud.assureRemoteLogin()
         .then(() => {
           this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
@@ -551,18 +550,21 @@ export default {
           if(!this.projectData.keys) {
             throw new Error ('Local Hardocs Project not present yet to replicate!')
           }
-          locForErrs = 'replicateDb up to: ' + this.cloudDb
-          // uploading only the current project is critical - slow net times
-          return habitatDb.replicateDatabase(
-            this.localDb,
-            this.cloudDb,
-            { doc_ids: [ this.projectData._id ] })
+          locForErrs = 'update HabitatProject up to: ' + this.cloudDb
+          return habitatCloud.doRequest('updateHabitatProject',
+            this.remoteUrl,
+            {
+              locale: this.locale,
+              project: this.project,
+              // *todo* !!!! settle this question - bootstraps, really
+              identity: 'not doing identities, or are we...',
+              projectData: this.projectData,
+              options: {} // cloud will handle the primary itself
+            }
+          )
         })
       .then (result => {
-        console.log('replicateDb:up:result: ' + JSON.stringify(result))
-        // this.dbDisplay = 'up: ' + this.$htmlJson(result)
           console.log('updateProject:result: ' + JSON.stringify(result))
-          // console.log('replicateDb:up:result: ' + JSON.stringify(result))
           // this.dbDisplay = 'up: ' + this.$htmlJson(result)
           if (result.ok) {
             this.dbDisplay = 'Project data successfully uploaded to Habitat Cloud, ' +
