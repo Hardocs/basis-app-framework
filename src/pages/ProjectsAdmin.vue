@@ -409,10 +409,6 @@ export default {
           }
           return jsonData
         })
-        .then (jsonData => {
-          // *todo* later no localDb, use default habitat-projectts to match cloud
-          return habitatDb.saveHabitatObject(jsonData, true, this.localDb)
-        })
         .then (result => {
           this.dbDisplay += ', saved: ' + result.ok
         })
