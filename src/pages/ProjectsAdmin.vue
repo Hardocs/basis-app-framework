@@ -147,7 +147,7 @@
         </form>
         <div class="w-1/2 bg-gray-500 h-12 px-2 border-l-2 border-gray-600 h-full">
           <vue-json-editor v-model="projectData"
-                           :show-btns="true"
+                           :show-btns="false"
                            :expandedOnStart="true"
           >
           </vue-json-editor>
