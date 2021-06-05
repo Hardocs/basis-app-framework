@@ -52,10 +52,6 @@ export default {
           action: this.listRemoteProjects
         },
         {
-          label: "Sync With Hardocs Cloud",
-          action: this.replicateDb
-        },
-        {
           label: "Clear Local Projects",
           action: this.clearLocalProjects
         },
@@ -93,9 +89,6 @@ export default {
     },
     adminProjects: function () {
       this.$emit('adminProjects')
-    },
-    replicateDb: function () {
-      this.$emit('replicateDb')
     },
     clearLocalProjects: function () {
       this.$emit('clearLocalProjects')

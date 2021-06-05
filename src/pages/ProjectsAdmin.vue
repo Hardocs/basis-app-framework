@@ -1,4 +1,5 @@
 <template>
+  <!-- *todo* this just cries for components :) - do we fix test gear?? -->
   <div>
     <div class="w-full bg-title">
     <h2 class="text-json">Buttons With Actions -- try one...</h2>
@@ -8,10 +9,9 @@
       v-on:adminLocale="adminLocale"
       v-on:adminProjects="adminProjects"
       v-on:interactWithProject="interactWithProject"
-      v-on:updateProject="updateProject"
+      v-on:uploadProject="uploadProject"
       v-on:listLocalProjects="listLocalProjects"
       v-on:listRemoteProjects="listRemoteProjects"
-      v-on:replicateDb="replicateDb"
       v-on:clearLocalProjects="clearLocalProjects"
       v-on:publishProject="publishProject"
       v-on:tryGql="tryGql"
@@ -117,8 +117,8 @@
             <input v-model="project" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
               leading-tight focus:outline-none focus:shadow-outline" type="text" id="project" placeholder="project-name">
           </div>
-          <div class="flex items-center justify-between">
-            <button @click="loadProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+          <div class="flex items-center justify-around">
+            <button @click="downloadProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
               Load Cloud Project
             </button>
@@ -126,22 +126,18 @@
               focus:outline-none focus:shadow-outline" type="button">
               Read Local Project
             </button>
-<!--            <button @click="replicateTestLocale" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-->
-<!--              focus:outline-none focus:shadow-outline" type="button">-->
-<!--              Replicate Test Locale-->
-<!--            </button>-->
           </div>
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-around v-spaced">
             <button @click="saveProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
               Save Local Project
             </button>
-            <button @click="updateProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <button @click="uploadProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
               Update to Cloud
             </button>
           </div>
-          <div class="flex items-center justify-between v-spaced">
+          <div class="flex items-center justify-around v-spaced">
             <button @click="resolveConflicts" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
               Resolve Conflicts
@@ -281,9 +277,6 @@ export default {
             { locale: this.locale } // identity check is properly in cloud
           )
         })
-        // .then (result => {
-        //   // *todo* replicateDb the initialized db down here??
-        // })
         .then(result => {
           if (result.ok) {
             this.localeExists = true
@@ -304,6 +297,7 @@ export default {
         return
       }
 
+      // *todo* !!! BE SURE to hold this off with an are-you-sure modal!!!
       console.log('delete locale: ' + this.locale + ' via identity: ' + this.loginIdentity)
       habitatCloud.assureRemoteLogin()
         .then (() => {
@@ -313,9 +307,6 @@ export default {
             { locale: this.locale } // identity check is properly in cloud
           )
         })
-        // .then (result => {
-        //   // *todo* replicateDb the initialized db down here??
-        // })
         .then(result => {
           if (result.ok) {
             this.localeExists = true
@@ -423,15 +414,15 @@ export default {
           this.showError('readLocalProject', err)
         })
     },
-    loadProject: function () {
-      console.log('cloud loadProject from: ' + this.locale + ':' + this.project)
+    downloadProject: function () {
+      console.log('cloud downloadProject from: ' + this.locale + ':' + this.project)
 
       habitatCloud.assureRemoteLogin()
         .then(() => {
           this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
         })
         .then (() => {
-          return  habitatCloud.doRequest('loadProject', this.remoteUrl,
+          return  habitatCloud.doRequest('downloadProject', this.remoteUrl,
             {
               locale: this.locale,
               project: this.project,
@@ -441,7 +432,8 @@ export default {
           )
         })
         .then (result => {
-          console.log('loadProject:result: ' + JSON.stringify(result))
+          console.log('downloadProject:result: ' + JSON.stringify(result))
+          // *todo* !!!! rationalize this - jsonData only inside ok true...
           let jsonData
           if (result.ok) {
             jsonData = JSON.parse (result.msg) // error will throw for catch
@@ -465,7 +457,7 @@ export default {
           this.dbDisplay += ', saved: ' + result.ok
         })
         .catch(err => {
-          this.showError('loadProject', err)
+          this.showError('downloadProject', err)
         })
     },
     resolveConflicts: function () {
@@ -524,26 +516,33 @@ export default {
         })
     },
     saveProject: function () {
-      console.log('saveProject from: ' + this.locale + ':' + this.project)
+      console.log('saveProject in local db to: ' + this.locale + ':' + this.project)
 
       habitatDb.saveProjectObject (this.projectData)
         .then (result => {
           console.log('saveProject:result: ' + JSON.stringify(result))
-          if (result.updated) {
-            this.dbDisplay = 'Project save ok for : ' +
-              this.projectData.keys.name +
-              ', rev: ' + result.rev
-          } else {
+          if (!result.updated) {
             throw new Error (result.msg)
           }
+
+          // this next is CRUCIAL: we need the rev updated in the in-memory
+          // project after the save, to make conflict resolution operable,
+          // at any stage of its possibilities
+          this.projectData._rev = result.rev // that's the one.
+
+          return this.projectData // just to make the CRUCIAL point...
+        })
+        .then ((result) => {
+          this.dbDisplay = 'Project save ok for id: ' +
+            result._id + ', new rev: ' + result._rev
         })
         .catch(err => {
           this.showError('saveProject', err)
         })
     },
-    updateProject: function () {
-      let locForErrs = 'begin updateProject'
-      console.log('updateProject from local: ' + this.locale + ':' + this.project)
+    uploadProject: function () {
+      let locForErrs = 'begin uploadProject'
+      console.log('uploadProject from local: ' + this.locale + ':' + this.project)
 
       habitatCloud.assureRemoteLogin()
         .then(() => {
@@ -551,10 +550,10 @@ export default {
         })
         .then (() => {
           if(!this.projectData.keys) {
-            throw new Error ('Local Hardocs Project not present yet to replicate!')
+            throw new Error ('Local Hardocs Project not present yet to update from!')
           }
           locForErrs = 'update HabitatProject up to: ' + this.cloudDb
-          return habitatCloud.doRequest('updateHabitatProject',
+          return habitatCloud.doRequest('uploadProject',
             this.remoteUrl,
             {
               locale: this.locale,
@@ -567,7 +566,7 @@ export default {
           )
         })
       .then (result => {
-          console.log('updateProject:result: ' + JSON.stringify(result))
+          console.log('uploadProject:result: ' + JSON.stringify(result))
           // this.dbDisplay = 'up: ' + this.$htmlJson(result)
           if (result.ok) {
             this.dbDisplay = 'Project data successfully uploaded to Habitat Cloud, ' +
@@ -577,42 +576,7 @@ export default {
           }
         })
         .catch(err => {
-          this.showError('updateProject' + locForErrs, err)
-        })
-    },
-    replicateTestLocale: function () {
-      this.clearPanels()
-      const testLocale = 'test-locale'
-      const remoteLocale = 'https://hd.narrationsd.com/hard-api/' + testLocale
-      console.log('replicateTestProject projects from ' + testLocale + ' to ' + remoteLocale + '... ')
-
-      // *todo* look very carefully into consequences of both checkpoint settings below,
-      // but also the thing they save from, the odd nature of the 404 setting off CORS
-
-      let locForErrs = 'replicateTestProject'
-      habitatCloud.assureRemoteLogin(remoteLocale, {})
-        .then(() => {
-          locForErrs = 'replicateTestProject down from: ' + testLocale
-          // *todo* temporary replication control discovery next
-          const options = {
-            filter: 'locale-projects/onlyTheLonely'
-          }
-          return habitatDb.replicateDatabase(remoteLocale, testLocale, options)
-        })
-        .then(result => {
-          console.log('replicateTestProject:down:result: ' + JSON.stringify(result))
-          this.dbDisplay = 'down: ' + JSON.stringify(result)
-          locForErrs = 'replicateTestProject up to: ' + remoteLocale
-          return habitatDb.replicateDatabase(testLocale, remoteLocale)
-        })
-        .then(result => {
-          console.log('replicateTestProject:up:result: ' + JSON.stringify(result))
-          this.dbDisplay += ', up: ' + JSON.stringify(result)
-          this.opsDisplay = 'this is not real yet - not operating on a proper ' +
-            'Locale yet - ' + remoteLocale + ' db'
-        })
-        .catch(err => {
-          this.showError('replicateTestProject' + ': \n' + locForErrs, err)
+          this.showError('uploadProject' + locForErrs, err)
         })
     },
     createProject: function () {
@@ -635,7 +599,7 @@ export default {
           )
         })
         // .then (result => {
-        //   // *todo* replicateDb the initialized project down here??
+        //   // *todo* download the initialized project down here??
         // })
         // *todo* when implementing, can be not agent, or project already, or? better way needed
         .then(result => {
@@ -657,6 +621,9 @@ export default {
           ' isn\'t an agent, thus isn\'t permitted to delete Project...'
         return
       }
+
+      // *todo* !!! BE SURE to hold this off with an are-you-sure modal!!!
+
       console.log('app:delete project: ' + this.project +
         ', locale: ' + this.locale + ', identity: ' + this.loginIdentity)
       habitatCloud.assureRemoteLogin()
@@ -729,39 +696,6 @@ export default {
         })
         .catch(err => {
           this.showError('listRemoteProjects', err)
-        })
-    },
-    replicateDb: function () {
-      // *todo* this will soon be unavailable, kept just for pre-full-safety tests...
-      this.clearPanels()
-      let locForErrs = 'replicateDb'
-      console.log('replicateDb projects from ' + this.cloudDb + ' to ' + this.localDb + '... ')
-      // *todo* look very carefully into consequences of both checkpoint settings below,
-      // but also the thing they save from, the odd nature of the 404 setting off CORS
-      habitatCloud.assureRemoteLogin()
-        .then(() => {
-          locForErrs = 'replicateDb down from: ' + this.cloudDb
-          // *todo* temporary replication control discovery next
-          const options = {
-            filter: 'projects/onlyTheLonely'
-          }
-
-          return habitatDb.replicateDatabase(this.cloudDb, this.localDb, options)
-        })
-        .then(result => {
-          console.log('replicateDb:down:result: ' + JSON.stringify(result))
-          this.dbDisplay = 'down: ' + this.$htmlJson(result)
-          locForErrs = 'replicateDb up to: ' + this.cloudDb
-          return habitatDb.replicateDatabase(this.localDb, this.cloudDb)
-        })
-        .then(result => {
-          console.log('replicateDb:up:result: ' + JSON.stringify(result))
-          this.dbDisplay += ', up: ' + this.$htmlJson(result)
-          this.opsDisplay = 'this is not real yet - not operating on a proper ' +
-            'Locale yet - ' + this.cloudDb + ' db'
-        })
-        .catch(err => {
-          this.showError(this.localDb + ':' + locForErrs, err)
         })
     },
     initializeHabitat: function () {
