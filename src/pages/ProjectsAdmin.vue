@@ -37,20 +37,25 @@
             </label>
             <input v-model="locale" id="locale-name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
               leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="project-locale-name">
+            <p v-if="!localeExists" class="text-red-500 text-xs italic">Please choose a locale name (can have dashes, no colons).</p>
           </div>
           <div class="flex items-center justify-between">
-            <button @click="initializeHabitat" :style="createStyle" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <button @click="initializeHabitat" :style="warnOrGreyStyle" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
               Initialize Habitat
             </button>
-            <button @click="createLocale" :style="createStyle" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <button @click="createLocale" :style="warnOrGreyStyle" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
               Create Locale
             </button>
-            <button v-if="localeExists" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <button @click="deleteLocale" :style="warnOrGreyStyle" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
               Delete Locale
             </button>
+<!--            <button v-if="true ||localeExists" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+              focus:outline-none focus:shadow-outline" type="button">
+              Delete Locale
+            </button>-->
           </div>
         </form>
       </div>
@@ -75,20 +80,18 @@
           </div>
           <div class="flex items-center justify-between">
             <div v-if="projectExists">
-              <button @click="loadProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+              <!-- this is truly where delete goes -->
+              <button @click="deleteProject" :style="warnOrGreyStyle" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-                Load Project
-              </button>
-              <button @click="addProjectMember" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
-              focus:outline-none focus:shadow-outline" type="button">
-                Add Member
+                Delete Project
               </button>
             </div>
             <button v-else @click="createProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
               Create Project
             </button>
-            <button v-if="projectExists" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <!-- *todo* when we check exists...another Cloud ability tbd...delete moves to note above... -->
+            <button @click="deleteProject" :style="warnOrGreyStyle" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
               Delete Project
             </button>
@@ -146,12 +149,12 @@
           </div>
         </form>
         <div class="w-1/2 bg-gray-500 h-12 px-2 border-l-2 border-gray-600 h-full">
+          <!-- we don't need show-btns because v-model accomplishes instant save -->
           <vue-json-editor v-model="projectData"
                            :show-btns="false"
                            :expandedOnStart="true"
           >
           </vue-json-editor>
-          <!--        @json-change="onJsonChange"-->
         </div>
       </div>
     </div>
@@ -202,15 +205,18 @@ export default {
     this.preloadDummyProjectInfo()
   },
   computed: {
-    createStyle: function () {
+    warnOrGreyStyle: function () {
+    // *todo* this depends on what we decide about informing on the client, tbd
+    // *todo* very probably a direct r-u-permitted on the action cloud returned
+    // *todo* though actually hard-coded style may do it. But we have the ability...
       return this.isAgent
         ? {
           color: 'red !important',
-          opacity: '50%'
         }
         : {
-          color: 'yellow !important'
-        }
+          color: 'yellow !important',
+          opacity: '50%'
+       }
     }
   },
   methods: {
@@ -268,26 +274,58 @@ export default {
 
       console.log('create locale: ' + this.locale + ' via identity: ' + this.loginIdentity)
       habitatCloud.assureRemoteLogin()
-      .then (() => {
-        return habitatCloud.doRequest(
-          'createLocale',
-          this.remoteUrl,
-          { locale: this.locale } // identity check is properly in cloud
-        )
-      })
-      // .then (result => {
-      //   // *todo* replicateDb the initialized db down here??
-      // })
-      .then(result => {
-        if (result.ok) {
-          this.localeExists = true
-          this.dbDisplay = 'Locale ' + this.locale + ' created'
-        }
-        this.opsDisplay = result.msg
-      })
-      .catch(err => {
-        this.showError('createLocale', err.msg)
-      })
+        .then (() => {
+          return habitatCloud.doRequest(
+            'createLocale',
+            this.remoteUrl,
+            { locale: this.locale } // identity check is properly in cloud
+          )
+        })
+        // .then (result => {
+        //   // *todo* replicateDb the initialized db down here??
+        // })
+        .then(result => {
+          if (result.ok) {
+            this.localeExists = true
+            this.dbDisplay = 'Locale ' + this.locale + ' created'
+          }
+          this.opsDisplay = result.msg
+        })
+        .catch(err => {
+          this.showError('createLocale', err.msg)
+        })
+    },
+    deleteLocale: function () {
+      // *todo* better this is isPermitted of some kind, for example of  this
+      //  *todo* case may be superAgent. isPermitted could query the cloud auth now...
+      if (!this.isAgent) {
+        this.opsDisplay = 'Sorry, ' + this.loginIdentity +
+          ' isn\'t an agent, thus isn\'t permitted to delete Locales...'
+        return
+      }
+
+      console.log('delete locale: ' + this.locale + ' via identity: ' + this.loginIdentity)
+      habitatCloud.assureRemoteLogin()
+        .then (() => {
+          return habitatCloud.doRequest(
+            'deleteLocale',
+            this.remoteUrl,
+            { locale: this.locale } // identity check is properly in cloud
+          )
+        })
+        // .then (result => {
+        //   // *todo* replicateDb the initialized db down here??
+        // })
+        .then(result => {
+          if (result.ok) {
+            this.localeExists = true
+            this.dbDisplay = 'Locale ' + this.locale + ' deleted'
+          }
+          this.opsDisplay = result.msg
+        })
+        .catch(err => {
+          this.showError('deleteLocale', err.msg)
+        })
     },
     setUpForCloudActions: function () {
       habitatCloud.assureRemoteLogin()
@@ -326,37 +364,6 @@ export default {
       this.interactWithProjectForm = true
       this.projectData = { projectName: 'dummy', projectMeta: 'some meta'}
       this.setUpForCloudActions()
-    },
-    addProjectMember: function () { // *todo* think this goes out
-      this.clearPanels()
-      console.log('add project member - on the way')
-      habitatCloud.assureRemoteLogin()
-        .then(() => {
-            // .then(result => {
-            // *todo* see plan related
-            this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
-        })
-        .then (() => {
-          return  habitatCloud.doRequest('addProjectMember', this.remoteUrl,
-            {
-              locale: this.locale,
-              project: this.project,
-              member: this.projectMember
-            }
-          )
-        })
-        // habitatCloud.doRequest('getLoginIdentity, this.remoteUrl)
-        .then (result => {
-          this.loginIdentity = result.identity
-          return result.identity
-        })
-        .then(result => {
-          this.project = 'your-project'
-          this.dbDisplay = 'Project creation identity: ' + result
-        })
-        .catch(err => {
-          this.showError('adminProjects', err)
-        })
     },
     testSaveLocalProjects: function () {
       this.clearPanels()
@@ -643,6 +650,43 @@ export default {
           this.showError('createProject', err.msg)
         })
     },
+    deleteProject: function () {
+      // *todo* cloud will just indicate not implemented for now...
+      if (!this.isAgent) {
+        this.opsDisplay = 'Sorry, ' + this.loginIdentity +
+          ' isn\'t an agent, thus isn\'t permitted to delete Project...'
+        return
+      }
+      console.log('app:delete project: ' + this.project +
+        ', locale: ' + this.locale + ', identity: ' + this.loginIdentity)
+      habitatCloud.assureRemoteLogin()
+        .then (() => {
+          return habitatCloud.doRequest(
+            'deleteProject',
+            this.remoteUrl,
+            {  // identity check is properly in cloud
+              locale: this.locale,
+              project: this.project,
+            }
+          )
+        })
+        // .then (result => {
+        //   // *todo* delete the initialized project down here also...all identities
+        //   // *todo* this will be via habitatDb, so a separate call you must make
+        // })
+        // *todo* when implementing, can be not agent, or project already, or? better way needed
+        .then(result => {
+          if (result.ok) {
+            this.isAgent = true
+            // *todo* make these reactive, rather soon!
+            this.localeExists = true
+          }
+          this.opsDisplay = result.msg
+        })
+        .catch(err => {
+          this.showError('deleteProject', err.msg)
+        })
+    },
     listLocalProjects: function () {
       this.clearPanels()
       habitatDb.listLocaleProjects('hardLocale', this.localDb)
@@ -688,6 +732,7 @@ export default {
         })
     },
     replicateDb: function () {
+      // *todo* this will soon be unavailable, kept just for pre-full-safety tests...
       this.clearPanels()
       let locForErrs = 'replicateDb'
       console.log('replicateDb projects from ' + this.cloudDb + ' to ' + this.localDb + '... ')
@@ -744,7 +789,8 @@ export default {
           this.showError('initializeHabitat', err)
         })
     },
-    publishProject: function () { // *todo* in progress at this point
+    publishProject: function () {
+      // *todo* cloud will just indicate not implemented for now...
       this.clearPanels()
       const requestedStatus = false
       const locale = 'dummy Locale'
