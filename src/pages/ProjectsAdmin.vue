@@ -128,9 +128,9 @@
             </button>
           </div>
           <div class="flex items-center justify-around v-spaced">
-            <button @click="saveProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <button @click="saveProjectLocally" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Save Local Project
+              Save Project Locally
             </button>
             <button @click="uploadProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
@@ -140,7 +140,7 @@
           <div class="flex items-center justify-around v-spaced">
             <button @click="resolveConflicts" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Resolve Conflicts
+              Resolve any Conflicts on Cloud
             </button>
           </div>
         </form>
@@ -450,8 +450,7 @@ export default {
           return jsonData
         })
         .then (jsonData => {
-          // *todo* later no localDb, use default habitat-projectts to match cloud
-          return habitatDb.saveHabitatObject(jsonData, true, this.localDb)
+          return habitatDb.saveObjectNoEdit(jsonData, this.localDb)
         })
         .then (result => {
           this.dbDisplay += ', saved: ' + result.ok
@@ -502,33 +501,29 @@ export default {
           }
           return jsonData
         })
-        // *todo* NONO NO this during development, work out what if any to do with local db
-        // we should probably write it back, but when we get an actual object...
-        // .then (jsonData => {
-        //   // *todo* later no localDb, use default habitat-projectts to match cloud
-        //   return habitatDb.saveHabitatObject(jsonData, true, this.localDb)
-        // })
-        // .then (result => {
-        //   this.dbDisplay += ', saved: ' + result.ok
-        // })
         .catch(err => {
           this.showError('resolveConflicts', err)
         })
     },
-    saveProject: function () {
-      console.log('saveProject in local db to: ' + this.locale + ':' + this.project)
+    saveProjectLocally: function () {
+      console.log('saveProjectLocally in local db to: ' + this.locale + ':' + this.project)
 
-      habitatDb.saveProjectObject (this.projectData)
+      habitatDb.saveProjectObject (this.projectData, this.localDb)
         .then (result => {
-          console.log('saveProject:result: ' + JSON.stringify(result))
+          console.log('saveProjectLocally:result: ' + JSON.stringify(result))
           if (!result.updated) {
             throw new Error (result.msg)
           }
 
-          // this next is CRUCIAL: we need the rev updated in the in-memory
-          // project after the save, to make conflict resolution operable,
-          // at any stage of its possibilities
+          // these next two assigns are CRUCIAL: we need the rev _and_ the timestamp
+          // updated to the in-memory projectData after the save, to make
+          // conflict resolution operable, for any stage of its possibilities
+
           this.projectData._rev = result.rev // that's the one.
+          this.projectData.timestamp = result.timestamp
+          // n.b. I tried various means to encapsulate these, but
+          // the nature of Vuejs hidden reactivness prevented all.
+          // So just be Sure you do the assigns, to use saveProjectData()...
 
           return this.projectData // just to make the CRUCIAL point...
         })
@@ -537,7 +532,7 @@ export default {
             result._id + ', new rev: ' + result._rev
         })
         .catch(err => {
-          this.showError('saveProject', err)
+          this.showError('saveProjectLocally', err)
         })
     },
     uploadProject: function () {
@@ -827,8 +822,8 @@ export default {
       // an essential, so we don't need to know which form comes
       // if it's not an Error, it's string or JSON
       // we ourselves always throe Errors, but libraries...
-      err = err instanceof Error ? err.message : JSON.stringify(err)
-      const msg = `Error:  ${action}: ` + err
+      const error = err instanceof Error ? err.stack : JSON.stringify(err)
+      const msg = `Error:  ${action}: ` + error
       this.opsDisplay = msg
       console.log(msg)
     },
