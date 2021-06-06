@@ -262,6 +262,7 @@ export default {
       this.setUpForCloudActions()
     },
     createLocale: function () {
+      this.clearDisplays()
       if (!this.isAgent) {
         this.opsDisplay = 'Sorry, ' + this.loginIdentity +
           ' isn\'t an agent, thus isn\'t permitted to create Locales...'
@@ -289,6 +290,7 @@ export default {
         })
     },
     deleteLocale: function () {
+      this.clearDisplays()
       // *todo* better this is isPermitted of some kind, for example of  this
       //  *todo* case may be superAgent. isPermitted could query the cloud auth now...
       if (!this.isAgent) {
@@ -356,33 +358,8 @@ export default {
       this.projectData = { projectName: 'dummy', projectMeta: 'some meta'}
       this.setUpForCloudActions()
     },
-    testSaveLocalProjects: function () {
-      this.clearPanels()
-      console.log('testSaveLocalProjects:remoteDb: ' +  this.cloudDb)
-      this.testSaveProjectsForm = true
-      habitatCloud.assureRemoteLogin()
-        .then(() => {
-            // .then(result => {
-            // *todo* see plan related
-            this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
-        })
-        .then (() => {
-          return  habitatCloud.doRequest('getLoginIdentity', this.remoteUrl)
-        })
-        // habitatCloud.doRequest('getLoginIdentity, this.remoteUrl)
-        .then (result => {
-          this.loginIdentity = result.identity
-          return result.identity
-        })
-        .then(result => {
-          this.project = 'your-project'
-          this.dbDisplay = 'Project creation identity: ' + result
-        })
-        .catch(err => {
-          this.showError('adminProjects', err)
-        })
-    },
     readLocalProject: function () {
+      this.clearDisplays()
       console.log('readLocalProject from: ' + this.locale + ':' + this.project)
 
       // local, but we need this to have the identity...
@@ -392,29 +369,24 @@ export default {
         })
         .then (result => {
           console.log('readLocalProject:result: ' + JSON.stringify(result))
-          let jsonData
           if (result.ok) {
-            jsonData = JSON.parse (result.msg) // error will throw for catch
-            console.log ('jsonData: ' + JSON.stringify(jsonData))
-            this.projectData = jsonData
+            this.projectData = JSON.parse (result.msg) // error will throw for catch
             console.log ('projectData: ' + JSON.stringify(this.projectData))
-            const msg = 'Project dataObject ok for : ' + this.projectData.keys.name
-            console.log(msg)
-            this.dbDisplay = msg
           } else {
             this.projectData = {}
             throw new Error (result.msg)
           }
-          return jsonData
+          return this.projectData
         })
         .then (result => {
-          this.dbDisplay += ', saved: ' + result.ok
+          this.dbDisplay = 'OK - local Project read for: ' + result._id
         })
         .catch(err => {
           this.showError('readLocalProject', err)
         })
     },
     downloadProject: function () {
+      this.clearDisplays()
       console.log('cloud downloadProject from: ' + this.locale + ':' + this.project)
 
       habitatCloud.assureRemoteLogin()
@@ -432,25 +404,20 @@ export default {
           )
         })
         .then (result => {
-          console.log('downloadProject:result: ' + JSON.stringify(result))
-          // *todo* !!!! rationalize this - jsonData only inside ok true...
-          let jsonData
+          // console.log('downloadProject:result: ' + JSON.stringify(result))
           if (result.ok) {
-            jsonData = JSON.parse (result.msg) // error will throw for catch
-            console.log ('jsonData: ' + JSON.stringify(jsonData))
-            this.projectData = jsonData
-            console.log ('projectData: ' + JSON.stringify(this.projectData))
-            const msg = 'Project dataObject ok for : ' + this.projectData.keys.name
-            console.log(msg)
+            this.projectData = JSON.parse (result.msg) // error will throw for catch
+            const msg = 'Ok - Project loaded from Habitat Cloud for : ' + this.projectData._id
+            // console.log(msg)
             this.dbDisplay = msg
           } else {
             this.projectData = {}
             throw new Error (result.msg)
           }
-          return jsonData
+          return this.projectData
         })
-        .then (jsonData => {
-          return habitatDb.saveObjectNoEdit(jsonData, this.localDb)
+        .then (projectData => {
+          return habitatDb.saveObjectNoEdit(projectData, this.localDb)
         })
         .then (result => {
           this.dbDisplay += ', saved: ' + result.ok
@@ -460,6 +427,7 @@ export default {
         })
     },
     resolveConflicts: function () {
+      this.clearDisplays()
       console.log('cloud resolveConflicts from: ' + this.locale + ':' + this.project)
 
       habitatCloud.assureRemoteLogin()
@@ -471,8 +439,11 @@ export default {
             {
               locale: this.locale,
               project: this.project,
-              identity: 'no identities now',
-              options: { conflicts: true, resolveMode: 'latest' }
+              identity: this.identity,
+              options: {
+                resolveMode: 'latestWins',
+                // we may have other options in future
+              }
             }
           )
         })
@@ -481,18 +452,20 @@ export default {
           let jsonData
           let msg
           if (result.ok) {
-            try {
-              // this is anticipating we sent the total winner back
-              // better than requiring another get on its new _id
-              jsonData = JSON.parse (result.msg)
-              console.log ('jsonData: ' + JSON.stringify(jsonData))
-              this.projectData = jsonData
-              console.log ('projectData: ' + JSON.stringify(this.projectData))
-              msg = 'Project dataObject ok for : ' + this.projectData.keys.name
-            } catch (err) {
-              // it was actually a string message
-              msg = 'Resolved ok: ' + result.msg
-            }
+            // We send the total winner back and here update it in editor; seems
+            // better than requiring another get for it, manually or automatically
+            // if they didn't like this, they can read what they have from local
+            // *todo* actually, though, there are real use questions here.
+            // *todo* to be discussed, but maybe not write back (or clear on error
+            // *todo* as below), let them decide if they want to pull the winner.
+            // *todo* It's complicated...truly. Remember there would be a save
+            // *todo* involved, either way we do it. And not an automatic save,
+            // *todo* either:  we don't want to over-write their local db. One
+            // *todo* more thing is how this aligns with on-disk file data.
+            // *todo* Answer: carefully discuss, till we see a solid way.
+            this.projectData = JSON.parse (result.msg) // unexpected errors caught below
+            console.log ('projectData: ' + JSON.stringify(this.projectData))
+            msg = 'Ok - projectData conflicts resolved and loaded, for : ' + this.projectData._id
             console.log(msg)
             this.dbDisplay = msg
           } else {
@@ -506,6 +479,7 @@ export default {
         })
     },
     saveProjectLocally: function () {
+      this.clearDisplays()
       console.log('saveProjectLocally in local db to: ' + this.locale + ':' + this.project)
 
       habitatDb.saveProjectObject (this.projectData, this.localDb)
@@ -528,7 +502,7 @@ export default {
           return this.projectData // just to make the CRUCIAL point...
         })
         .then ((result) => {
-          this.dbDisplay = 'Project save ok for id: ' +
+          this.dbDisplay = 'Ok - Project saved locally for id: ' +
             result._id + ', new rev: ' + result._rev
         })
         .catch(err => {
@@ -536,7 +510,8 @@ export default {
         })
     },
     uploadProject: function () {
-      let locForErrs = 'begin uploadProject'
+      this.clearDisplays()
+      let step = 'begin uploadProject'
       console.log('uploadProject from local: ' + this.locale + ':' + this.project)
 
       habitatCloud.assureRemoteLogin()
@@ -547,14 +522,12 @@ export default {
           if(!this.projectData.keys) {
             throw new Error ('Local Hardocs Project not present yet to update from!')
           }
-          locForErrs = 'update HabitatProject up to: ' + this.cloudDb
+          step = 'update HabitatProject up to: ' + this.cloudDb
           return habitatCloud.doRequest('uploadProject',
             this.remoteUrl,
             {
               locale: this.locale,
               project: this.project,
-              // *todo* !!!! settle this question - bootstraps, really
-              identity: 'not doing identities, or are we...',
               projectData: this.projectData,
               options: {} // cloud will handle the primary itself
             }
@@ -564,17 +537,18 @@ export default {
           console.log('uploadProject:result: ' + JSON.stringify(result))
           // this.dbDisplay = 'up: ' + this.$htmlJson(result)
           if (result.ok) {
-            this.dbDisplay = 'Project data successfully uploaded to Habitat Cloud, ' +
+            this.dbDisplay = 'Ok - Project successfully uploaded to Habitat Cloud, ' +
               ' for : ' + this.projectData._id
           } else {
-            throw new Error (locForErrs + ':' + result.msg)
+            throw new Error (step + ':' + result.msg)
           }
         })
         .catch(err => {
-          this.showError('uploadProject' + locForErrs, err)
+          this.showError('uploadProject' + step, err)
         })
     },
     createProject: function () {
+      this.clearDisplays()
       if (!this.isAgent) {
         this.opsDisplay = 'Sorry, ' + this.loginIdentity +
           ' isn\'t an agent, thus isn\'t permitted to create Project...'
@@ -587,20 +561,18 @@ export default {
           return habitatCloud.doRequest(
             'createProject',
             this.remoteUrl,
-            {  // identity check is properly in cloud
+            {  // actual securely validated identity required, and properly done in cloud
               locale: this.locale,
               project: this.project,
             }
           )
         })
-        // .then (result => {
-        //   // *todo* download the initialized project down here??
-        // })
-        // *todo* when implementing, can be not agent, or project already, or? better way needed
         .then(result => {
+          // *todo* another .then to download the initialized project to local here??
+          // *todo* if implementing, can be not agent, or project already, or? better way needed
           if (result.ok) {
             this.isAgent = true
-            // *todo* make these reactive, rather soon!
+            // *todo* any reactivity question, either of these here?
             this.localeExists = true
           }
           this.opsDisplay = result.msg
@@ -610,6 +582,7 @@ export default {
         })
     },
     deleteProject: function () {
+      this.clearDisplays()
       // *todo* cloud will just indicate not implemented for now...
       if (!this.isAgent) {
         this.opsDisplay = 'Sorry, ' + this.loginIdentity +
@@ -694,7 +667,7 @@ export default {
         })
     },
     initializeHabitat: function () {
-      // this.clearPanels()
+      this.clearDisplays()
       console.log('initializing Habitat...')
 
       habitatCloud.assureRemoteLogin()
@@ -720,7 +693,7 @@ export default {
     },
     publishProject: function () {
       // *todo* cloud will just indicate not implemented for now...
-      this.clearPanels()
+      this.clearDisplays()
       const requestedStatus = false
       const locale = 'dummy Locale'
       const project = 'dummy Project'
@@ -827,13 +800,17 @@ export default {
       this.opsDisplay = msg
       console.log(msg)
     },
-    clearPanels: function () {
-      console.log ('clearPanels')
+    clearDisplays: function () {
+      console.log ('clearDisplayss')
       this.opsDisplay = ''
       this.dbDisplay = ''
+    },
+    clearPanels: function () {
+      console.log ('clearPanels')
       this.adminLocaleForm = false
       this.adminProjectsForm = false
       this.interactWithProjectForm = false
+      this.clearDisplays()
     },
     preloadDummyProjectInfo: function (marker) {
       // *todo* for the moment, this is dummy data. Soon we'll add it normally, then find with view
