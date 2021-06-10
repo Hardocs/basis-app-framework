@@ -101,26 +101,26 @@
     </div>
     <div v-if="interactWithProjectForm">
       <div class="flex mb-4 h-full">
-<!--        <div class="w-full max-w-xs">-->
         <form class="w-1/2 bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-          <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="our-locale">
-              Locale
+          <div class="flex mb-4 end row">
+            <label class="label-spacing block text-gray-700 text-sm font-bold mb-2" for="our-locale">
+              Locale:
             </label>
-            <input v-model="locale" id="our-locale" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
+            <input v-model="locale" id="our-locale" class="flex shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
               leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="locale-identity">
           </div>
-          <div class="mb-6">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="project">
-              Project
+          <div class="flex mb-6 row">
+            <label class="label-spacing block text-gray-700 text-sm font-bold mb-2" for="project">
+              Project:
             </label>
             <input v-model="project" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
               leading-tight focus:outline-none focus:shadow-outline" type="text" id="project" placeholder="project-name">
           </div>
+          <p class="v-spaced-below">normal operations:</p>
           <div class="flex items-center justify-around">
-            <button @click="downloadProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <button @click="loadCloudProjectLatest" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Load Cloud Project
+              Load Latest Cloud Project
             </button>
             <button @click="readLocalProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
@@ -137,10 +137,11 @@
               Update to Cloud
             </button>
           </div>
+          <p class="v-spaced">resolve validation only:</p>
           <div class="flex items-center justify-around v-spaced">
-            <button @click="resolveConflicts" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <button @click="loadUnresolvedCloudProject" class="xbtn-limit bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Resolve any Conflicts on Cloud
+              Load from Cloud without Resolve
             </button>
           </div>
         </form>
@@ -385,28 +386,28 @@ export default {
           this.showError('readLocalProject', err)
         })
     },
-    downloadProject: function () {
+    loadCloudProjectLatest: function () {
       this.clearDisplays()
-      console.log('cloud downloadProject from: ' + this.locale + ':' + this.project)
+      console.log('cloud loadProjectLatest from: ' + this.locale + ':' + this.project)
 
       habitatCloud.assureRemoteLogin()
         .then(() => {
           this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
         })
         .then (() => {
-          return  habitatCloud.doRequest('downloadProject', this.remoteUrl,
+          return  habitatCloud.doRequest('loadProjectResolve', this.remoteUrl,
             {
               locale: this.locale,
               project: this.project,
-              identity: 'no identities now',
-              options: { conflicts: true }
+              identity: this.identity,
+              options: { resolveMode: 'latestWins' }
             }
           )
         })
         .then (result => {
-          // console.log('downloadProject:result: ' + JSON.stringify(result))
+          console.log('loadProjectLatest:result: ' + JSON.stringify(result))
           if (result.ok) {
-            this.projectData = JSON.parse (result.msg) // error will throw for catch
+            this.projectData = result.data // JSON.parse (result.data) // error will throw for catch
             const msg = 'Ok - Project loaded from Habitat Cloud for : ' + this.projectData._id
             // console.log(msg)
             this.dbDisplay = msg
@@ -423,7 +424,49 @@ export default {
           this.dbDisplay += ', saved: ' + result.ok
         })
         .catch(err => {
-          this.showError('downloadProject', err)
+          this.showError('loadProjectLatest', err)
+        })
+    },
+    loadUnresolvedCloudProject: function () {
+      this.clearDisplays()
+      console.log('cloud loadUnresolvedCloudProject from: ' + this.locale + ':' + this.project)
+
+      habitatCloud.assureRemoteLogin()
+        .then(() => {
+          this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
+        })
+        .then (() => {
+          return  habitatCloud.doRequest('loadProjectUnresolved', this.remoteUrl,
+            {
+              locale: this.locale,
+              project: this.project,
+              identity: 'no identities now',
+              options: { conflicts: true }
+            }
+          )
+        })
+        .then (result => {
+          // console.log('loadProjectLatest:result: ' + JSON.stringify(result))
+          if (result.ok) {
+            console.log (result.msg)
+            this.projectData = result.data
+            const msg = 'Ok - Project loaded without resolve from Habitat Cloud for : ' + this.projectData._id
+            // console.log(msg)
+            this.dbDisplay = msg
+          } else {
+            this.projectData = {}
+            throw new Error (result.msg)
+          }
+          return this.projectData
+        })
+        .then (projectData => {
+          return habitatDb.saveObjectNoEdit(projectData, this.localDb)
+        })
+        .then (result => {
+          this.dbDisplay += ', saved: ' + result.ok
+        })
+        .catch(err => {
+          this.showError('loadProjectLatest', err)
         })
     },
     resolveConflicts: function () {
@@ -463,7 +506,7 @@ export default {
             // *todo* either:  we don't want to over-write their local db. One
             // *todo* more thing is how this aligns with on-disk file data.
             // *todo* Answer: carefully discuss, till we see a solid way.
-            this.projectData = JSON.parse (result.msg) // unexpected errors caught below
+            this.projectData = result.data // unexpected errors caught below
             console.log ('projectData: ' + JSON.stringify(this.projectData))
             msg = 'Ok - projectData conflicts resolved and loaded, for : ' + this.projectData._id
             console.log(msg)
@@ -877,8 +920,24 @@ body {
 
 }
 
+.btn-limit {
+  max-width: 220px;
+}
+
 .v-spaced {
   margin-top: 1em;
+}
+
+.v-spaced-below {
+  margin-bottom: 1em;
+}
+
+.rule-spacing {
+  margin-top: 24px;
+}
+
+.label-spacing {
+  margin: 10px;
 }
 
 .bg-title {
