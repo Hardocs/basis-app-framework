@@ -406,18 +406,14 @@ export default {
         })
         .then (result => {
           console.log('loadProjectLatest:result: ' + JSON.stringify(result))
-          if (result.ok) {
-            this.projectData = result.data // JSON.parse (result.data) // error will throw for catch
-            const msg = 'Ok - Project loaded from Habitat Cloud for : ' + this.projectData._id
-            // console.log(msg)
-            this.dbDisplay = msg
-          } else {
-            this.projectData = {}
-            throw new Error (result.msg)
-          }
+          this.projectData = result.data
+          const msg = 'Ok - Project loaded from Habitat Cloud for : ' + this.projectData._id
+          this.dbDisplay = msg
           return this.projectData
         })
         .then (projectData => {
+          // save always to local db -- it's the requested project,
+          // and the completion of our CouchDB-compatible but non-replicating design
           return habitatDb.saveObjectNoEdit(projectData, this.localDb)
         })
         .then (result => {
@@ -446,79 +442,24 @@ export default {
           )
         })
         .then (result => {
-          // console.log('loadProjectLatest:result: ' + JSON.stringify(result))
-          if (result.ok) {
-            console.log (result.msg)
-            this.projectData = result.data
-            const msg = 'Ok - Project loaded without resolve from Habitat Cloud for : ' + this.projectData._id
-            // console.log(msg)
-            this.dbDisplay = msg
-          } else {
-            this.projectData = {}
-            throw new Error (result.msg)
-          }
+          console.log (result.msg)
+          this.projectData = result.data
+          const msg = 'Ok - Project loaded without resolve from Habitat Cloud for : ' + this.projectData._id
+          this.dbDisplay = msg
           return this.projectData
         })
         .then (projectData => {
+          // we need to save the result to the local db, *without* changing the rev
+          // this is the other half of our use of the standard CouchDB pattern,
+          // where we would not do a replication for both activity and security reasons
           return habitatDb.saveObjectNoEdit(projectData, this.localDb)
         })
         .then (result => {
           this.dbDisplay += ', saved: ' + result.ok
         })
         .catch(err => {
+          this.projectData = { no: 'data' }
           this.showError('loadProjectLatest', err)
-        })
-    },
-    resolveConflicts: function () {
-      this.clearDisplays()
-      console.log('cloud resolveConflicts from: ' + this.locale + ':' + this.project)
-
-      habitatCloud.assureRemoteLogin()
-        .then(() => {
-          this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
-        })
-        .then (() => {
-          return  habitatCloud.doRequest('resolveConflicts', this.remoteUrl,
-            {
-              locale: this.locale,
-              project: this.project,
-              identity: this.identity,
-              options: {
-                resolveMode: 'latestWins',
-                // we may have other options in future
-              }
-            }
-          )
-        })
-        .then (result => {
-          console.log('resolveConflicts:result: ' + JSON.stringify(result))
-          let jsonData
-          let msg
-          if (result.ok) {
-            // We send the total winner back and here update it in editor; seems
-            // better than requiring another get for it, manually or automatically
-            // if they didn't like this, they can read what they have from local
-            // *todo* actually, though, there are real use questions here.
-            // *todo* to be discussed, but maybe not write back (or clear on error
-            // *todo* as below), let them decide if they want to pull the winner.
-            // *todo* It's complicated...truly. Remember there would be a save
-            // *todo* involved, either way we do it. And not an automatic save,
-            // *todo* either:  we don't want to over-write their local db. One
-            // *todo* more thing is how this aligns with on-disk file data.
-            // *todo* Answer: carefully discuss, till we see a solid way.
-            this.projectData = result.data // unexpected errors caught below
-            console.log ('projectData: ' + JSON.stringify(this.projectData))
-            msg = 'Ok - projectData conflicts resolved and loaded, for : ' + this.projectData._id
-            console.log(msg)
-            this.dbDisplay = msg
-          } else {
-            this.projectData = {}
-            throw new Error (result.msg)
-          }
-          return jsonData
-        })
-        .catch(err => {
-          this.showError('resolveConflicts', err)
         })
     },
     saveProjectLocally: function () {
@@ -536,11 +477,15 @@ export default {
           // updated to the in-memory projectData after the save, to make
           // conflict resolution operable, for any stage of its possibilities
 
-          this.projectData._rev = result.rev // that's the one.
-          this.projectData.timestamp = result.timestamp
-          // n.b. I tried various means to encapsulate these, but
-          // the nature of Vuejs hidden reactivness prevented all.
-          // So just be Sure you do the assigns, to use saveProjectData()...
+          this.projectData._rev = result.rev // critical
+          this.projectData.timestamp = result.timestamp // critical also
+
+          // n.b. I tried various means to encapsulate these,
+          // so app devs wouldn't have to handle them, but
+          // the nature of Vuejs hidden reactiveness prevented all.
+          // So just be Sure you do these assigns, to use saveProjectData()...
+          // It's critical because the cloud needs to see the new revision
+          // as well as the timestamp, to enable our actual conflict resolution.
 
           return this.projectData // just to make the CRUCIAL point...
         })
@@ -702,8 +647,7 @@ export default {
         .then(result => {
           console.log('listRemoteProjects: ' + JSON.stringify(result))
           this.dbDisplay = this.$htmlJson(result)
-          this.opsDisplay = 'this is not real yet - just listing any records ' +
-            'locale can reach - ' +  this.cloudDb + ' db'
+          this.opsDisplay = 'this is not available at present - revising for indirect api: ' + this.cloudDb + ' db'
         })
         .catch(err => {
           this.showError('listRemoteProjects', err)
