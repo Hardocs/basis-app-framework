@@ -55,11 +55,6 @@ export default {
           type: 'local'
         },
         {
-          path: "/hardocs-db",
-          label: "Hardocs Db In-Out",
-          type: 'local'
-        },
-        {
           path: "/docs-trans",
           label: "Translate Files",
           type: 'local'
@@ -70,8 +65,9 @@ export default {
           type: 'local'
         },
         {
-          // path: "https://www.google.com/search?q=oceanic&source=lnms&tbm=isch",
-          path: "https://hd.narrationsd.com/hard-api/_utils",
+          path: "https://www.google.com/search?q=oceanic&source=lnms&tbm=isch",
+          // this extra is only usable if you were the superAdmin - locked up solid now
+          // path: "https://hd.narrationsd.com/hard-api/_utils",
           label: "Other site",
           type: 'remote'
         },

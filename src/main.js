@@ -8,7 +8,6 @@ dotEnv.config()
 import App from '@/App.vue'
 import Home from '@/pages/Home'
 import MasterDetail from '@/pages/MasterDetail'
-import HardocsDb from '@/pages/HardocsDb';
 import DocsTrans from '@/pages/DocsTrans'
 import ProjectsAdmin from '@/pages/ProjectsAdmin'
 import Documentation from '@/pages/Documentation'
@@ -25,8 +24,6 @@ Vue.use(AdminHelpers)
 const router = new VueRouter({
   routes: [
     { path: '/', component: Home, props: { appVersion: process.env.HD_APP_VERSION } },
-    { path: '/master-detail', component: MasterDetail },
-    { path: '/hardocs-db', component: HardocsDb },
     { path: '/master-detail', component: MasterDetail },
     { path: '/docs-trans', component: DocsTrans },
     { path: '/projects-admin', component: ProjectsAdmin },

@@ -332,7 +332,12 @@ export default {
           return habitatCloud.doRequest('getLoginIdentity', this.remoteUrl)
         })
         .then(result => {
-          console.log('C - identity: ' + JSON.stringify(result))
+          // *todo* this is all wrong at present: we determine authorization only
+          // *todo* on the server, and will tell it from there. Identity is available
+          // *todo* in future call for use here, but is hard-determined on server
+          // *todo* for ids and commands, so that no forgery is possible. No matter
+          // *todo* what is tried, your db-affecting data like keys will always be you.
+          console.log('identity: ' + JSON.stringify(result))
           this.loginIdentity = result.identity
           this.isAgent = this.checkRole('agent')
           console.log('id: ' + this.loginIdentity + ', is agent: ' + this.isAgent)
@@ -712,7 +717,7 @@ export default {
       // const query = 'query { projects(locale: "NSD") { locale project description metadata docs { title content } } }'
       // const query = 'query { project(locale: "NSD", project: "Habitat HD Client") { locale project description metadata docs { title content } } }'
       const query = 'query { projects(locale: "NSD") { locale project description metadata docs { title content } } }'
-      // queries below for actual db
+      // queries below tests for actual db with test project
       // const query = 'query { projects(locale: "delft-lab01") { locale project description metadata docs { title content } } }'
       // const query = 'query { project(locale: "delft-lab01", project: "your-project") { locale project description } }'
       // const query = 'query { project(locale: "delft-lab01", project: "your-project") { _id keys { locale name identity }  locale project description } }'
@@ -788,7 +793,7 @@ export default {
       console.log(msg)
     },
     clearDisplays: function () {
-      console.log ('clearDisplayss')
+      console.log ('clearDisplays')
       this.opsDisplay = ''
       this.dbDisplay = ''
     },
