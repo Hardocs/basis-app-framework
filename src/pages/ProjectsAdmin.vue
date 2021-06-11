@@ -471,32 +471,28 @@ export default {
       this.clearDisplays()
       console.log('saveProjectLocally in local db to: ' + this.locale + ':' + this.project)
 
-      habitatDb.saveProjectObject (this.projectData, this.localDb)
+      // you MUST have this local method and use it in the call,
+      // in the updateProject.bind(this) form, as the example shows
+
+      function updateProject (result) {
+        // these two assigns are CRUCIAL: we need the rev _and_ the timestamp
+        // updated to the in-memory projectData after the save, to make
+        // conflict resolution operable, for any stage of its possibilities
+
+        this.projectData._rev = result.rev // critical
+        this.projectData.timestamp = result.timestamp // critical also
+
+        // n.b. the result at this point uses id and rev, not _id and _rev
+      }
+
+      habitatDb.saveProjectObject (
+        this.projectData,
+          updateProject.bind(this),  // always with the .bind(this)
+          this.localDb)
         .then (result => {
           console.log('saveProjectLocally:result: ' + JSON.stringify(result))
-          if (!result.updated) {
-            throw new Error (result.msg)
-          }
-
-          // these next two assigns are CRUCIAL: we need the rev _and_ the timestamp
-          // updated to the in-memory projectData after the save, to make
-          // conflict resolution operable, for any stage of its possibilities
-
-          this.projectData._rev = result.rev // critical
-          this.projectData.timestamp = result.timestamp // critical also
-
-          // n.b. I tried various means to encapsulate these,
-          // so app devs wouldn't have to handle them, but
-          // the nature of Vuejs hidden reactiveness prevented all.
-          // So just be Sure you do these assigns, to use saveProjectData()...
-          // It's critical because the cloud needs to see the new revision
-          // as well as the timestamp, to enable our actual conflict resolution.
-
-          return this.projectData // just to make the CRUCIAL point...
-        })
-        .then ((result) => {
-          this.dbDisplay = 'Ok - Project saved locally for id: ' +
-            result._id + ', new rev: ' + result._rev
+          this.dbDisplay = 'Ok - ' + result.msg + ', for id: ' +
+            result.data.id + ', new rev: ' + result.data.rev
         })
         .catch(err => {
           this.showError('saveProjectLocally', err)
