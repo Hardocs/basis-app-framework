@@ -9,7 +9,7 @@
       v-on:adminLocale="adminLocale"
       v-on:adminProjects="adminProjects"
       v-on:interactWithProject="interactWithProject"
-      v-on:uploadProject="uploadProject"
+      v-on:updateProjectToCloud="updateProjectToCloud"
       v-on:listLocalProjects="listLocalProjects"
       v-on:listRemoteProjects="listRemoteProjects"
       v-on:clearLocalProjects="clearLocalProjects"
@@ -122,19 +122,19 @@
               focus:outline-none focus:shadow-outline" type="button">
               Load Latest Cloud Project
             </button>
-            <button @click="readLocalProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <button @click="loadLocalProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Read Local Project
+              Load Local Project
             </button>
           </div>
           <div class="flex items-center justify-around v-spaced">
-            <button @click="saveProjectLocally" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <button @click="storeProjectLocally" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Save Project Locally
+              Store Project Locally
             </button>
-            <button @click="uploadProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <button @click="updateProjectToCloud" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Update to Cloud
+              Update Project to Cloud
             </button>
           </div>
           <p class="v-spaced">resolve validation only:</p>
@@ -364,31 +364,19 @@ export default {
       this.projectData = { projectName: 'dummy', projectMeta: 'some meta'}
       this.setUpForCloudActions()
     },
-    readLocalProject: function () {
+    loadLocalProject: function () {
       this.clearDisplays()
-      console.log('readLocalProject from: ' + this.locale + ':' + this.project)
+      console.log('loadLocalProject from: ' + this.locale + ':' + this.project)
 
-      // local, but we need this to have the identity...
-      habitatCloud.assureRemoteLogin()
-        .then(() => {
-          return habitatDb.readLocalProjectObject(this.locale, this.project, this.loginIdentity)
-        })
+      habitatDb.loadProjectObject(this.locale, this.project, this.loginIdentity)
         .then (result => {
-          console.log('readLocalProject:result: ' + JSON.stringify(result))
-          if (result.ok) {
-            this.projectData = JSON.parse (result.msg) // error will throw for catch
-            console.log ('projectData: ' + JSON.stringify(this.projectData))
-          } else {
-            this.projectData = {}
-            throw new Error (result.msg)
-          }
-          return this.projectData
-        })
-        .then (result => {
-          this.dbDisplay = 'OK - local Project read for: ' + result._id
+          console.log('loadLocalProject:result: ' + JSON.stringify(result))
+          this.projectData = result.data // error will throw for catch
+          this.dbDisplay = 'OK - ' + result.msg + ' locally, '
+          this.opsDisplay = 'for: ' + result.data._id
         })
         .catch(err => {
-          this.showError('readLocalProject', err)
+          this.showError('loadLocalProject', err)
         })
     },
     loadCloudProjectLatest: function () {
@@ -397,9 +385,6 @@ export default {
 
       habitatCloud.assureRemoteLogin()
         .then(() => {
-          this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
-        })
-        .then (() => {
           return  habitatCloud.doRequest('loadProjectResolve', this.remoteUrl,
             {
               locale: this.locale,
@@ -412,17 +397,17 @@ export default {
         .then (result => {
           console.log('loadProjectLatest:result: ' + JSON.stringify(result))
           this.projectData = result.data
-          const msg = 'Ok - Project loaded from Habitat Cloud for : ' + this.projectData._id
+          const msg = 'Ok - ' + result.msg + ', for : ' + this.projectData._id
           this.dbDisplay = msg
-          return this.projectData
-        })
-        .then (projectData => {
-          // save always to local db -- it's the requested project,
-          // and the completion of our CouchDB-compatible but non-replicating design
-          return habitatDb.saveObjectNoEdit(projectData, this.localDb)
+
+          // always store project to local db -- it's the completion of request,
+          // keeping all current, using a call which does _not_ update the rev, thus
+          // the pattern of our CouchDB-compatible, necessarily sans-replication design
+
+          return habitatDb.storeProjectObjectSameRev(this.projectData, this.localDb)
         })
         .then (result => {
-          this.dbDisplay += ', saved: ' + result.ok
+          this.opsDisplay = result.msg + ' locally '
         })
         .catch(err => {
           this.showError('loadProjectLatest', err)
@@ -434,9 +419,6 @@ export default {
 
       habitatCloud.assureRemoteLogin()
         .then(() => {
-          this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
-        })
-        .then (() => {
           return  habitatCloud.doRequest('loadProjectUnresolved', this.remoteUrl,
             {
               locale: this.locale,
@@ -449,27 +431,27 @@ export default {
         .then (result => {
           console.log (result.msg)
           this.projectData = result.data
-          const msg = 'Ok - Project loaded without resolve from Habitat Cloud for : ' + this.projectData._id
+          const msg = 'Ok - ' + result.msg + ', from Habitat Cloud for : ' + this.projectData._id
           this.dbDisplay = msg
           return this.projectData
         })
         .then (projectData => {
-          // we need to save the result to the local db, *without* changing the rev
-          // this is the other half of our use of the standard CouchDB pattern,
-          // where we would not do a replication for both activity and security reasons
-          return habitatDb.saveObjectNoEdit(projectData, this.localDb)
+          // we need to save the result to the local db, *without* changing the rev.
+          // this is to make visible why we do the other half of our conflict-reaolving
+          // pattern, instead of replication, for both activity and security reasons
+          return habitatDb.storeProjectObjectSameRev(projectData, this.localDb)
         })
         .then (result => {
-          this.dbDisplay += ', saved: ' + result.ok
+          this.opsDisplay = result.msg + ' locally'
         })
         .catch(err => {
           this.projectData = { no: 'data' }
           this.showError('loadProjectLatest', err)
         })
     },
-    saveProjectLocally: function () {
+    storeProjectLocally: function () {
       this.clearDisplays()
-      console.log('saveProjectLocally in local db to: ' + this.locale + ':' + this.project)
+      console.log('storeProjectLocally in local db to: ' + this.locale + ':' + this.project)
 
       // you MUST have this local method and use it in the call,
       // in the updateProject.bind(this) form, as the example shows
@@ -485,23 +467,24 @@ export default {
         // n.b. the result at this point uses id and rev, not _id and _rev
       }
 
-      habitatDb.saveProjectObject (
+      habitatDb.storeProjectObject (
         this.projectData,
           updateProject.bind(this),  // always with the .bind(this)
           this.localDb)
         .then (result => {
-          console.log('saveProjectLocally:result: ' + JSON.stringify(result))
+          console.log('storeProjectLocally:result: ' + JSON.stringify(result))
           this.dbDisplay = 'Ok - ' + result.msg + ', for id: ' +
-            result.data.id + ', new rev: ' + result.data.rev
+            result.data.id + ', '
+          this.opsDisplay = 'with new rev: ' + result.data.rev
         })
         .catch(err => {
-          this.showError('saveProjectLocally', err)
+          this.showError('storeProjectLocally', err)
         })
     },
-    uploadProject: function () {
+    updateProjectToCloud: function () {
       this.clearDisplays()
-      let step = 'begin uploadProject'
-      console.log('uploadProject from local: ' + this.locale + ':' + this.project)
+      let step = 'begin updateProjectToCloud'
+      console.log('updateProjectToCloud locale: ' + this.locale + ':' + this.project)
 
       habitatCloud.assureRemoteLogin()
         .then(() => {
@@ -511,8 +494,8 @@ export default {
           if(!this.projectData.keys) {
             throw new Error ('Local Hardocs Project not present yet to update from!')
           }
-          step = 'update HabitatProject up to: ' + this.cloudDb
-          return habitatCloud.doRequest('uploadProject',
+          step = 'update HabitatProject to: ' + this.cloudDb
+          return habitatCloud.doRequest('updateProject',
             this.remoteUrl,
             {
               locale: this.locale,
@@ -523,17 +506,12 @@ export default {
           )
         })
       .then (result => {
-          console.log('uploadProject:result: ' + JSON.stringify(result))
-          // this.dbDisplay = 'up: ' + this.$htmlJson(result)
-          if (result.ok) {
-            this.dbDisplay = 'Ok - Project successfully uploaded to Habitat Cloud, ' +
-              ' for : ' + this.projectData._id
-          } else {
-            throw new Error (step + ':' + result.msg)
-          }
+          console.log('updateProjectToCloud:result: ' + JSON.stringify(result))
+          this.dbDisplay = 'Ok - ' + result.msg + ','
+            this.opsDisplay = 'for : ' + this.projectData._id
         })
         .catch(err => {
-          this.showError('uploadProject' + step, err)
+          this.showError('updateProjectToCloud:' + step, err)
         })
     },
     createProject: function () {
@@ -661,19 +639,11 @@ export default {
       habitatCloud.assureRemoteLogin()
         .then(result => {
           this.opsDisplay = result.msg
-          return
-        })
-        .then(() => {
           console.log('headed for initialize')
-          const result = habitatCloud.doRequest('initializeCloud', this.remoteUrl)
-          console.log('type of doRequest result: ' + typeof result)
-          return result
+          return habitatCloud.doRequest('initializeCloud', this.remoteUrl)
         })
         .then(result => {
-          console.log('back from initializeHabitat: ' + JSON.stringify(result))
-          this.dbDisplay = 'Initializing Cloud: '
-            + JSON.stringify(result)
-          console.log('initializeHabitat', JSON.stringify(result))
+          this.dbDisplay = 'Initializing Cloud: ' + JSON.stringify(result)
         })
         .catch(err => {
           this.showError('initializeHabitat', err)
@@ -689,14 +659,16 @@ export default {
 
       habitatCloud.assureRemoteLogin()
         .then(result => {
-          this.opsDisplay = result.msg + '\r'
-          return
-        })
-        .then(() => {
+          this.opsDisplay = result.msg
           return habitatCloud.doRequest(
             'publishProject',
             this.remoteUrl,
-            {status: requestedStatus, locale: locale, project: project})
+            {
+              status: requestedStatus,
+              locale: locale,
+              project: project
+            }
+          )
         })
         .then (result => {
           this.opsDisplay += 'Publish project result: ' + JSON.stringify(result)
@@ -723,10 +695,6 @@ export default {
       this.dbDisplay = 'Gql query: ' + query
 
       habitatCloud.assureRemoteLogin()
-        .then(result => {
-          this.opsDisplay = result.msg + '\r'
-          return
-        })
         .then(() => {
           return habitatCloud.doRequest(
             'tryGql',
@@ -900,6 +868,6 @@ body {
 .html-data {
   text-align: left;
   white-space: normal;
-  padding: 0 15%;
+  padding: 0 5%;
 }
 </style>
