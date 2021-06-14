@@ -130,7 +130,7 @@
           <div class="flex items-center justify-around v-spaced">
             <button @click="storeProjectLocally" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Store Project Locally
+              Store Edited Project Locally
             </button>
             <button @click="updateProjectToCloud" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
@@ -227,7 +227,7 @@ export default {
           this.opsDisplay = 'Db Status: ' + JSON.stringify(result)
         })
         .catch(err => {
-          this.showError('Check Db Status', err)
+          this.showCmdError('Check Db Status', err)
         })
     },
     checkRole: function (role) {
@@ -237,7 +237,7 @@ export default {
           return result.msg === role
         })
         .catch(err => {
-          this.showError('Check Db Status', err)
+          this.showCmdError('Check Db Status', err)
         })
     },
     checkLocale: function (identity) {
@@ -287,7 +287,7 @@ export default {
           this.opsDisplay = result.msg
         })
         .catch(err => {
-          this.showError('createLocale', err.msg)
+          this.showCmdError('createLocale', err.msg)
         })
     },
     deleteLocale: function () {
@@ -318,7 +318,7 @@ export default {
           this.opsDisplay = result.msg
         })
         .catch(err => {
-          this.showError('deleteLocale', err.msg)
+          this.showCmdError('deleteLocale', err.msg)
         })
     },
     setUpForCloudActions: function () {
@@ -349,7 +349,7 @@ export default {
           this.dbDisplay = 'Actions identity: ' + result
         })
         .catch(err => {
-          this.showError('adminProjects', err)
+          this.showCmdError('adminProjects', err)
         })
     },
     adminProjects: function () {
@@ -376,7 +376,7 @@ export default {
           this.opsDisplay = 'for: ' + result.data._id
         })
         .catch(err => {
-          this.showError('loadLocalProject', err)
+          this.showCmdError('loadLocalProject', err)
         })
     },
     loadCloudProjectLatest: function () {
@@ -410,7 +410,7 @@ export default {
           this.opsDisplay = result.msg + ' locally '
         })
         .catch(err => {
-          this.showError('loadProjectLatest', err)
+          this.showCmdError('loadProjectLatest', err)
         })
     },
     loadUnresolvedCloudProject: function () {
@@ -446,7 +446,7 @@ export default {
         })
         .catch(err => {
           this.projectData = { no: 'data' }
-          this.showError('loadProjectLatest', err)
+          this.showCmdError('loadProjectLatest', err)
         })
     },
     storeProjectLocally: function () {
@@ -478,7 +478,7 @@ export default {
           this.opsDisplay = 'with new rev: ' + result.data.rev
         })
         .catch(err => {
-          this.showError('storeProjectLocally', err)
+          this.showCmdError('storeProjectLocally', err)
         })
     },
     updateProjectToCloud: function () {
@@ -511,7 +511,7 @@ export default {
             this.opsDisplay = 'for : ' + this.projectData._id
         })
         .catch(err => {
-          this.showError('updateProjectToCloud:' + step, err)
+          this.showCmdError('updateProjectToCloud:' + step, err)
         })
     },
     createProject: function () {
@@ -545,7 +545,7 @@ export default {
           this.opsDisplay = result.msg
         })
         .catch(err => {
-          this.showError('createProject', err.msg)
+          this.showCmdError('createProject', err.msg)
         })
     },
     deleteProject: function () {
@@ -586,7 +586,7 @@ export default {
           this.opsDisplay = result.msg
         })
         .catch(err => {
-          this.showError('deleteProject', err.msg)
+          this.showCmdError('deleteProject', err.msg)
         })
     },
     listLocalProjects: function () {
@@ -599,7 +599,7 @@ export default {
             'locale can reach - ' + this.localDb + ' db'
         })
         .catch(err => {
-          this.showError('listLocalProjects', err)
+          this.showCmdError('listLocalProjects', err)
         })
     },
     clearLocalProjects: function () {
@@ -613,7 +613,7 @@ export default {
             'in real Hardocs!): ' + JSON.stringify(result)
         })
         .catch(err => {
-          this.showError('clearLocalProjects', err)
+          this.showCmdError('clearLocalProjects', err)
         })
     },
     listRemoteProjects: function () {
@@ -629,7 +629,7 @@ export default {
           this.opsDisplay = 'this is not available at present - revising for indirect api: ' + this.cloudDb + ' db'
         })
         .catch(err => {
-          this.showError('listRemoteProjects', err)
+          this.showCmdError('listRemoteProjects', err)
         })
     },
     initializeHabitat: function () {
@@ -646,7 +646,7 @@ export default {
           this.dbDisplay = 'Initializing Cloud: ' + JSON.stringify(result)
         })
         .catch(err => {
-          this.showError('initializeHabitat', err)
+          this.showCmdError('initializeHabitat', err)
         })
     },
     publishProject: function () {
@@ -674,7 +674,7 @@ export default {
           this.opsDisplay += 'Publish project result: ' + JSON.stringify(result)
         })
         .catch(err => {
-          this.showError('publishProject', JSON.stringify(err))
+          this.showCmdError('publishProject', JSON.stringify(err))
         })
     },
     tryGql: function () {
@@ -708,7 +708,7 @@ export default {
         })
         .catch(err => {
           // our library errors are strings, simple
-          this.showError('tryGql', err)
+          this.showCmdError('tryGql', err)
         })
     },
     logOutRemote: function () {
@@ -723,7 +723,7 @@ export default {
           habitatLocal.deleteNodeCookies(result)
         })
         .catch(err => {
-          this.showError('logOutRemote', err)
+          this.showCmdError('logOutRemote', err)
         })
     },
     jsonResult: function (result) {
@@ -747,7 +747,7 @@ export default {
     onJsonChange (value) {
       console.log('value:', value)
     },
-    showError: function (action, err) {
+    showCmdError: function (action, err) {
       // an essential, so we don't need to know which form comes
       // if it's not an Error, it's string or JSON
       // we ourselves always throe Errors, but libraries...

@@ -5,6 +5,22 @@
 Ready for visual improvement of proven cloud operations demonstration,
 documentation to be brought up to current at that time.
 
+# Definite Nota Bene
+
+Be sure to use only yarn in here. Yarn install, yarn upgrade, etc.
+
+No npm, or you'll find it won't build, no matter how clean the results may seem. 
+
+Thank Electron, seems pretty clear.
+
+At least you don't have to worry about npm 7 changes that would come with other-than-LTS Node...
+
+# Current release
+
+Operates with @hardocs-project/habitat-client@alpha, which is very different indeed to the discovery code from last year on the @latest version.
+
+We'll go to current as @latest once sure everyone's caught up. And then continue the improvements on that.
+
 # Earlier documentation (to be updated)
 
 --- begin earlier documentation ---

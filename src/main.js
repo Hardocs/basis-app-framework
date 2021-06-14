@@ -2,6 +2,11 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import { AdminHelpers } from './plugins/admin-helpers.js'
 
+// this next is not for fun. Something the Electron build process misses,
+// and the next thing you know, electron builds, but build won't run...
+// eslint-disable-next-line
+import 'regenerator-runtime/runtime'
+
 import dotEnv from 'dotenv'
 dotEnv.config()
 
