@@ -491,7 +491,7 @@ export default {
           this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
         })
         .then (() => {
-          if(!this.projectData.keys) {
+          if(!this.projectData.details) {
             throw new Error ('Local Hardocs Project not present yet to update from!')
           }
           step = 'update HabitatProject to: ' + this.cloudDb
