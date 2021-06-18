@@ -621,12 +621,25 @@ export default {
       this.clearPanels()
       habitatCloud.assureRemoteLogin()
         .then(() => {
-          return habitatDb.listLocaleProjects('hardLocale',  this.cloudDb)
+          console.log('app:delete project: ' + this.project +
+            ', locale: ' + this.locale + ', identity: ' + this.loginIdentity)
+          return habitatCloud.doRequest(
+            'listProjects',
+            this.remoteUrl,
+            {  // identity check is properly in cloud
+              locale: 'all', // this.locale,
+              project: 'all' //this.project,
+            }
+          )
         })
         .then(result => {
           console.log('listRemoteProjects: ' + JSON.stringify(result))
-          this.dbDisplay = this.$htmlJson(result)
-          this.opsDisplay = 'this is not available at present - revising for indirect api: ' + this.cloudDb + ' db'
+          if (result.ok) {
+            this.dbDisplay = result.msg
+            this.opsDisplay = this.$htmlJson(result.data)
+          } else {
+            throw new Error (result.msg)
+          }
         })
         .catch(err => {
           this.showCmdError('listRemoteProjects', err)
