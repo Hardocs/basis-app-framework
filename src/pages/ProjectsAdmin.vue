@@ -162,7 +162,6 @@
 
 import ProjectsAdminOpsButtons from '@/components/ProjectsAdminOpsButtons'
 import { habitatCloud, habitatLocal, habitatDb } from '@hardocs-project/habitat-client'
-import prettyJson from 'prettyprintjs'
 import VueJsonEditor from 'vue-json-editor'
 
 export default {
@@ -182,11 +181,7 @@ export default {
 
       // where we can indicate issues to screen
       opsDisplay: null,
-      // *todo* REVISE how this works, to a current db, or an _all_dbs, or habitat-request,
-      // *todo* also consider how initiate is going to use it...or not...
-      cloudDb: 'https://hd.narrationsd.com/hard-api/habitat-projects',
-      remoteUrl: 'https://hd.narrationsd.com/hard-api',
-      localDb: 'habitat-projects',
+      localProjectsDbName: 'habitat-projects',
 
       // control of forms
       adminLocaleForm: false,
@@ -231,7 +226,7 @@ export default {
         })
     },
     checkRole: function (role) {
-      return habitatCloud.doRequest('checkRoles', this.remoteUrl)
+      return habitatCloud.doRequest('checkRoles')
         .then (result => {
           console.log ('checkRole returns: ' + JSON.stringify(result) + ', for check: ' + role)
           return result.msg === role
@@ -275,7 +270,6 @@ export default {
         .then (() => {
           return habitatCloud.doRequest(
             'createLocale',
-            this.remoteUrl,
             { locale: this.locale } // identity check is properly in cloud
           )
         })
@@ -306,7 +300,6 @@ export default {
         .then (() => {
           return habitatCloud.doRequest(
             'deleteLocale',
-            this.remoteUrl,
             { locale: this.locale } // identity check is properly in cloud
           )
         })
@@ -329,14 +322,16 @@ export default {
           this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
         })
         .then(() => {
-          return habitatCloud.doRequest('getLoginIdentity', this.remoteUrl)
+          return habitatCloud.doRequest('getLoginIdentity')
         })
         .then(result => {
-          // *todo* this is all wrong at present: we determine authorization only
-          // *todo* on the server, and will tell it from there. Identity is available
-          // *todo* in future call for use here, but is hard-determined on server
-          // *todo* for ids and commands, so that no forgery is possible. No matter
-          // *todo* what is tried, your db-affecting data like keys will always be you.
+          // We likely still want to pull role and identity information
+          // just to help the UX present what's possible - the original intent.
+
+          // Both identity and role are only hard-determined on the cloud,
+          // so that no forgery is possible. No matter what is tried,
+          // db-affecting data like keys will always be you.
+
           console.log('identity: ' + JSON.stringify(result))
           this.loginIdentity = result.identity
           this.isAgent = this.checkRole('agent')
@@ -354,7 +349,6 @@ export default {
     },
     adminProjects: function () {
       this.clearPanels()
-      console.log('adminProjects:remoteDb: ' +  this.cloudDb)
       this.adminProjectsForm = true
       this.setUpForCloudActions()
    },
@@ -385,7 +379,8 @@ export default {
 
       habitatCloud.assureRemoteLogin()
         .then(() => {
-          return  habitatCloud.doRequest('loadProjectResolve', this.remoteUrl,
+          return  habitatCloud.doRequest(
+            'loadProjectResolve',
             {
               locale: this.locale,
               project: this.project,
@@ -404,7 +399,9 @@ export default {
           // keeping all current, using a call which does _not_ update the rev, thus
           // the pattern of our CouchDB-compatible, necessarily sans-replication design
 
-          return habitatDb.storeProjectObjectSameRev(this.projectData, this.localDb)
+          // in this case we want the resolved cloud result replicated exactly, locally
+          // NOTE but never use this call without complete understanding of what you are doing!
+          return habitatDb.storeProjectObjectSameRev(this.projectData, this.localProjectsDbName)
         })
         .then (result => {
           this.opsDisplay = result.msg + ' locally '
@@ -414,12 +411,16 @@ export default {
         })
     },
     loadUnresolvedCloudProject: function () {
+
+      // NOTE:  this method is ONLY for examining how resolution works. NOT for production!
+
       this.clearDisplays()
       console.log('cloud loadUnresolvedCloudProject from: ' + this.locale + ':' + this.project)
 
       habitatCloud.assureRemoteLogin()
         .then(() => {
-          return  habitatCloud.doRequest('loadProjectUnresolved', this.remoteUrl,
+          return  habitatCloud.doRequest(
+            'loadProjectUnresolved',
             {
               locale: this.locale,
               project: this.project,
@@ -437,9 +438,12 @@ export default {
         })
         .then (projectData => {
           // we need to save the result to the local db, *without* changing the rev.
-          // this is to make visible why we do the other half of our conflict-reaolving
+          // this is to make visible why we do the other half of our conflict-resolving
           // pattern, instead of replication, for both activity and security reasons
-          return habitatDb.storeProjectObjectSameRev(projectData, this.localDb)
+
+          // in this test case also we want the resolved cloud result replicated exactly, locally
+          // NOTE but never use this call without complete understanding of what you are doing!
+          return habitatDb.storeProjectObjectSameRev(projectData, this.localProjectsDbName)
         })
         .then (result => {
           this.opsDisplay = result.msg + ' locally'
@@ -470,7 +474,7 @@ export default {
       habitatDb.storeProjectObject (
         this.projectData,
           updateProject.bind(this),  // always with the .bind(this)
-          this.localDb)
+          this.localProjectsDbName)
         .then (result => {
           console.log('storeProjectLocally:result: ' + JSON.stringify(result))
           this.dbDisplay = 'Ok - ' + result.msg + ', for id: ' +
@@ -494,9 +498,9 @@ export default {
           if(!this.projectData.details) {
             throw new Error ('Local Hardocs Project not present yet to update from!')
           }
-          step = 'update HabitatProject to: ' + this.cloudDb
-          return habitatCloud.doRequest('updateProject',
-            this.remoteUrl,
+          step = 'update HabitatProject'
+          return habitatCloud.doRequest(
+            'updateProject',
             {
               locale: this.locale,
               project: this.project,
@@ -527,7 +531,6 @@ export default {
         .then (() => {
           return habitatCloud.doRequest(
             'createProject',
-            this.remoteUrl,
             {  // actual securely validated identity required, and properly done in cloud
               locale: this.locale,
               project: this.project,
@@ -565,7 +568,6 @@ export default {
         .then (() => {
           return habitatCloud.doRequest(
             'deleteProject',
-            this.remoteUrl,
             {  // identity check is properly in cloud
               locale: this.locale,
               project: this.project,
@@ -591,12 +593,12 @@ export default {
     },
     listLocalProjects: function () {
       this.clearPanels()
-      habitatDb.listLocaleProjects('hardLocale', this.localDb)
+      habitatDb.listLocaleProjects('hardLocale', this.localProjectsDbName)
         .then(result => {
           console.log('listLocalProjects: ' + JSON.stringify(result))
           this.dbDisplay = this.$htmlJson(result)
           this.opsDisplay = 'this is not real yet - just listing any records ' +
-            'locale can reach - ' + this.localDb + ' db'
+            'locale can reach - ' + this.localProjectsDbName + ' db'
         })
         .catch(err => {
           this.showCmdError('listLocalProjects', err)
@@ -606,7 +608,7 @@ export default {
       this.clearPanels()
       console.log('clearing local database... ')
 
-      habitatDb.clearDatabase(this.localDb)
+      habitatDb.clearDatabase(this.localProjectsDbName)
         .then(result => {
           console.log('adminProjects: result: ' + JSON.stringify(result))
           this.opsDisplay = 'Cleared Entire Hardocs database (we won\'t have this ' +
@@ -625,7 +627,6 @@ export default {
             ', locale: ' + this.locale + ', identity: ' + this.loginIdentity)
           return habitatCloud.doRequest(
             'listProjects',
-            this.remoteUrl,
             {  // identity check is properly in cloud
               locale: 'all', // this.locale,
               project: 'all' //this.project,
@@ -653,7 +654,9 @@ export default {
         .then(result => {
           this.opsDisplay = result.msg
           console.log('headed for initialize')
-          return habitatCloud.doRequest('initializeCloud', this.remoteUrl)
+          return habitatCloud.doRequest(
+            'initializeCloud'
+          )
         })
         .then(result => {
           this.dbDisplay = 'Initializing Cloud: ' + JSON.stringify(result)
@@ -675,7 +678,6 @@ export default {
           this.opsDisplay = result.msg
           return habitatCloud.doRequest(
             'publishProject',
-            this.remoteUrl,
             {
               status: requestedStatus,
               locale: locale,
@@ -711,13 +713,13 @@ export default {
         .then(() => {
           return habitatCloud.doRequest(
             'tryGql',
-            this.remoteUrl,
             {query: query})
         })
         .then (result => {
           // with gql, results contain data or its own errors
           // thus, ok is critical to handling, and result is json either waay
-          this.opsDisplay = 'Gql result: ' + this.jsonResult(result);
+          this.opsDisplay = 'Gql result: ' + this.$htmlJson(result.data);
+          this.dbDisplay += ' -- ' + result.msg
         })
         .catch(err => {
           // our library errors are strings, simple
@@ -739,24 +741,6 @@ export default {
           this.showCmdError('logOutRemote', err)
         })
     },
-    jsonResult: function (result) {
-      let screenText
-      // *todo* look into this, may be actual format problem
-      // if (result.ok) {
-        let json = 'no json string'
-        json = result.msg
-        try {
-          json = JSON.parse(result.msg)
-        } catch (e) {
-          json = e
-        }
-        screenText = ': (ok: ' + result.ok + '):<br>' +
-          prettyJson(json, 4, 'html')
-      // } else {
-      //   screenText = result.msg
-      // }
-      return screenText
-    },
     onJsonChange (value) {
       console.log('value:', value)
     },
@@ -764,7 +748,7 @@ export default {
       // an essential, so we don't need to know which form comes
       // if it's not an Error, it's string or JSON
       // we ourselves always throe Errors, but libraries...
-      const error = err instanceof Error ? err.stack : JSON.stringify(err)
+      const error = err instanceof Error ? err/*.stack*/ : JSON.stringify(err)
       const msg = `Error:  ${action}: ` + error
       this.opsDisplay = msg
       console.log(msg)
