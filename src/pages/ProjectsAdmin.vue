@@ -731,11 +731,14 @@ export default {
       habitatLocal.getNodeCookies()
         .then(result => {
           this.cookies = result
-          this.opsDisplay = 'Now logged out...'
           return result
         })
         .then(result => {
+          // *todo* clan this if possible, if we can id just the api cookie, or if
+          // *todo* there is instead an action we can provide on the server. Old code...
+          // *todo* anyway, put it in the client local or cloud api apropos - not raw here
           habitatLocal.deleteNodeCookies(result)
+          this.opsDisplay = 'Now logged out...'
         })
         .catch(err => {
           this.showCmdError('logOutRemote', err)
