@@ -404,6 +404,14 @@ export default {
           return habitatDb.storeProjectObjectSameRev(this.projectData, this.localProjectsDbName)
         })
         .then (result => {
+          // here are your actions after.  We stored to the db, just to keep
+          // the id and rev available and sane, but not for use of data, or even
+          // last safety on that.
+
+          // what you want to do here is write the projectData out to your filesystem
+          // storage of all. This will be your own routine, and here since we're
+          // not using that, this example just updates the display, which you can also.
+
           this.opsDisplay = result.msg + ' locally '
         })
         .catch(err => {
