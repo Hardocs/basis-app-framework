@@ -10,9 +10,7 @@
       v-on:adminProjects="adminProjects"
       v-on:interactWithProject="interactWithProject"
       v-on:updateProjectToCloud="updateProjectToCloud"
-      v-on:listLocalProjects="listLocalProjects"
       v-on:listRemoteProjects="listRemoteProjects"
-      v-on:clearLocalProjects="clearLocalProjects"
       v-on:publishProject="publishProject"
       v-on:tryGql="tryGql"
       v-on:logOutRemote="logOutRemote"
@@ -120,28 +118,21 @@
           <div class="flex items-center justify-around">
             <button @click="loadCloudProjectLatest" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Load Latest Cloud Project
-            </button>
-            <button @click="loadLocalProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
-              focus:outline-none focus:shadow-outline" type="button">
-              Load Local Project
-            </button>
-          </div>
-          <div class="flex items-center justify-around v-spaced">
-            <button @click="storeProjectLocally" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
-              focus:outline-none focus:shadow-outline" type="button">
-              Store Edited Project Locally
+              Load Project<br>from Cloud
             </button>
             <button @click="updateProjectToCloud" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Update Project to Cloud
+              Update Project<br>to Cloud
             </button>
           </div>
-          <p class="v-spaced">resolve validation only:</p>
           <div class="flex items-center justify-around v-spaced">
-            <button @click="loadUnresolvedCloudProject" class="xbtn-limit bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <button @click="loadLocalProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
-              Load from Cloud without Resolve
+              Load your<br>Local Project
+            </button>
+            <button @click="storeProjectLocally" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+              focus:outline-none focus:shadow-outline" type="button">
+              Save Your<br>Project Locally
             </button>
           </div>
         </form>

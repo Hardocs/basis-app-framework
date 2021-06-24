@@ -44,16 +44,8 @@ export default {
           action: this.interactWithProject
         },
         {
-          label: "List Local Projects",
-          action: this.listLocalProjects
-        },
-        {
-          label: "List Remote Projects",
+          label: "List Cloud Projects",
           action: this.listRemoteProjects
-        },
-        {
-          label: "Clear Local Projects",
-          action: this.clearLocalProjects
         },
         {
           label: "Publish Project",
@@ -64,7 +56,7 @@ export default {
           action: this.tryGql
         },
         {
-          label: "Log Out Hardocs Cloud",
+          label: "Log Out from Hardocs Cloud",
           action: this.logOutRemote
         },
         // {
