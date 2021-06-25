@@ -1,6 +1,6 @@
 {
   "name": "hardocs-app-framework",
-  "version": "0.6.7",
+  "version": "0.6.8",
   "private": true,
   "author": "Narration SD",
   "description": "Collect and illustrate patterns in Hardocs basis architecture",
@@ -27,6 +27,7 @@
     "tiptap-extensions": "^1.33.2",
     "vue": "^2.6.12",
     "vue-json-editor": "^1.4.3",
+    "vue-radial-progress": "^0.3.2",
     "vue-router": "^3.4.8",
     "vue-select": "^3.10.8",
     "webpack-bundle-analyzer": "^3.9.0",

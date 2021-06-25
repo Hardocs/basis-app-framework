@@ -136,6 +136,20 @@
             </button>
           </div>
         </form>
+        <div>
+          <radial-progress-bar :diameter="200"
+                               :completed-steps="completedSteps"
+                               :total-steps="totalSteps"
+                               :animateSpeed="animateSpeed"
+                               :startColor="startColor"
+                               :stopColor="stopColor"
+                               :innerStrokeColor="innerStrokeColor"
+                               :strokeWidth="strokeWidth"
+                               :innerStrokeWidth="innerStrokeWidth">
+            <p>Total steps: {{ totalSteps }}</p>
+            <p>Completed steps: {{ completedSteps }}</p>
+          </radial-progress-bar>
+        </div>
         <div class="w-1/2 bg-gray-500 h-12 px-2 border-l-2 border-gray-600 h-full">
           <!-- we don't need show-btns because v-model accomplishes instant save -->
           <vue-json-editor v-model="projectData"
@@ -154,6 +168,7 @@
 import ProjectsAdminOpsButtons from '@/components/ProjectsAdminOpsButtons'
 import { habitatCloud, habitatLocal, habitatDb } from '@hardocs-project/habitat-client'
 import VueJsonEditor from 'vue-json-editor'
+import RadialProgressBar from 'vue-radial-progress'
 
 export default {
   name: "ProjectsAdmin",
@@ -169,6 +184,15 @@ export default {
       projectData: null, // expected connect to Vuex
       dbDisplay: null, // temporary measure, to first view
       jsonEditor: null, // for project update exercise
+      // progress circle
+      completedSteps: 3,
+      totalSteps: 10,
+      animateSpeed: 500,
+      strokeWidth: 15,
+      innerStrokeWidth: 15,
+      stopColor: '#d6b668',
+      startColor: '#a3ff02',
+      innerStrokeColor: '#03a8c4',
 
       // where we can indicate issues to screen
       opsDisplay: null,
@@ -486,6 +510,12 @@ export default {
     },
     updateProjectToCloud: function () {
       this.clearDisplays()
+
+      this.completedSteps = 1
+      const progressMonitor = (amount) => {
+        this.completedSteps = amount/100 * this.totalSteps % 10
+      }
+
       let step = 'begin updateProjectToCloud'
       console.log('updateProjectToCloud locale: ' + this.locale + ':' + this.project)
 
@@ -494,9 +524,9 @@ export default {
           this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
         })
         .then (() => {
-          if(!this.projectData.details) {
-            throw new Error ('Local Hardocs Project not present yet to update from!')
-          }
+          // if(!this.projectData.details) {
+          //   throw new Error ('Local Hardocs Project not present yet to update from!')
+          // }
           step = 'update HabitatProject'
           return habitatCloud.doRequest(
             'updateProject',
@@ -504,9 +534,9 @@ export default {
               locale: this.locale,
               project: this.project,
               projectData: this.projectData,
-              options: {} // cloud will handle the primary itself
-            }
-          )
+              options: {}, // cloud will handle the primary itself
+              progressMonitor
+            })
         })
       .then (result => {
           console.log('updateProjectToCloud:result: ' + JSON.stringify(result))
@@ -514,7 +544,8 @@ export default {
             this.opsDisplay = 'for : ' + this.projectData._id
         })
         .catch(err => {
-          this.showCmdError('updateProjectToCloud:' + step, err)
+          console.log ('bloop: ' + err)
+          this.showCmdError('updateProjectToCloud:' + step, err, true)
         })
     },
     createProject: function () {
@@ -721,7 +752,7 @@ export default {
           this.dbDisplay += ' -- ' + result.msg
         })
         .catch(err => {
-          // our library errors are strings, simple
+          // our library errors are strings, simple (*todo* wut)
           this.showCmdError('tryGql', err)
         })
     },
@@ -746,11 +777,18 @@ export default {
     onJsonChange (value) {
       console.log('value:', value)
     },
-    showCmdError: function (action, err) {
+    showCmdError: function (action, err, showStack = false) {
       // an essential, so we don't need to know which form comes
       // if it's not an Error, it's string or JSON
       // we ourselves always throe Errors, but libraries...
-      const error = err instanceof Error ? err/*.stack*/ : JSON.stringify(err)
+      // the stack showing would be used only in debugging for
+      // the local habitat-cliet (habitatCloud etc.) libraries
+      let error
+      if (err instanceof Error) {
+        error = showStack ? err.stack : err
+      } else {
+        error = JSON.stringify(err)
+      }
       const msg = `Error:  ${action}: ` + error
       this.opsDisplay = msg
       console.log(msg)
@@ -791,7 +829,8 @@ export default {
   },
   components: {
     ProjectsAdminOpsButtons,
-    VueJsonEditor
+    VueJsonEditor,
+    RadialProgressBar
   }
 }
 </script>
