@@ -65,11 +65,11 @@
               leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="locale-identity">
           </div>
           <div class="mb-6">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="project">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="project-locale">
               Project
             </label>
             <input v-model="project" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
-              leading-tight focus:outline-none focus:shadow-outline" type="text" id="project" placeholder="project-name">
+              leading-tight focus:outline-none focus:shadow-outline" type="text" id="project-locale" placeholder="project-name">
             <p v-if="!projectExists" class="text-red-500 text-xs italic">Please choose a project name (can have dashes, no colons).</p>
           </div>
           <div class="flex items-center justify-between">
@@ -104,11 +104,11 @@
               leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="locale-identity">
           </div>
           <div class="flex mb-6 row">
-            <label class="label-spacing block text-gray-700 text-sm font-bold mb-2" for="project">
+            <label class="label-spacing block text-gray-700 text-sm font-bold mb-2" for="project-project">
               Project:
             </label>
             <input v-model="project" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
-              leading-tight focus:outline-none focus:shadow-outline" type="text" id="project" placeholder="project-name">
+              leading-tight focus:outline-none focus:shadow-outline" type="text" id="project-project" placeholder="project-name">
           </div>
           <p class="v-spaced-below">normal operations:</p>
           <div class="flex items-center justify-around">
@@ -159,6 +159,7 @@
 
 import ProjectsAdminOpsButtons from '@/components/ProjectsAdminOpsButtons'
 import { habitatCloud, habitatLocal, habitatDb } from '@hardocs-project/habitat-client'
+// import ProgressModal from '@/components/ProgressModal'; './components/ProgressModal'
 import VueJsonEditor from 'vue-json-editor'
 
 export default {
@@ -197,6 +198,9 @@ export default {
       adminProjectsForm: false,
       interactWithProjectForm: false,
       isAgent: false,
+
+      // progress indication
+      progressIndicator: habitatLocal.progressModalFactory(),
 
       // testing
       testCount: 0,
@@ -386,27 +390,10 @@ export default {
     loadCloudProjectLatest: function () {
       this.clearDisplays()
       console.log('cloud loadProjectLatest from: ' + this.locale + ':' + this.project)
-      let progressModal
-      let timer
 
       habitatCloud.assureRemoteLogin()
         .then(() => {
-          const options =  {
-            height: 480,
-            width: 600,
-            backgroundColor: '#0d3856'
-          }
-          return habitatLocal.modalOnFileHtml('waiting.html', options)
-        })
-        .then(result => {
-          progressModal = result
-          timer = setTimeout (function () {
-            // delay close of progressModal, avoid flash in case we're fast
-            progressModal.show()
-          }, 1000)
-          return null
-        })
-        .then(() => {
+          this.progressInitiate()
           return  habitatCloud.doRequest(
             'loadProjectResolve',
             {
@@ -419,7 +406,7 @@ export default {
         })
         .then (result => {
           // console.log('loadProjectLatest:result: ' + JSON.stringify(result))
-          this.projectData = result.data
+          this.setProjectObject(result.data)
           const msg = 'Ok - ' + result.msg + ', for : ' + this.projectData._id
           this.dbDisplay = msg
 
@@ -439,25 +426,11 @@ export default {
           // what you want to do here is write the projectData out to your filesystem
           // storage of all. This will be your own routine, and here since we're
           // not using that, this example just updates the display, which you can also.
-          if (timer) {
-            clearTimeout(timer)
-          }
-          if (progressModal) {
-            setTimeout (function () {
-              // delay close of progressModal, avoid flash in case we're fast
-              progressModal.close()
-            }, 3000)
-          }
-
+          this.progressClose()
           this.opsDisplay = result.msg + ' locally '
         })
         .catch(err => {
-          if (timer) {
-            clearTimeout(timer)
-          }
-          if (progressModal) {
-              progressModal.close()
-          }
+          this.progressClose()
           this.showCmdError('loadProjectLatest', err)
         })
     },
@@ -559,63 +532,32 @@ export default {
       this.clearDisplays()
 
       let step = 'begin updateProjectToCloud'
-      let progressModal
-      let timer
       console.log('updateProjectToCloud locale: ' + this.locale + ':' + this.project)
 
       habitatCloud.assureRemoteLogin()
         .then(() => {
-          this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
-        })
-        .then(() => {
-          const options =  {
-            height: 480,
-            width: 600,
-            backgroundColor: '#0d3856'
-          }
-          return habitatLocal.modalOnFileHtml('waiting.html', options)
-        })
-        .then(result => {
-          progressModal = result
-          timer = setTimeout (function () {
-            // delay close of progressModal, avoid flash in case we're fast
-            progressModal.show()
-          }, 1000)
-          return null
+          this.opsDisplay = 'Updating Project to Habitat Cloud'
         })
         .then(() => {
           step = 'update HabitatProject'
+          this.progressInitiate()
           return habitatCloud.doRequest(
             'updateProject',
             {
               locale: this.locale,
               project: this.project,
-              projectData: this.projectData,
+              projectData: this.getProjectObject(),
               options: {}, // cloud will handle the primary itself
             })
         })
         .then(result => {
-          if (timer) {
-            clearTimeout(timer)
-          }
-          if (progressModal) {
-            setTimeout (function () {
-              // delay close of progressModal, avoid flash in case we're fast
-              progressModal.close()
-            }, 3000)
-          }
+          this.progressClose()
           console.log('updateProjectToCloud:result: ' + JSON.stringify(result))
           this.dbDisplay = 'Ok - ' + result.msg + ','
           this.opsDisplay = 'for : ' + this.projectData._id
         })
         .catch(err => {
-          if (timer) {
-            clearTimeout(timer)
-          }
-          if (progressModal) {
-            progressModal.close()
-          }
-          console.log('bloop: ' + err)
+          this.progressClose()
           this.showCmdError('updateProjectToCloud:' + step, err, true)
         })
     },
@@ -839,6 +781,39 @@ export default {
     },
     onJsonChange (value) {
       console.log('value:', value)
+    },
+    progressInitiate: function () {
+      // must renew this way, due to hidden Electron problem
+      this.progressIndicator = habitatLocal.progressModalFactory()
+      this.progressIndicator.initiate()
+    },
+    progressClose: function () {
+      this.progressIndicator.complete()
+      this.progressIndicator = null
+    },
+    setProjectObject: function (resultObject) {
+      // write your own, compose from data you have
+      this.projectData = {
+        // first two only for this app framework as it still uses db -- you definitely won't
+        _id: resultObject._id,
+        _rev: resultObject._rev,
+        //
+        details: resultObject.details,
+        hdFrame: resultObject.hdFrame,
+        hdObject:resultObject.hdObject
+      }
+    },
+    getProjectObject: function () {
+      // write your own, compose from data you have
+      return {
+        // *todo* first two go out
+        _id: this.projectData._id,
+        _rev: this.projectData._rev,
+        //
+        details: this.projectData.details,
+        hdFrame: this.projectData.hdFrame,
+        hdObject: this.projectData.hdObject
+      }
     },
     showCmdError: function (action, err, showStack = false) {
       // an essential, so we don't need to know which form comes
