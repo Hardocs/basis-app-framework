@@ -131,16 +131,16 @@
               Save Your<br>Project Locally
             </button>
           </div>
-          <div class="flex items-center justify-around v-spaced">
+<!--          <div class="flex items-center justify-around v-spaced">
             <button @click="tryModal" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
               Try that<br>File modal
             </button>
-<!--            <button @click="storeProjectLocally" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+&lt;!&ndash;            <button @click="storeProjectLocally" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
               Save Your<br>Project Locally
-            </button>-->
-          </div>
+            </button>&ndash;&gt;
+          </div>-->
         </form>
         <div class="w-1/2 bg-gray-500 h-12 px-2 border-l-2 border-gray-600 h-full">
           <!-- we don't need show-btns because v-model accomplishes instant save -->
@@ -179,7 +179,6 @@ export default {
       projectData: null, // expected connect to Vuex
       dbDisplay: null, // temporary measure, to first view
       jsonEditor: null, // for project update exercise
-      // progress circle
       completedSteps: 3,
       totalSteps: 10,
       animateSpeed: 500,
@@ -387,8 +386,26 @@ export default {
     loadCloudProjectLatest: function () {
       this.clearDisplays()
       console.log('cloud loadProjectLatest from: ' + this.locale + ':' + this.project)
+      let progressModal
+      let timer
 
       habitatCloud.assureRemoteLogin()
+        .then(() => {
+          const options =  {
+            height: 480,
+            width: 600,
+            backgroundColor: '#0d3856'
+          }
+          return habitatLocal.modalOnFileHtml('waiting.html', options)
+        })
+        .then(result => {
+          progressModal = result
+          timer = setTimeout (function () {
+            // delay close of progressModal, avoid flash in case we're fast
+            progressModal.show()
+          }, 1000)
+          return null
+        })
         .then(() => {
           return  habitatCloud.doRequest(
             'loadProjectResolve',
@@ -422,10 +439,25 @@ export default {
           // what you want to do here is write the projectData out to your filesystem
           // storage of all. This will be your own routine, and here since we're
           // not using that, this example just updates the display, which you can also.
+          if (timer) {
+            clearTimeout(timer)
+          }
+          if (progressModal) {
+            setTimeout (function () {
+              // delay close of progressModal, avoid flash in case we're fast
+              progressModal.close()
+            }, 3000)
+          }
 
           this.opsDisplay = result.msg + ' locally '
         })
         .catch(err => {
+          if (timer) {
+            clearTimeout(timer)
+          }
+          if (progressModal) {
+              progressModal.close()
+          }
           this.showCmdError('loadProjectLatest', err)
         })
     },
@@ -526,13 +558,9 @@ export default {
     updateProjectToCloud: function () {
       this.clearDisplays()
 
-      this.completedSteps = 1
-      const progressMonitor = (amount) => {
-        this.completedSteps = amount / 100 * this.totalSteps % 10
-      }
-
       let step = 'begin updateProjectToCloud'
-      let modal
+      let progressModal
+      let timer
       console.log('updateProjectToCloud locale: ' + this.locale + ':' + this.project)
 
       habitatCloud.assureRemoteLogin()
@@ -548,13 +576,15 @@ export default {
           return habitatLocal.modalOnFileHtml('waiting.html', options)
         })
         .then(result => {
-          modal = result
-          modal.show()
+          progressModal = result
+          timer = setTimeout (function () {
+            // delay close of progressModal, avoid flash in case we're fast
+            progressModal.show()
+          }, 1000)
           return null
         })
         .then(() => {
           step = 'update HabitatProject'
-          console.log(step)
           return habitatCloud.doRequest(
             'updateProject',
             {
@@ -562,20 +592,28 @@ export default {
               project: this.project,
               projectData: this.projectData,
               options: {}, // cloud will handle the primary itself
-              progressMonitor
             })
         })
         .then(result => {
-          if (modal) {
-            modal.close()
+          if (timer) {
+            clearTimeout(timer)
+          }
+          if (progressModal) {
+            setTimeout (function () {
+              // delay close of progressModal, avoid flash in case we're fast
+              progressModal.close()
+            }, 3000)
           }
           console.log('updateProjectToCloud:result: ' + JSON.stringify(result))
           this.dbDisplay = 'Ok - ' + result.msg + ','
           this.opsDisplay = 'for : ' + this.projectData._id
         })
         .catch(err => {
-          if (modal) {
-            modal.close()
+          if (timer) {
+            clearTimeout(timer)
+          }
+          if (progressModal) {
+            progressModal.close()
           }
           console.log('bloop: ' + err)
           this.showCmdError('updateProjectToCloud:' + step, err, true)
