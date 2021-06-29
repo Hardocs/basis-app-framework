@@ -50,10 +50,6 @@
               focus:outline-none focus:shadow-outline" type="button">
               Delete Locale
             </button>
-<!--            <button v-if="true ||localeExists" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
-              focus:outline-none focus:shadow-outline" type="button">
-              Delete Locale
-            </button>-->
           </div>
         </form>
       </div>
@@ -135,21 +131,17 @@
               Save Your<br>Project Locally
             </button>
           </div>
+          <div class="flex items-center justify-around v-spaced">
+            <button @click="tryModal" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+              focus:outline-none focus:shadow-outline" type="button">
+              Try that<br>File modal
+            </button>
+<!--            <button @click="storeProjectLocally" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+              focus:outline-none focus:shadow-outline" type="button">
+              Save Your<br>Project Locally
+            </button>-->
+          </div>
         </form>
-        <div>
-          <radial-progress-bar :diameter="200"
-                               :completed-steps="completedSteps"
-                               :total-steps="totalSteps"
-                               :animateSpeed="animateSpeed"
-                               :startColor="startColor"
-                               :stopColor="stopColor"
-                               :innerStrokeColor="innerStrokeColor"
-                               :strokeWidth="strokeWidth"
-                               :innerStrokeWidth="innerStrokeWidth">
-            <p>Total steps: {{ totalSteps }}</p>
-            <p>Completed steps: {{ completedSteps }}</p>
-          </radial-progress-bar>
-        </div>
         <div class="w-1/2 bg-gray-500 h-12 px-2 border-l-2 border-gray-600 h-full">
           <!-- we don't need show-btns because v-model accomplishes instant save -->
           <vue-json-editor v-model="projectData"
@@ -168,10 +160,13 @@
 import ProjectsAdminOpsButtons from '@/components/ProjectsAdminOpsButtons'
 import { habitatCloud, habitatLocal, habitatDb } from '@hardocs-project/habitat-client'
 import VueJsonEditor from 'vue-json-editor'
-import RadialProgressBar from 'vue-radial-progress'
 
 export default {
   name: "ProjectsAdmin",
+  components: {
+    ProjectsAdminOpsButtons,
+    VueJsonEditor
+  },
   data: function () {
     return {
       // these are the primary information for a project and its data
@@ -329,8 +324,8 @@ export default {
           this.showCmdError('deleteLocale', err.msg)
         })
     },
-    setUpForCloudActions: function () {
-      habitatCloud.assureRemoteLogin()
+    setUpForCloudActions: async function () {
+      await habitatCloud.assureRemoteLogin()
         .then(() => {
           // .then(result => {
           // *todo* see plan related
@@ -359,6 +354,7 @@ export default {
           this.dbDisplay = 'Actions identity: ' + result
         })
         .catch(err => {
+          console.log ('setUpForCloud:error: ' + JSON.stringify(err))
           this.showCmdError('adminProjects', err)
         })
     },
@@ -405,7 +401,7 @@ export default {
           )
         })
         .then (result => {
-          console.log('loadProjectLatest:result: ' + JSON.stringify(result))
+          // console.log('loadProjectLatest:result: ' + JSON.stringify(result))
           this.projectData = result.data
           const msg = 'Ok - ' + result.msg + ', for : ' + this.projectData._id
           this.dbDisplay = msg
@@ -476,6 +472,25 @@ export default {
           this.showCmdError('loadProjectLatest', err)
         })
     },
+    tryModal: function () {
+      // this.clearPanels()
+      const options =  {
+        height: 480,
+        width: 600,
+        backgroundColor: '#0d3856'
+      }
+      habitatLocal.modalOnFileHtml ('waiting.html', options)
+      .then (modal => {
+        modal.show()
+        this.opsDisplay = 'ok, modal'
+        // setTimeout (function () {
+        //   modal.close()
+        // }, 4000)
+      })
+      .catch (err => {
+        this.opsDisplay = 'no modal, err: ' + err
+      })
+    },
     storeProjectLocally: function () {
       this.clearDisplays()
       console.log('storeProjectLocally in local db to: ' + this.locale + ':' + this.project)
@@ -513,21 +528,33 @@ export default {
 
       this.completedSteps = 1
       const progressMonitor = (amount) => {
-        this.completedSteps = amount/100 * this.totalSteps % 10
+        this.completedSteps = amount / 100 * this.totalSteps % 10
       }
 
       let step = 'begin updateProjectToCloud'
+      let modal
       console.log('updateProjectToCloud locale: ' + this.locale + ':' + this.project)
 
       habitatCloud.assureRemoteLogin()
         .then(() => {
           this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
         })
-        .then (() => {
-          // if(!this.projectData.details) {
-          //   throw new Error ('Local Hardocs Project not present yet to update from!')
-          // }
+        .then(() => {
+          const options =  {
+            height: 480,
+            width: 600,
+            backgroundColor: '#0d3856'
+          }
+          return habitatLocal.modalOnFileHtml('waiting.html', options)
+        })
+        .then(result => {
+          modal = result
+          modal.show()
+          return null
+        })
+        .then(() => {
           step = 'update HabitatProject'
+          console.log(step)
           return habitatCloud.doRequest(
             'updateProject',
             {
@@ -538,13 +565,19 @@ export default {
               progressMonitor
             })
         })
-      .then (result => {
+        .then(result => {
+          if (modal) {
+            modal.close()
+          }
           console.log('updateProjectToCloud:result: ' + JSON.stringify(result))
           this.dbDisplay = 'Ok - ' + result.msg + ','
-            this.opsDisplay = 'for : ' + this.projectData._id
+          this.opsDisplay = 'for : ' + this.projectData._id
         })
         .catch(err => {
-          console.log ('bloop: ' + err)
+          if (modal) {
+            modal.close()
+          }
+          console.log('bloop: ' + err)
           this.showCmdError('updateProjectToCloud:' + step, err, true)
         })
     },
@@ -758,17 +791,9 @@ export default {
     },
     logOutRemote: function () {
       this.clearPanels()
-      habitatLocal.getNodeCookies()
+      habitatLocal.logoutOfHabitat()
         .then(result => {
-          this.cookies = result
-          return result
-        })
-        .then(result => {
-          // *todo* clan this if possible, if we can id just the api cookie, or if
-          // *todo* there is instead an action we can provide on the server. Old code...
-          // *todo* anyway, put it in the client local or cloud api apropos - not raw here
-          habitatLocal.deleteNodeCookies(result)
-          this.opsDisplay = 'Now logged out...'
+          this.opsDisplay = result.msg
         })
         .catch(err => {
           this.showCmdError('logOutRemote', err)
@@ -784,12 +809,17 @@ export default {
       // the stack showing would be used only in debugging for
       // the local habitat-cliet (habitatCloud etc.) libraries
       let error
+      let msg
       if (err instanceof Error) {
         error = showStack ? err.stack : err
+        msg = `Error:  ${action}: ` + error
       } else {
-        error = JSON.stringify(err)
+        // we should always have the same form now, { ok, msg }
+        // but if not, revert here until we do...
+        // error = JSON.stringify(err)
+        msg = `Error:  ${action}: ` + err.msg
       }
-      const msg = `Error:  ${action}: ` + error
+      // const msg = `Error:  ${action}: ` + error
       this.opsDisplay = msg
       console.log(msg)
     },
@@ -826,11 +856,6 @@ export default {
         countMarker: 0 // this is for keeping track of updates
       }
     }
-  },
-  components: {
-    ProjectsAdminOpsButtons,
-    VueJsonEditor,
-    RadialProgressBar
   }
 }
 </script>

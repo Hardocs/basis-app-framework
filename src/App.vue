@@ -14,7 +14,9 @@ export default {
     'Nav': Nav
   },
   created () {
-    console.log ('App ... created')
+    const title = 'Hardocs App Framework'
+    document.title = title
+    console.log (title + ' ... created')
   }
 }
 </script>

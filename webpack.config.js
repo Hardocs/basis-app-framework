@@ -1,5 +1,6 @@
 module.exports = {
   module: {
+    target: 'electron-renderer',
     rules: [
       {
         test: /\.css$/,
@@ -15,6 +16,10 @@ module.exports = {
             }
           }
         ]
+      },
+      {
+        test: /\.html$/i,
+        loader: 'html-loader',
       }
     ]
   }
