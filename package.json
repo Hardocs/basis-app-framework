@@ -1,6 +1,6 @@
 {
   "name": "hardocs-app-framework",
-  "version": "0.6.8",
+  "version": "0.6.9",
   "private": true,
   "author": "Narration SD",
   "description": "Collect and illustrate patterns in Hardocs basis architecture",
@@ -15,7 +15,7 @@
   },
   "main": "background.js",
   "dependencies": {
-    "@hardocs-project/habitat-client": "^0.8.9",
+    "@hardocs-project/habitat-client": "^0.8.11",
     "autoprefixer": "^9.8.6",
     "core-js": "^3.12.1",
     "dotenv": "^8.6.0",

@@ -35,7 +35,9 @@
             </label>
             <input v-model="locale" id="locale-name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
               leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="project-locale-name">
-            <p v-if="!localeExists" class="text-red-500 text-xs italic">Please choose a locale name (can have dashes, no colons).</p>
+            <p v-if="!localeExists" class="text-red-500 text-xs italic">
+              Please choose a locale name. which can have letters, numbers, dashes; no spaces.
+            </p>
           </div>
           <div class="flex items-center justify-between">
             <button @click="initializeHabitat" :style="warnOrGreyStyle" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
@@ -70,7 +72,9 @@
             </label>
             <input v-model="project" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700
               leading-tight focus:outline-none focus:shadow-outline" type="text" id="project-locale" placeholder="project-name">
-            <p v-if="!projectExists" class="text-red-500 text-xs italic">Please choose a project name (can have dashes, no colons).</p>
+            <p v-if="!projectExists" class="text-red-500 text-xs italic">
+              Please choose a locale name. which can have letters, numbers, dashes; no spaces.
+            </p>
           </div>
           <div class="flex items-center justify-between">
             <div v-if="projectExists">
@@ -112,7 +116,7 @@
           </div>
           <p class="v-spaced-below">normal operations:</p>
           <div class="flex items-center justify-around">
-            <button @click="loadCloudProjectLatest" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+            <button @click="loadCloudProject" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
               focus:outline-none focus:shadow-outline" type="button">
               Load Project<br>from Cloud
             </button>
@@ -209,62 +213,159 @@ export default {
   mounted () {
     this.preloadDummyProjectInfo()
   },
-  computed: {
-    warnOrGreyStyle: function () {
-    // *todo* this depends on what we decide about informing on the client, tbd
-    // *todo* very probably a direct r-u-permitted on the action cloud returned
-    // *todo* though actually hard-coded style may do it. But we have the ability...
-      return this.isAgent
-        ? {
-          color: 'red !important',
-        }
-        : {
-          color: 'yellow !important',
-          opacity: '50%'
-       }
-    }
-  },
   methods: {
-    checkStatus: function (dbUrl) {
-      this.clearPanels()
-      console.log('checking db status')
-      // *todd* not yet a business, has to be a promise for others, local
-      habitatDb.getStatusOfDb(dbUrl)
+
+    // n.b. I know, it's big. And hungry for componentization, but...other needs came first
+    // these routines arranged at the top are the ones to study for code pathways,
+    // the useful ones you'll need. I'll extract from them for docmentation examples.
+
+    loadCloudProject: function () {
+      this.clearDisplays()
+      console.log('cloud loadProjectLatest from: ' + this.locale + ':' + this.project)
+
+      let step = 'assure-login'
+      habitatCloud.assureRemoteLogin()
         .then(result => {
-          console.log('checkStatus: ' + JSON.stringify(result))
-          this.opsDisplay = 'Db Status: ' + JSON.stringify(result)
+          this.dbDisplay = result.msg
+          this.opsDisplay = 'Loading Project from Habitat Cloud'
+          step = 'load-from-cloud'
+          this.progressInitiate()
+          return  habitatCloud.doRequest(
+            'loadProjectResolve',
+            {
+              locale: this.locale,
+              project: this.project,
+              identity: this.identity,
+              options: { resolveMode: 'latestWins' }
+            }
+          )
         })
-        .catch(err => {
-          this.showCmdError('Check Db Status', err)
-        })
-    },
-    checkRole: function (role) {
-      return habitatCloud.doRequest('checkRoles')
         .then (result => {
-          console.log ('checkRole returns: ' + JSON.stringify(result) + ', for check: ' + role)
-          return result.msg === role
+          // console.log('loadProjectLatest:result: ' + JSON.stringify(result))
+
+          // here are your actions after.  We stored to the db in this app framework
+          // demonstrator, just to keep the id and rev available and sane for its ..
+          // use or the database which production must never have and will go away.
+
+          // what you want to do instead is store the projectData out to your immediate
+          // state store, later to be sent to the filesystem storage of all. So
+          // setProjectObject will be your own routine, as will be display updating.
+
+          // You'll want to use progressOpen() and progressClose(), to make confidence.
+          step = 'set-project-object'
+          this.setProjectObject(result.data)
+
+          this.dbDisplay = 'Ok - ' + result.msg + ' completed'
+          this.opsDisplay = 'for : ' + this.locale + ':' + this.project
+          this.progressClose()
         })
         .catch(err => {
-          this.showCmdError('Check Db Status', err)
+          this.progressClose()
+          this.showCmdError('loadProjectLatest:' + step, err)
         })
     },
-    checkLocale: function (identity) {
-      console.log ('checkLocale: ' + identity)
-      return false // *todo* until habitat can actually do it
+    updateProjectToCloud: function () {
+      this.clearDisplays()
+      console.log('updateProjectToCloud locale: ' + this.locale + ':' + this.project)
 
-      // *todo* this is now looking wrong several ways - ck intent, reformulate to
-      // match advancing habitat design.
-
-      // will be promise
-      // use to dim/enable button
-      // this probably doesn't want to be hit every time as it calls habitat
-      // so, when? checkLocale button
-      // console.log('checking locale')
-      // const result = habitatCloud.doRequest('dbExists/'
-      //   + encodeURIComponent(`${identity}`))
-      // this.opsDisplay = result.msg
-      // return result.isAgent
+      let step = 'assure-login'
+      habitatCloud.assureRemoteLogin()
+        .then(result => {
+          this.dbDisplay = result.msg
+          this.opsDisplay = 'Updating Project to Habitat Cloud'
+          step = 'update-HabitatProject'
+          this.progressInitiate()
+          return habitatCloud.doRequest(
+            'updateProject',
+            {
+              locale: this.locale,
+              project: this.project,
+              projectData: this.getProjectObject(),
+              options: {}, // cloud will handle the primary itself
+            })
+        })
+        .then(result => {
+          this.progressClose()
+          console.log('updateProjectToCloud:result: ' + JSON.stringify(result))
+          this.dbDisplay = 'Ok - ' + result.msg + ','
+          this.opsDisplay = 'for : ' + this.projectData._id
+        })
+        .catch(err => {
+          this.progressClose()
+          // normally you don't set showStack, for softer messages. Here though is how:
+          this.showCmdError('updateProjectToCloud:' + step, err, true)
+        })
     },
+    progressInitiate: function () {
+      // must renew this way, due to hidden Electron problem
+      this.progressIndicator = habitatLocal.progressModalFactory()
+      this.progressIndicator.initiate()
+    },
+    progressClose: function () {
+      this.progressIndicator.complete()
+      this.progressIndicator = null
+    },
+    setProjectObject: function (resultObject) {
+      // write your own, compose from data you have
+      this.projectData = {
+        // first two only for this app framework, as it still uses db --
+        // you definitely mustn't, all the reasons Jose & I have understood
+        _id: resultObject._id,
+        _rev: resultObject._rev,
+        //
+        details: resultObject.details, // locale and name are crucial here
+        hdFrame: resultObject.hdFrame,
+        hdObject:resultObject.hdObject
+      }
+    },
+    getProjectObject: function () {
+      // write your own, compose from data you have
+      return {
+        // *todo* first two go out
+        _id: this.projectData._id,
+        _rev: this.projectData._rev,
+        //
+        details: this.projectData.details,
+        hdFrame: this.projectData.hdFrame,
+        hdObject: this.projectData.hdObject
+      }
+    },
+    showCmdError: function (action, err, showStack = false) {
+      // an essential, so we don't need to know which form comes
+      // if it's not an Error, it's string or JSON
+      // we ourselves always throe Errors, but libraries...
+      // the stack showing would be used only in debugging for
+      // the local habitat-cliet (habitatCloud etc.) libraries
+      let error
+      let msg
+      if (err instanceof Error) {
+        error = showStack ? err.stack : err
+        msg = `Error:  ${action}: ` + error
+      } else {
+        // we should always have the same form now, { ok, msg }
+        // but if not, revert here until we do...
+        msg = `Error:  ${action}: ` + err.msg
+      }
+      // const msg = `Error:  ${action}: ` + error
+      this.opsDisplay = msg
+      console.log(msg)
+    },
+    clearDisplays: function () {
+      console.log ('clearDisplays')
+      this.opsDisplay = ''
+      this.dbDisplay = ''
+    },
+    clearPanels: function () {
+      console.log ('clearPanels')
+      this.adminLocaleForm = false
+      this.adminProjectsForm = false
+      this.interactWithProjectForm = false
+      this.clearDisplays()
+    },
+
+    // n.b. below here, still discovery-land and development
+    // the idea is to not take any of this code, nor look at it :)
+
     adminLocale: function () {
       this.clearPanels()
       this.adminLocaleForm = true
@@ -281,6 +382,8 @@ export default {
       console.log('create locale: ' + this.locale + ' via identity: ' + this.loginIdentity)
       habitatCloud.assureRemoteLogin()
         .then (() => {
+          habitatLocal.validateHabitatName (this.locale, 'Project Locale')
+
           return habitatCloud.doRequest(
             'createLocale',
             { locale: this.locale } // identity check is properly in cloud
@@ -294,7 +397,7 @@ export default {
           this.opsDisplay = result.msg
         })
         .catch(err => {
-          this.showCmdError('createLocale', err.msg)
+          this.showCmdError('createLocale', err)
         })
     },
     deleteLocale: function () {
@@ -311,6 +414,8 @@ export default {
       console.log('delete locale: ' + this.locale + ' via identity: ' + this.loginIdentity)
       habitatCloud.assureRemoteLogin()
         .then (() => {
+          habitatLocal.validateHabitatName (this.locale, 'Locale')
+
           return habitatCloud.doRequest(
             'deleteLocale',
             { locale: this.locale } // identity check is properly in cloud
@@ -324,15 +429,15 @@ export default {
           this.opsDisplay = result.msg
         })
         .catch(err => {
-          this.showCmdError('deleteLocale', err.msg)
+          this.showCmdError('deleteLocale', err)
         })
     },
     setUpForCloudActions: async function () {
       await habitatCloud.assureRemoteLogin()
-        .then(() => {
+        .then((result) => {
           // .then(result => {
           // *todo* see plan related
-          this.opsDisplay = 'Logged in to Habitat Cloud'  // result.msg
+          this.dbDisplay = /*'Logged in to Habitat Cloud'*/  result.msg
         })
         .then(() => {
           return habitatCloud.doRequest('getLoginIdentity')
@@ -349,16 +454,17 @@ export default {
           this.loginIdentity = result.identity
           this.isAgent = this.checkRole('agent')
           console.log('id: ' + this.loginIdentity + ', is agent: ' + this.isAgent)
-          this.dbDisplay = this.isAgent ? ('Locale: ' + this.locale) : 'not agent yet'
+          // later?
+          // this.opsDisplay = this.isAgent ? ('Locale: ' + this.locale) : 'not agent yet'
           return result.identity
         })
         .then(result => {
           this.project = 'your-project'
-          this.dbDisplay = 'Actions identity: ' + result
+          this.opsDisplay = 'Actions identity: ' + result
         })
         .catch(err => {
           console.log ('setUpForCloud:error: ' + JSON.stringify(err))
-          this.showCmdError('adminProjects', err)
+          this.showCmdError('setUpForCloud', err)
         })
     },
     adminProjects: function () {
@@ -387,56 +493,11 @@ export default {
           this.showCmdError('loadLocalProject', err)
         })
     },
-    loadCloudProjectLatest: function () {
-      this.clearDisplays()
-      console.log('cloud loadProjectLatest from: ' + this.locale + ':' + this.project)
-
-      habitatCloud.assureRemoteLogin()
-        .then(() => {
-          this.progressInitiate()
-          return  habitatCloud.doRequest(
-            'loadProjectResolve',
-            {
-              locale: this.locale,
-              project: this.project,
-              identity: this.identity,
-              options: { resolveMode: 'latestWins' }
-            }
-          )
-        })
-        .then (result => {
-          // console.log('loadProjectLatest:result: ' + JSON.stringify(result))
-          this.setProjectObject(result.data)
-          const msg = 'Ok - ' + result.msg + ', for : ' + this.projectData._id
-          this.dbDisplay = msg
-
-          // always store project to local db -- it's the completion of request,
-          // keeping all current, using a call which does _not_ update the rev, thus
-          // the pattern of our CouchDB-compatible, necessarily sans-replication design
-
-          // in this case we want the resolved cloud result replicated exactly, locally
-          // NOTE but never use this call without complete understanding of what you are doing!
-          return habitatDb.storeProjectObjectSameRev(this.projectData, this.localProjectsDbName)
-        })
-        .then (result => {
-          // here are your actions after.  We stored to the db, just to keep
-          // the id and rev available and sane, but not for use of data, or even
-          // last safety on that.
-
-          // what you want to do here is write the projectData out to your filesystem
-          // storage of all. This will be your own routine, and here since we're
-          // not using that, this example just updates the display, which you can also.
-          this.progressClose()
-          this.opsDisplay = result.msg + ' locally '
-        })
-        .catch(err => {
-          this.progressClose()
-          this.showCmdError('loadProjectLatest', err)
-        })
-    },
     loadUnresolvedCloudProject: function () {
 
       // NOTE:  this method is ONLY for examining how resolution works. NOT for production!
+      // and now that we do all resolution on the server, it  won't show you anything interesting
+      // kept for the moment, but probably add an option to get the info from the normal call instead.
 
       this.clearDisplays()
       console.log('cloud loadUnresolvedCloudProject from: ' + this.locale + ':' + this.project)
@@ -476,6 +537,46 @@ export default {
           this.projectData = { no: 'data' }
           this.showCmdError('loadProjectLatest', err)
         })
+    },
+    checkStatus: function (dbUrl) {
+      this.clearPanels()
+      console.log('checking db status')
+      // *todd* not yet a business, has to be a promise for others, local
+      habitatDb.getStatusOfDb(dbUrl)
+        .then(result => {
+          console.log('checkStatus: ' + JSON.stringify(result))
+          this.opsDisplay = 'Db Status: ' + JSON.stringify(result)
+        })
+        .catch(err => {
+          this.showCmdError('Check Db Status', err)
+        })
+    },
+    checkRole: function (role) {
+      return habitatCloud.doRequest('checkRoles')
+        .then (result => {
+          console.log ('checkRole returns: ' + JSON.stringify(result) + ', for check: ' + role)
+          return result.msg === role
+        })
+        .catch(err => {
+          this.showCmdError('Check Db Status', err)
+        })
+    },
+    checkLocale: function (identity) {
+      console.log ('checkLocale: ' + identity)
+      return false // *todo* until habitat can actually do it
+
+      // *todo* this is now looking wrong several ways - ck intent, reformulate to
+      // match advancing habitat design.
+
+      // will be promise
+      // use to dim/enable button
+      // this probably doesn't want to be hit every time as it calls habitat
+      // so, when? checkLocale button
+      // console.log('checking locale')
+      // const result = habitatCloud.doRequest('dbExists/'
+      //   + encodeURIComponent(`${identity}`))
+      // this.opsDisplay = result.msg
+      // return result.isAgent
     },
     tryModal: function () {
       // this.clearPanels()
@@ -528,39 +629,6 @@ export default {
           this.showCmdError('storeProjectLocally', err)
         })
     },
-    updateProjectToCloud: function () {
-      this.clearDisplays()
-
-      let step = 'begin updateProjectToCloud'
-      console.log('updateProjectToCloud locale: ' + this.locale + ':' + this.project)
-
-      habitatCloud.assureRemoteLogin()
-        .then(() => {
-          this.opsDisplay = 'Updating Project to Habitat Cloud'
-        })
-        .then(() => {
-          step = 'update HabitatProject'
-          this.progressInitiate()
-          return habitatCloud.doRequest(
-            'updateProject',
-            {
-              locale: this.locale,
-              project: this.project,
-              projectData: this.getProjectObject(),
-              options: {}, // cloud will handle the primary itself
-            })
-        })
-        .then(result => {
-          this.progressClose()
-          console.log('updateProjectToCloud:result: ' + JSON.stringify(result))
-          this.dbDisplay = 'Ok - ' + result.msg + ','
-          this.opsDisplay = 'for : ' + this.projectData._id
-        })
-        .catch(err => {
-          this.progressClose()
-          this.showCmdError('updateProjectToCloud:' + step, err, true)
-        })
-    },
     createProject: function () {
       this.clearDisplays()
       if (!this.isAgent) {
@@ -572,6 +640,9 @@ export default {
         ', locale: ' + this.locale + ', identity: ' + this.loginIdentity)
       habitatCloud.assureRemoteLogin()
         .then (() => {
+          habitatLocal.validateHabitatName (this.locale, 'Locale')
+          habitatLocal.validateHabitatName (this.project, 'Project')
+
           return habitatCloud.doRequest(
             'createProject',
             {  // actual securely validated identity required, and properly done in cloud
@@ -591,7 +662,7 @@ export default {
           this.opsDisplay = result.msg
         })
         .catch(err => {
-          this.showCmdError('createProject', err.msg)
+          this.showCmdError('createProject', err)
         })
     },
     deleteProject: function () {
@@ -609,6 +680,9 @@ export default {
         ', locale: ' + this.locale + ', identity: ' + this.loginIdentity)
       habitatCloud.assureRemoteLogin()
         .then (() => {
+          habitatLocal.validateHabitatName (this.locale, 'Locale')
+          habitatLocal.validateHabitatName (this.project, 'Project')
+
           return habitatCloud.doRequest(
             'deleteProject',
             {  // identity check is properly in cloud
@@ -631,7 +705,7 @@ export default {
           this.opsDisplay = result.msg
         })
         .catch(err => {
-          this.showCmdError('deleteProject', err.msg)
+          this.showCmdError('deleteProject', err)
         })
     },
     listLocalProjects: function () {
@@ -711,9 +785,9 @@ export default {
     publishProject: function () {
       // *todo* cloud will just indicate not implemented for now...
       this.clearDisplays()
-      const requestedStatus = false
-      const locale = 'dummy Locale'
-      const project = 'dummy Project'
+      const requestedStatus = false // what is this intended for, now it's later?
+      const locale = 'dummy-Locale'
+      const project = 'dummy-Project'
       this.dbDisplay = 'publishProject state requested: ' + requestedStatus
 
       habitatCloud.assureRemoteLogin()
@@ -729,7 +803,7 @@ export default {
           )
         })
         .then (result => {
-          this.opsDisplay += 'Publish project result: ' + JSON.stringify(result)
+          this.opsDisplay += '.  Publish project result: ' + JSON.stringify(result)
         })
         .catch(err => {
           this.showCmdError('publishProject', JSON.stringify(err))
@@ -782,72 +856,6 @@ export default {
     onJsonChange (value) {
       console.log('value:', value)
     },
-    progressInitiate: function () {
-      // must renew this way, due to hidden Electron problem
-      this.progressIndicator = habitatLocal.progressModalFactory()
-      this.progressIndicator.initiate()
-    },
-    progressClose: function () {
-      this.progressIndicator.complete()
-      this.progressIndicator = null
-    },
-    setProjectObject: function (resultObject) {
-      // write your own, compose from data you have
-      this.projectData = {
-        // first two only for this app framework as it still uses db -- you definitely won't
-        _id: resultObject._id,
-        _rev: resultObject._rev,
-        //
-        details: resultObject.details,
-        hdFrame: resultObject.hdFrame,
-        hdObject:resultObject.hdObject
-      }
-    },
-    getProjectObject: function () {
-      // write your own, compose from data you have
-      return {
-        // *todo* first two go out
-        _id: this.projectData._id,
-        _rev: this.projectData._rev,
-        //
-        details: this.projectData.details,
-        hdFrame: this.projectData.hdFrame,
-        hdObject: this.projectData.hdObject
-      }
-    },
-    showCmdError: function (action, err, showStack = false) {
-      // an essential, so we don't need to know which form comes
-      // if it's not an Error, it's string or JSON
-      // we ourselves always throe Errors, but libraries...
-      // the stack showing would be used only in debugging for
-      // the local habitat-cliet (habitatCloud etc.) libraries
-      let error
-      let msg
-      if (err instanceof Error) {
-        error = showStack ? err.stack : err
-        msg = `Error:  ${action}: ` + error
-      } else {
-        // we should always have the same form now, { ok, msg }
-        // but if not, revert here until we do...
-        // error = JSON.stringify(err)
-        msg = `Error:  ${action}: ` + err.msg
-      }
-      // const msg = `Error:  ${action}: ` + error
-      this.opsDisplay = msg
-      console.log(msg)
-    },
-    clearDisplays: function () {
-      console.log ('clearDisplays')
-      this.opsDisplay = ''
-      this.dbDisplay = ''
-    },
-    clearPanels: function () {
-      console.log ('clearPanels')
-      this.adminLocaleForm = false
-      this.adminProjectsForm = false
-      this.interactWithProjectForm = false
-      this.clearDisplays()
-    },
     preloadDummyProjectInfo: function (marker) {
       // *todo* for the moment, this is dummy data. Soon we'll add it normally, then find with view
       this.locale = 'delft-lab01'
@@ -869,7 +877,22 @@ export default {
         countMarker: 0 // this is for keeping track of updates
       }
     }
-  }
+  },
+  computed: {
+    warnOrGreyStyle: function () {
+      // *todo* this depends on what we decide about informing on the client, tbd
+      // *todo* very probably a direct r-u-permitted on the action cloud returned
+      // *todo* though actually hard-coded style may do it. But we have the ability...
+      return this.isAgent
+        ? {
+          color: 'red !important',
+        }
+        : {
+          color: 'yellow !important',
+          opacity: '50%'
+        }
+    }
+  },
 }
 </script>
 
