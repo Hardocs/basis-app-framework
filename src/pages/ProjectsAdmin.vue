@@ -229,9 +229,9 @@ export default {
           this.dbDisplay = result.msg
           this.opsDisplay = 'Loading Project from Habitat Cloud'
           step = 'load-from-cloud'
-          this.progressInitiate()
+          this.progressInitiate('Loading current Project from the cloud...')
           return  habitatCloud.doRequest(
-            'loadProjectResolve',
+            'loadProject',
             {
               locale: this.locale,
               project: this.project,
@@ -274,7 +274,7 @@ export default {
           this.dbDisplay = result.msg
           this.opsDisplay = 'Updating Project to Habitat Cloud'
           step = 'update-HabitatProject'
-          this.progressInitiate()
+          this.progressInitiate('Updating current Project to the cloud...')
           return habitatCloud.doRequest(
             'updateProject',
             {
@@ -296,9 +296,9 @@ export default {
           this.showCmdError('updateProjectToCloud:' + step, err, true)
         })
     },
-    progressInitiate: function () {
+    progressInitiate: function (activityMsg) {
       // must renew this way, due to hidden Electron problem
-      this.progressIndicator = habitatLocal.progressModalFactory()
+      this.progressIndicator = habitatLocal.progressModalFactory(activityMsg)
       this.progressIndicator.initiate()
     },
     progressClose: function () {
@@ -321,10 +321,11 @@ export default {
     getProjectObject: function () {
       // write your own, compose from data you have
       return {
-        // *todo* first two go out
+        // *todo* first two, and any others are only for moment, go out
         _id: this.projectData._id,
         _rev: this.projectData._rev,
-        //
+
+        // and this is your real data handling, that you do
         details: this.projectData.details,
         hdFrame: this.projectData.hdFrame,
         hdObject: this.projectData.hdObject
@@ -336,17 +337,15 @@ export default {
       // we ourselves always throe Errors, but libraries...
       // the stack showing would be used only in debugging for
       // the local habitat-cliet (habitatCloud etc.) libraries
-      let error
       let msg
       if (err instanceof Error) {
-        error = showStack ? err.stack : err
+        const error = showStack ? err.stack : err
         msg = `Error:  ${action}: ` + error
       } else {
         // we should always have the same form now, { ok, msg }
         // but if not, revert here until we do...
         msg = `Error:  ${action}: ` + err.msg
       }
-      // const msg = `Error:  ${action}: ` + error
       this.opsDisplay = msg
       console.log(msg)
     },
