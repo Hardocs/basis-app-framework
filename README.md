@@ -1,183 +1,131 @@
-# Hardocs Application Framework, a basis
+# Hardocs Application Framework, 01 July 2021
 
-# Status
+## Status
 
-Ready for visual improvement of proven cloud operations demonstration,
-documentation to be brought up to current at that time.
+Ready for development of 2021 applications with usage-proving and usage-based improvement of the Beta Habitat Cloud -- and the applications which use it.
 
-# Definite Nota Bene
+## Usage
 
-Be sure to use only yarn in here. Yarn install, yarn upgrade, etc.
+All is normal, except that you need to be very careful to always be actually using the Beta version of the habitat-client package.
 
-No npm, or you'll find it won't build, no matter how clean the results may seem. 
+In general, do the following:
+
+1. Do your Git installs and upgrades, with Yarn, as normal for this and any app project.
+
+2. Each time after you do so, be sure to run the following: `yarn upgrade @hardocs-project/habitat-client@beta`
+
+This two-step procedure is necessary because Yarn will lock you to the Beta the first time you set it, and then ***not*** updated that package even when it's been updated on the npm repository. 
+
+So, remember to do it always, yourself, as long as we're working from the Beta, thanks.
+
+## Definite Nota Bene
+
+Be sure to use only Yarn in here. `yarn install`, `yarn upgrade`, etc.
+
+No npm, or you'll find the project won't build, no matter how clean the results may seem. 
 
 Thank Electron, seems pretty clear.
 
-At least you don't have to worry about npm 7 changes that would come with other-than-LTS Node...
+At least you don't have to worry about npm 7 changes that would come with other-than-LTS Node....
 
-# Current release
+## Current release
 
-Operates with @hardocs-project/habitat-client@alpha, which is very different indeed to the discovery code from last year on the @latest version.
+Operates with @hardocs-project/habitat-client@beta, which is very different indeed to the discovery code from last year on the @latest version.
 
-We'll go to current as @latest once sure everyone's caught up. And then continue the improvements on that.
+We'll go to current as @latest once sure everyone's caught up, and otherwise the project is ready for it. At that point improvements will occur there.
 
-# Earlier documentation (to be updated)
+## Further documentation
 
---- begin earlier documentation ---
+The earlier set is so far out of date that this must begin anew. We have very nice abilities now, and it's easy and in a consistent pattern to use them, as this App Framework demonstrates.
 
-This is a draft of an earlier present which has move on, but it should be useful to understand a basis.
+Brief notes folloe for now.
 
-There's a section at the end about why the calls are all Promises, in notes mentioning how useful that actually is in getting our smooth and responsive UX good experience.
+### Promises promise the way
 
-## Beginning a-gnu
+Everything you do that involves a User Experience should use Promises, and use them properly. This is so that time-consuming actions can be set running, and the UX immediately become responsive again. 
 
-The Habitat API is sectioned between exposing calls for using the database, and calls to efficiently use local services: the filesystem access and expected Windows etc. widgets we get through Electron.
+This means no `async/await` either, if you think about it. And thinking is what will get you forward in all cases where Promises are used to their advantages.
 
-You can find each of these in the Framework page examples, used in their proper way.
+### No App-local Database
 
-For now at least, please refer to the Habitat source to discover calling parameters and types of values.
+It's said several times elsewhere, but it's a very clear picture: any database on a browser-based client would be a huge reliability, security, and recoverability risk. This also applies in most regards to any other form of client software. 
 
-Some of the abilities employ lower-level routines that are not exposed, to make everything as straightforward as possible, keeping our application code clean.
+Hardocs needs to be fully reliable, recoverable, and secure, particlarly with regard to forgery attempts. So don't do this. 
 
-As the Promises section will explain, for each call you'll be provided a result from the Promise, or separately an error String if one occurs. These are both callbacks, so they will be where you code to set data in the Vue component itself, or to be reflected in the Vuex store, so that the screen will update as the data arrives.
+The use in this App Framework is the exception that will go away just as soon as other project work can be adopted, and with it, all the database abilities of the Habitat Client will be removed.
 
-You must never provide or look for a return value directly from the calls themselves - it wouldn't be there, or reliably, because results only arrive in event time.
+### Habitat Client patterns: Helpers
 
-## Database Operations
+This App Framework should show you how easy it is, and some quite good practices.  
 
-### `createOrOpenDatabase`
+The helper routines are part of this picture, and you can just upgrade their code with actions suitable to your app, when you copy over and include their code. This will keep your interaction with the cloud themselves as quite clean code.
 
-In CouchDB and its local version PouchDb, there isn't a distinction between creating and opening a database, so this is just one call. It not only accesses the database, it checks status to be sure all is well, as opening doesn't do this itself.
+### Habitat Client patterns: Simple Promise Chains
 
-The result from this Promise will give you the db handle, which you'll set in the Vue data content.
+You'll see there is a quite consistent flow of operation, beginning with the two main application calls, `habitatCloud.oadProject`, and `habitatCloud.updateProject`, in their similarly named methods.
 
-An error would arrive as a String, to be put in an appropriate spot in data also, for reflection on screen.
+In pseudo-code,it looks like this:
+```
+assureRemoteLogin
+  .then
+    prepare calling data block
+    initiate your user interface 
+    initiate the progressIndicator
+    doRequest your habitatCall and data block
+  .then
+    receive result
+    close the progressIndicator
+    update your user interface
+  .catch
+    showCmdError instead, if there was one
+```
 
-Once you have the db handle, you can use it in the following very straightforward calls, to load or store the entire Design Project as an object complete: carrying is metadata, docs, and imgs areas just as you'd expect.
+And that's it. Data blocks allow a clear statement of what you want, and the doRequested call to gain results.  The progress indicator blocks interference until results are in, and gives a good feeling for the person making the request. 
 
-### `loadFromDatabase`
+### The Hardocs User Experience, and our Data
 
-This loads a Design Project from the database, given a proper Hardocs-format identifier pair for it. This will be an `owner` and a `project` name.
+A note here on that progress. We want to keep the Hardocs experience very appealing, as a significant aspect of its design.
 
-Your project data object will come as the result, for local data and/or pushing into the Vuex store, as we develop how we want that.
+That means highly limiting data sizes we communicate to the ***summary*** level Hardocs has always been designed to provide. Beyond the absolutely necessary control of images which should be present (now...!), we can improve our handling for best visual appearance, and a paper will come out with details and explaining the limits again.
 
-An error would arrive as usual, as a String to be presented in the UX area for that.
+To help this become real, a nice tool will be provided to allow you to simulate low-bandwidth internet uploads, as are very common even in the best provided areas of the world. Experience with how this feels will be our guide.
 
-### `storeToDatabase`
+### Your Habitat Data, coming and going
 
-This call stores a full project data object into the database, once again via an `owner` and `project` naming pair which becomes the key. Of course you'll also pass the project object as `data`.
+You'll notice there are three sections in the Habitat Project Object that you are concerned, or partially concerned with. It goes together in this way:
+```
+Habitat Project Object
+ internal
+ details
+ hdFrame
+   searchable and Finder data
+ hdObject
+   your Hardocs Object, complete
+```
 
-The successful result will be a small standard object from the database  containing `{ ok: 'true' }`
+In handling, as the example code methods show, you should store and update only the three main sections. The meanings are:
 
-You don't need to check that, because an error would instead show up as a String, in that branch of the Promise.
+- internal: this can be _id, _rev, etc., or other things for convenience on the underlying systems we use and may use.
+- details: this furnishes essential keys beginning with locale and project, and will contain other things in future according to app features. At present at least, you should be able to simply ignore it, even if the App Framework is storing it locally. Later there will be information which could be important for _use_ in your app, such as for namings, but you shouldn't have to store it, is the intention.
+- hdFrame: this one you should store, and you will be providing the information in it for update to the Habitat Cloud. Its contents will be like the top section we used in CombatCovid: its own metadata with keywords and short description, a very small Finder image, and an (html this time...no Markdown!) short overview page. We don't have to have this right away, but you can prepare for its coming with a Frame folder in the on-disk Desktop App files. If you wonder, we are keeping the frame very size-limited and separated this way for the same reason as in CombatCovid, to enable search, Finder-type apps, and rapid response in any of what constitutes them.
+- hdObject: this is what you well know already, the Hardocs Object, with all its metadata and lingua franca docs. This must be compact, and there's some discussion below of how we really must be and can be conscious in providing this.
 
-### Notes
+## Functionality and the code
 
-And that's it, very simple and powerful, for our fundamental use of the database. Later, as the cloud end becomes available, there will be equally simple calls to deal with replication.
+The App Framework has been used intensively for many months to discover what we can do, and how best to do it, in the full layers of the Habitat, besides what you see now in results of that. 
 
-What about data dependability?  Here is where CoucnDb shines. It will never lose data, is the statement made not only in the design, but by those who use it.
+As this kind of a development backplane, convenience has been much more important than structuring which would only come later, and visual appearance above the pleasantly serviceable has been bypassed with a smile as well.
 
-Even when there may be the natural issues that can occur at times with multiple locations and users, it makes an automatic 'best' choice, and then keeps all the updates available for later conflict resolution. We'll develop a call or two for this, down the road, but it's not important for now.
+It would have been nice in retrospect to partition out components for the various areas of the Projects Admin section where you find the example code, and this will happen as this App Framework gravitates into becoming the Hardocs Adminstration console anticipated. 
 
-## Local Service Calls
+This is future business, and so to make it easy for you to work with the portion of code which is providing your examples at this time, there are comment separators: one at the beginning of the Vue methods, and another at the conclusion of the few of those routines which are actually of interest to you in developing the desktop application. The rest...just don't concern with it, please.
 
-Local services are the ones for each platform that Electron aids us to run on.
+You'll also have to realize that there is a database in use, which has been underlined that we simply won't have, and so those calls are ones you replace by your own Project Data storage arrangement. 
 
-The ones we most directly need are reading and writing to the filesystem, but also for some cases dialogs that are expected to choose folders or files. These calls give you all of those.
+This temporary use in the App Framework demonstrator will go away as soon as an alternative is ready, preferably back-ported from your desktop app itself. So don't get involved with or confused by the database presence, thank you.
 
-For one or two of them, there may be some small issues that need to be dealt with for different operating system file path separators. Easily fixed, and will be soon, or sooner if you tell me you run into a problem, but I also want to see what influences this may have on app page code itself, so we can work all out smoothly. At present, all is working well on Windows.
+## Conclusion
 
-## Dialog calls
+Enough to say, for a pre-contract first development release of the cloud abilities that benefit Hardocs. I hope you may find that they give a smile, with their simplicity and transparency of use, with all the hard parts taken care of beyond the API walls. 
 
-These are what you use when you need to manually select a file or folder, and bring information in for use.
-
-Once again we use Promises, so that there's a separate code area for you to handle results or errors...when in event time the Promise actually comes back.
-
-There are several needs we'll have, thus several calls -- each for its purpose.
-
-\[n.b.I And in writing this first documentation for the services area, I may have spotted a further need or so, noted, and if so, these will appear in an update, along with other needs if you discover some and tell me...\]
-
-### `selectContentFromFolder`
-
-This will put up a dialog allowing you to select a file, and then return its contents. It's used for a single file, and there are other calls to use if  you want several.
-
-Note that you must set the `fileExts` for the file type you want, with the dot, as `".md"`, and `typeName` to name that in the dialog. I've just noticed that the code needs a small change to allow multiple type possibilities - this will come on next update.
-
-The result fork will provide the content of the selected file.
-
-The error fork will give you a string indicating a Cancel by the user, or if there are any issues like permissions which prevented loading the file.
-
-### `chooseFolderForUse`
-
-Now, what if you want to simply selectt a folder, later for a use  such as loading multiple files of a type which exist there?
-
-In this case, you'll want to have a Dialog to select a folder, and this call can give you that.
-
-There's memory in Electron for 'last folder used', so let's see if that's sufficient.
-
-The result fork will provide you the folder path selected, and the error fork would give you a Cancel notification or other error message.
-
-### `loadFilePathsFromSelectedFolder`
-
-This call will let you choose a folder, and then will load the paths all the files of selected type(s) from that folder.
-
-The result fork will provide you the array of filePaths, such as might be used for a list in the UX, which will need the the paths to be useful, while stripping just the names for the list labels.
-
-As ever, the error fork would give you a String describing a problem.
-
-### 'putContentToSelectedFolder`
-
-This is the way you get the expected 'save' dialog, able to select a folder and propose an editiable filename and type, along with a descriptive Label.
-
-The result fork will provide you an object with the path and the operating system success return value.
-
-The error fork would give you a String for a Cancel, or describing the issue.
-
-## Direct Filesystem calls
-
-These calls let you get content from, and put content to files, whose names you might have already in the app, but more likely initially gained from the dialog calls.
-
-### 'loadContentFromFilePath`
-
-Wherever you have a filePath, you can upload its content with this call.
-
-The result fork will provide a FileContent object, containing the `path` as may be convenient to keep together, along with the `data`.
-
-On the error branch, as expected, you would get a string explaining the problem.
-
-### 'putContentToFilePath`
-
-As you'd expect, this is also a straightforward call, to be used when you have the filePath for the file to be written.
-
-The result fork will receive an object with the path and success return vallue from the filesystem.
-
-An error fork will receive a String with reason.
-
-### 'loadFilePathsFromFolder`
-
-This call lets you get paths for files of named types, when you know the folder path to start with, as from one of the dialog calls.
-
-The return fork will provide you with the array of filePaths.
-
-The error fork would give you a string describing the problem.
-
-### Beyond...
-
-More description will follow here, but the shellProcess call is used in a very specific case at the moment, to enable all of the essential `pandoc` document translations.
-
-### 'shellProcess`
-
-...
-
-
-## why everything's a promise
-- every Habitat call is a Promise
-- so you always have a .then ({}).catch({}) pattern to use it -- just as all my code does.
-- But what is that doing? And why?
-- the .then area is where you code for the result, as aways when it comes back, firing that data into the gui presentation  -- it won't be available until the promise returns.
-- the .catch area is where you handle the alternative:  that there was an error. Just the same, you'd put that into your gui from the code within.
-- if you ever try to code action 'after' the Promise call, it will happen immediately. Thus anything you think you might use from the Promise call will almostnever be there -- except maybe to fool you if the Promise return is very instant, but then on another day the information won't be there.
-- how you properly respond to anything in Promise call is always by reactivity. If the .catch or .err change something in the Vue data items, then anything that depends on them (like a field in the template) will automatically respond to the new value.
-- reactivity is entirely dependable, and in concept, very tied indeed what Promises offer....
-- you've got lots of examples of this Promise-set-reactive-data pattern, in the pages of the app.
-- Once you get into it, I think you'll really enjoy the way this works.  It's a fresh kind of building blocks, and really suits the things we do.
+This sense of ease and the security always present which makes a comfort to use them, have been the intent guiding all efforts so that you have these results today.
