@@ -243,15 +243,17 @@ export default {
         .then (result => {
           // console.log('loadProjectLatest:result: ' + JSON.stringify(result))
 
-          // here are your actions after.  We stored to the db in this app framework
-          // demonstrator, just to keep the id and rev available and sane for its ..
-          // use or the database which production must never have and will go away.
+          // here are your actions after.  We store to the db in this app framework
+          // demonstrator, just to keep the id and rev available and sane for its
+          // now-legacy use of a database, which production must never have and won't.
 
           // what you want to do instead is store the projectData out to your immediate
           // state store, later to be sent to the filesystem storage of all. So
           // setProjectObject will be your own routine, as will be display updating.
+          // You'll find the easy details of how you do that in this example routine.
 
-          // You'll want to use progressOpen() and progressClose(), to make confidence.
+          // You'll want to use progressOpen() above, and progressClose(), to make confidence,
+          // and they hold and call some necessary steps, also attune the modal text.
           step = 'set-project-object'
           this.setProjectObject(result.data)
 
@@ -308,14 +310,24 @@ export default {
     setProjectObject: function (resultObject) {
       // write your own, compose from data you have
       this.projectData = {
-        // first two only for this app framework, as it still uses db --
-        // you definitely mustn't, all the reasons Jose & I have understood
+        // these first items (and any added later) are only for this App Framework, as
+        // it's a convenience to Habitat client api development to have them visible
+        // DO NOT save or restore them in your application software.
+        // -- begin ignore --
         _id: resultObject._id,
         _rev: resultObject._rev,
-        //
-        details: resultObject.details, // locale and name are crucial here
+        // details vary with future abilities. There might come a time
+        // when you would use one or two of them, but never store directly
+        details: resultObject.details,
+        // -- end ignore --
+
+        // Now, these are the objects you take from the result in your application
+        // you'll aave the hdFrame and hdObject on your own app in-view object,
+        // and as necessary further to your internal and then filesystem storage
+        // In other words, what you do here should be just as you expect...
+
         hdFrame: resultObject.hdFrame,
-        hdObject:resultObject.hdObject
+        hdObject: resultObject.hdObject
       }
     },
     getProjectObject: function () {
@@ -334,9 +346,9 @@ export default {
     showCmdError: function (action, err, showStack = false) {
       // an essential, so we don't need to know which form comes
       // if it's not an Error, it's string or JSON
-      // we ourselves always throe Errors, but libraries...
+      // we ourselves always throw Errors, but libraries...
       // the stack showing would be used only in debugging for
-      // the local habitat-cliet (habitatCloud etc.) libraries
+      // the local habitat-client (habitatCloud etc.) libraries
       let msg
       if (err instanceof Error) {
         const error = showStack ? err.stack : err
@@ -442,18 +454,18 @@ export default {
           return habitatCloud.doRequest('getLoginIdentity')
         })
         .then(result => {
-          // We likely still want to pull role and identity information
+          // We likely  want to use role and identity information coming here,
           // just to help the UX present what's possible - the original intent.
 
           // Both identity and role are only hard-determined on the cloud,
-          // so that no forgery is possible. No matter what is tried,
-          // db-affecting data like keys will always be you.
+          // so that no forgery is ever possible. No matter what is tried,
+          // db-affecting data like keys will always be identified to you.
 
           console.log('identity: ' + JSON.stringify(result))
           this.loginIdentity = result.identity
           this.isAgent = this.checkRole('agent')
           console.log('id: ' + this.loginIdentity + ', is agent: ' + this.isAgent)
-          // later?
+          // later? still working out what we actually want to show, and when
           // this.opsDisplay = this.isAgent ? ('Locale: ' + this.locale) : 'not agent yet'
           return result.identity
         })
@@ -483,7 +495,6 @@ export default {
 
       habitatDb.loadProjectObject(this.locale, this.project, this.loginIdentity)
         .then (result => {
-          console.log('loadLocalProject:result: ' + JSON.stringify(result))
           this.projectData = result.data // error will throw for catch
           this.dbDisplay = 'OK - ' + result.msg + ' locally, '
           this.opsDisplay = 'for: ' + result.data._id
@@ -495,8 +506,8 @@ export default {
     loadUnresolvedCloudProject: function () {
 
       // NOTE:  this method is ONLY for examining how resolution works. NOT for production!
-      // and now that we do all resolution on the server, it  won't show you anything interesting
-      // kept for the moment, but probably add an option to get the info from the normal call instead.
+      // and now that we do all resolution on the server, it  won't show you anything interesting.
+      // Kept for the moment, but probably add an option to get the info from the normal call instead.
 
       this.clearDisplays()
       console.log('cloud loadUnresolvedCloudProject from: ' + this.locale + ':' + this.project)
@@ -521,12 +532,14 @@ export default {
           return this.projectData
         })
         .then (projectData => {
-          // we need to save the result to the local db, *without* changing the rev.
-          // this is to make visible why we do the other half of our conflict-resolving
+          // we needed to save the result to the local db, in this case *without* changing the rev.
+          // this was to make visible why we did the other half of our conflict-resolving
           // pattern, instead of replication, for both activity and security reasons
 
-          // in this test case also we want the resolved cloud result replicated exactly, locally
-          // NOTE but never use this call without complete understanding of what you are doing!
+          // in this test case also we wanted the resolved cloud result replicated exactly, locally
+          // NOTE but never use this call in any normal Hardocs application,
+          // and never without complete understanding of what you are doing!!
+          // In any case, as noted, the daaabase will entirely disappear before long.
           return habitatDb.storeProjectObjectSameRev(projectData, this.localProjectsDbName)
         })
         .then (result => {
@@ -608,11 +621,12 @@ export default {
         // updated to the in-memory projectData after the save, to make
         // conflict resolution operable, for any stage of its possibilities
 
+        // n.b. the result at this point uses id and rev, not _id and _rev
+
         this.projectData._rev = result.rev // critical
         this.projectData.timestamp = result.timestamp // critical also
-
-        // n.b. the result at this point uses id and rev, not _id and _rev
-      }
+        return this.projectData
+     }
 
       habitatDb.storeProjectObject (
         this.projectData,

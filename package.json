@@ -15,8 +15,7 @@
   },
   "main": "background.js",
   "dependencies": {
-    "@hardocs-project/habitat-client": "^0.8.16",
-    "autoprefixer": "^9.8.6",
+    "@hardocs-project/habitat-client": "^0.8.17",
     "core-js": "^3.12.1",
     "dotenv": "^8.6.0",
     "file-loader": "^6.2.0",
@@ -32,13 +31,13 @@
     "vue-radial-progress": "^0.3.2",
     "vue-router": "^3.4.8",
     "vue-select": "^3.10.8",
-    "webpack-bundle-analyzer": "^3.9.0",
     "wrap-ansi": "^7.0.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^4.5.13",
     "@vue/cli-plugin-eslint": "^4.5.13",
     "@vue/cli-service": "^4.5.13",
+    "autoprefixer": "^9.8.6",
     "babel-eslint": "^10.1.0",
     "babel-plugin-add-module-exports": "^1.0.4",
     "electron": "^9.3.3",
@@ -48,7 +47,8 @@
     "node-sass": "^4.14.1",
     "sass-loader": "^8.0.2",
     "vue-cli-plugin-electron-builder": "^2.0.0",
-    "vue-template-compiler": "^2.6.12"
+    "vue-template-compiler": "^2.6.12",
+    "webpack-bundle-analyzer": "^3.9.0"
   },
   "eslintConfig": {
     "root": true,
