@@ -163,7 +163,6 @@
 
 import ProjectsAdminOpsButtons from '@/components/ProjectsAdminOpsButtons'
 import { habitatCloud, habitatLocal, habitatDb } from '@hardocs-project/habitat-client'
-// import ProgressModal from '@/components/ProgressModal'; './components/ProgressModal'
 import VueJsonEditor from 'vue-json-editor'
 
 export default {
@@ -847,12 +846,11 @@ export default {
         })
         .then (result => {
           // with gql, results contain data or its own errors
-          // thus, ok is critical to handling, and result is json either waay
+          // thus, ok is critical to handling, and result is json either way
           this.opsDisplay = 'Gql result: ' + this.$htmlJson(result.data);
           this.dbDisplay += ' -- ' + result.msg
         })
         .catch(err => {
-          // our library errors are strings, simple (*todo* wut)
           this.showCmdError('tryGql', err)
         })
     },
@@ -870,7 +868,6 @@ export default {
       console.log('value:', value)
     },
     preloadDummyProjectInfo: function (marker) {
-      // *todo* for the moment, this is dummy data. Soon we'll add it normally, then find with view
       this.locale = 'delft-lab01'
       this.project = 'your-project'
       this.projectData = {
