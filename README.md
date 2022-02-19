@@ -1,4 +1,4 @@
-# Hardocs Application Framework, 01 July 2021
+conda create -y -n napari-env -c conda-forge python=3.9z# Hardocs Application Framework, 01 July 2021
 
 ## Status
 
